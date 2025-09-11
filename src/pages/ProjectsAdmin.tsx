@@ -176,7 +176,7 @@ const ProjectsAdmin: React.FC = () => {
               <tbody>
                 {projects.map((p, i) => (
                   <tr key={p.id} className="border-t border-slate-200">
-                    <td className="py-2 pr-2"><button onClick={() => removeRow(i)} className="text-red-600 text-xs">LÃ¶schen</button></td>
+                    <td className="py-2 pr-2"><button onClick={() => removeRow(i)} className="text-red-600 text-xs">L&ouml;schen</button></td>
                     <td className="py-2 pr-2"><input className="w-36 border rounded px-1" value={p.id} onChange={(e)=>update(i,'id',e.target.value)} /></td>
                     <td className="py-2 pr-2"><input className="w-64 border rounded px-1" value={p.title} onChange={(e)=>update(i,'title',e.target.value)} /></td>
                     <td className="py-2 pr-2"><input className="w-40 border rounded px-1" value={p.owner} onChange={(e)=>update(i,'owner',e.target.value)} /></td>
@@ -206,5 +206,6 @@ const ProjectsAdmin: React.FC = () => {
 };
 
 export default ProjectsAdmin;
+
 
 
