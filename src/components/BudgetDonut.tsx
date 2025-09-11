@@ -17,6 +17,10 @@ export const BudgetDonut: React.FC<Props> = ({ spent, remaining, height = 220 })
     { name: 'Ausgegeben', value: spentSafe },
     { name: 'Verbleibend', value: remSafe },
   ];
+  // Threshold coloring: <=90% green, <=105% amber, otherwise red
+  const spentColor = spentSafe <= total * 0.9 ? COLORS.green
+                   : spentSafe <= total * 1.05 ? COLORS.amber
+                   : COLORS.red;
   const outer = Math.min(120, Math.floor(height * 0.42));
   const inner = Math.max(outer - 26, 20);
   const fmt = (n: number) => new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(n);
@@ -31,8 +35,8 @@ export const BudgetDonut: React.FC<Props> = ({ spent, remaining, height = 220 })
         </div>
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
-            <Pie data={data} dataKey="value" nameKey="name" outerRadius={outer} innerRadius={inner} strokeWidth={0}>
-              <Cell fill={COLORS.blue} />
+            <Pie data={data} dataKey="value" nameKey="name" outerRadius={outer} innerRadius={inner} strokeWidth={0} isAnimationActive animationDuration={700}>
+              <Cell fill={spentColor} />
               <Cell fill={COLORS.slate} />
             </Pie>
           </PieChart>
@@ -40,7 +44,7 @@ export const BudgetDonut: React.FC<Props> = ({ spent, remaining, height = 220 })
       </div>
       <div className="mt-3 flex items-center justify-center gap-4 text-xs">
         <div className="flex items-center gap-2">
-          <span className="inline-block w-2.5 h-2.5 rounded-full" style={{ backgroundColor: COLORS.blue }} aria-hidden />
+          <span className="inline-block w-2.5 h-2.5 rounded-full" style={{ backgroundColor: spentColor }} aria-hidden />
           <span className="text-slate-700">Ausgegeben</span>
           <span className="text-slate-500">{fmt(spentSafe)} ({pct}%)</span>
         </div>
