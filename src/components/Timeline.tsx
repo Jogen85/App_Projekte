@@ -97,7 +97,7 @@ const Timeline: React.FC<Props> = ({ projects, bounds, yearOnly, year }) => {
                   tabIndex={0}
                   aria-label={barTitle}
                 >
-                  {p.statusNorm !== 'planned' && (
+                  {p.statusNorm === 'active' && (
                     <div
                       className="absolute top-0 left-0 h-full rounded border-l border-white/60"
                       style={{ width: `${clamp(p.progress, 0, 100)}%`, backgroundColor: 'rgba(96,165,250,0.9)' }}
