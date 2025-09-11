@@ -8,6 +8,7 @@ import {
   plannedBudgetForYearD, costsYTDForYearD,
 } from './lib';
 import FiltersPanel from './components/FiltersPanel';
+import Timeline from './components/Timeline';
 
 const ProjectsTable = lazy(() => import('./components/ProjectsTable'));
 const BudgetDonut = lazy(() => import('./components/BudgetDonut'));
@@ -296,6 +297,8 @@ export default function App() {
             </details>
           </div>
         </Card>
+
+        <Timeline projects={filtered} bounds={bounds} yearOnly={yearOnly} year={year} />
 
         <Card title={"Zeitachse (Gantt-ähnlich)"}>
           <div className="space-y-3">
