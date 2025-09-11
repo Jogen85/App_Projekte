@@ -162,15 +162,15 @@ const ProjectsAdmin: React.FC = () => {
                   <th className="py-2 pr-3">Aktion</th>
                   <th className="py-2 pr-3">ID</th>
                   <th className="py-2 pr-3">Titel</th>
-                  <th className="py-2 pr-3">Owner</th>
+                  <th className="py-2 pr-3">Verantwortliche</th>
                   <th className="py-2 pr-3">Status</th>
                   <th className="py-2 pr-3">Start</th>
                   <th className="py-2 pr-3">Ende</th>
-                  <th className="py-2 pr-3">% prog</th>
+                  <th className="py-2 pr-3">Fortschritt %</th>
                   <th className="py-2 pr-3">Budget &euro;</th>
                   <th className="py-2 pr-3">Kosten &euro;</th>
                   <th className="py-2 pr-3">Std/Monat</th>
-                  <th className="py-2 pr-3">Org</th>
+                  <th className="py-2 pr-3">Gesellschaft</th>
                 </tr>
               </thead>
               <tbody>
@@ -182,9 +182,9 @@ const ProjectsAdmin: React.FC = () => {
                     <td className="py-2 pr-2"><input className="w-40 border rounded px-1" value={p.owner} onChange={(e)=>update(i,'owner',e.target.value)} /></td>
                     <td className="py-2 pr-2">
                       <select className="border rounded px-1" value={p.status} onChange={(e)=>update(i,'status',e.target.value)}>
-                        <option value="planned">planned</option>
-                        <option value="active">active</option>
-                        <option value="done">done</option>
+                        <option value="planned">Geplant</option>
+                        <option value="active">Laufend</option>
+                        <option value="done">Abgeschlossen</option>
                       </select>
                     </td>
                     <td className="py-2 pr-2"><input type="date" className="border rounded px-1" value={p.start} onChange={(e)=>update(i,'start',e.target.value)} /></td>

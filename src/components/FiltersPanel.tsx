@@ -55,7 +55,7 @@ const FiltersPanel: React.FC<Props> = ({
       <div className="flex items-center gap-2">
         <input id="csvInput" type="file" accept=".csv" className="hidden" onChange={(e) => onCSVUpload(e.target.files?.[0])} />
         <button onClick={() => document.getElementById('csvInput')!.click()} className="rounded-lg border px-3 py-1 text-sm">CSV laden</button>
-        <button onClick={onDownloadTemplate} className="rounded-lg border px-3 py-1 text-sm">CSV export</button>
+        <button onClick={onDownloadTemplate} className="rounded-lg border px-3 py-1 text-sm">CSV-Export</button>
       </div>
     </div>
   );

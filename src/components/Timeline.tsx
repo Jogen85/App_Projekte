@@ -27,6 +27,8 @@ function monthTicks(minStart: Date, maxEnd: Date) {
 const statusColor = (status: string) =>
   status === 'done' ? '#334155' /* slate-700, dunkler */ : status === 'planned' ? COLORS.amber : COLORS.blue;
 
+const statusLabelDe = (s: string) => (s === 'planned' ? 'geplant' : s === 'done' ? 'abgeschlossen' : 'laufend');
+
 const Timeline: React.FC<Props> = ({ projects, bounds, yearOnly, year }) => {
   const inRange = today >= bounds.minStart && today <= bounds.maxEnd;
   const todayPct = inRange
@@ -72,7 +74,7 @@ const Timeline: React.FC<Props> = ({ projects, bounds, yearOnly, year }) => {
           const color = statusColor(p.statusNorm);
           const isPlanned = p.statusNorm === 'planned';
           const isDone = p.statusNorm === 'done';
-          const barTitle = `${p.title} • ${fmtDate(s)} – ${fmtDate(e)} • Status: ${p.statusNorm} • Fortschritt: ${clamp(p.progress, 0, 100)}%`;
+          const barTitle = `${p.title} • ${fmtDate(s)} – ${fmtDate(e)} • Status: ${statusLabelDe(p.statusNorm)} • Fortschritt: ${clamp(p.progress, 0, 100)}%`;
 
           return (
             <div key={p.id} className="text-sm">
