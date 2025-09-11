@@ -45,7 +45,7 @@ const ProjectsTable: React.FC<Props> = ({ projects, year, yearOnly, plannedBudge
                 <tr key={p.id} className="border-t border-slate-200">
                   <td className="py-3 pr-4">
                     <div className="font-medium">{p.title}</div>
-                    <div className="text-slate-500 text-xs">{"Verantw.: "}{p.owner}</div>
+                    <div className="text-slate-500 text-xs">{"Verantwortlicher MA: "}{p.owner}</div>
                     <div className="text-slate-500 text-xs mt-1 max-w-md">{p.description}</div>
                   </td>
                   <td className="py-3 pr-4 whitespace-nowrap">{p.org || '-'}</td>
