@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect, Suspense, lazy } from 'react';
 import { Card, COLORS } from './ui';
 import { Project, NormalizedProject } from './types';
 import {
@@ -8,10 +8,10 @@ import {
   plannedBudgetForYearD, costsYTDForYearD,
 } from './lib';
 import FiltersPanel from './components/FiltersPanel';
-import ProjectsTable from './components/ProjectsTable';
-import BudgetDonut from './components/BudgetDonut';
-import ResourceBar from './components/ResourceBar';
-import BurndownChart from './components/BurndownChart';
+const ProjectsTable = lazy(() => import('./components/ProjectsTable'));
+const BudgetDonut = lazy(() => import('./components/BudgetDonut'));
+const ResourceBar = lazy(() => import('./components/ResourceBar'));
+const BurndownChart = lazy(() => import('./components/BurndownChart'));
 
 // Beispiel-Projektdaten
 const DEMO_PROJECTS: Project[] = [
@@ -221,27 +221,35 @@ export default function App() {
           <Card title="Budget (Jahr)">
             <div className="flex flex-col gap-2">
               <div className="text-sm text-slate-600">{new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR'}).format(kpis.costSum)} / {new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR'}).format(kpis.budgetPlannedSum)}</div>
-              <BudgetDonut spent={budgetSpent} remaining={budgetRemaining} />
+              <Suspense fallback={<div className="h-28 bg-slate-100 rounded animate-pulse" />}>
+                <BudgetDonut spent={budgetSpent} remaining={budgetRemaining} />
+              </Suspense>
             </div>
           </Card>
           <Card title="Ressourcen (aktueller Monat)">
-            <ResourceBar capacity={capacity} usedHours={kpis.usedHours} />
+            <Suspense fallback={<div className="h-48 bg-slate-100 rounded animate-pulse" />}>
+              <ResourceBar capacity={capacity} usedHours={kpis.usedHours} />
+            </Suspense>
             <div className="mt-2"><span className="text-sm text-slate-600">Ampel: </span><span className="text-sm" style={{ color: resourceRAG === 'red' ? '#dc2626' : resourceRAG === 'amber' ? '#f59e0b' : '#16a34a' }}>{resourceRAG.toUpperCase()}</span></div>
           </Card>
           <Card title="Burndown (Projekt p1)">
-            <BurndownChart data={burndown} />
+            <Suspense fallback={<div className="h-48 bg-slate-100 rounded animate-pulse" />}>
+              <BurndownChart data={burndown} />
+            </Suspense>
           </Card>
         </div>
 
-        <ProjectsTable
-          projects={filtered}
-          year={year}
-          yearOnly={yearOnly}
-          plannedBudgetForYearD={plannedBudgetForYearD as any}
-          costsYTDForYearD={costsYTDForYearD as any}
-          calcTimeRAGD={calcTimeRAGD as any}
-          calcBudgetRAG={calcBudgetRAG as any}
-        />
+        <Suspense fallback={<Card title="Projekte"><div className="h-32 bg-slate-100 rounded animate-pulse" /></Card>}>
+          <ProjectsTable
+            projects={filtered}
+            year={year}
+            yearOnly={yearOnly}
+            plannedBudgetForYearD={plannedBudgetForYearD as any}
+            costsYTDForYearD={costsYTDForYearD as any}
+            calcTimeRAGD={calcTimeRAGD as any}
+            calcBudgetRAG={calcBudgetRAG as any}
+          />
+        </Suspense>
 
         <Card>
           <div className="space-y-2">
@@ -286,4 +294,3 @@ export default function App() {
     </div>
   );
 }
-
