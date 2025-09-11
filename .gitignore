@@ -4,3 +4,6 @@ dist/
 *.log
 vite.config.d.ts
 
+
+vite.config.js
+
