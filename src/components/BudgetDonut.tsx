@@ -56,12 +56,12 @@ export const BudgetDonut: React.FC<Props> = ({ spent, remaining, height = 220 })
       <div className="mt-3 flex items-center justify-center gap-4 text-xs">
         <div className="flex items-center gap-2">
           <span className="inline-block w-2.5 h-2.5 rounded-full" style={{ backgroundColor: spentColor }} aria-hidden />
-          <span className="text-slate-700">Ausgegeben</span>
+          <span className="text-slate-700">{"Ausgegeben"}</span>
           <span className="text-slate-500">{fmt(spentSafe)} ({pct}%)</span>
         </div>
         <div className="flex items-center gap-2">
           <span className="inline-block w-2.5 h-2.5 rounded-full" style={{ backgroundColor: COLORS.slate }} aria-hidden />
-          <span className="text-slate-700">Verbleibend</span>
+          <span className="text-slate-700">{"Verbleibend"}</span>
           <span className="text-slate-500">{fmt(remSafe)}</span>
         </div>
       </div>
