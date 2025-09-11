@@ -3,7 +3,7 @@ import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Toolti
 
 export const ResourceBar: React.FC<{ capacity: number; usedHours: number }> = ({ capacity, usedHours }) => {
   const data = [
-    { name: 'Kapazit\u00E4t', Stunden: capacity },
+    { name: 'Kapazität', Stunden: capacity },
     { name: 'Geplant (akt. Monat)', Stunden: usedHours },
   ];
   return (
