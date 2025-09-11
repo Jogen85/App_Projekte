@@ -27,7 +27,6 @@ export const BudgetDonut: React.FC<Props> = ({ spent, remaining, height = 220 })
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none">
           <div className="text-center">
             <div className="text-3xl font-bold leading-tight">{pct}%</div>
-            <div className="text-xs text-slate-500">{fmt(spentSafe)} von {fmt(total)}</div>
           </div>
         </div>
         <ResponsiveContainer width="100%" height="100%">

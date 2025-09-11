@@ -268,7 +268,7 @@ export default function App() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          <Card title="Budget (Jahr)">
+          <Card title={`Budget (Jahr): ${new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR'}).format(kpis.budgetPlannedSum)}`}>
             <div className="flex flex-col gap-2">
               <Suspense fallback={<div className="h-56 bg-slate-100 rounded animate-pulse" />}>
                 <BudgetDonut spent={budgetSpent} remaining={budgetRemaining} height={240} />
