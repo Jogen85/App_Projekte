@@ -1,6 +1,6 @@
-import React, { useMemo, useState, useEffect, Suspense, lazy } from 'react';
+import React, { useEffect, useMemo, useState, Suspense, lazy } from 'react';
 import { Card, COLORS } from './ui';
-import { Project, NormalizedProject } from './types';
+import type { Project, NormalizedProject } from './types';
 import {
   toDate, fmtDate, today, currentYear, daysBetween, clamp,
   yearStart, yearEnd, overlapDays,
@@ -8,6 +8,7 @@ import {
   plannedBudgetForYearD, costsYTDForYearD,
 } from './lib';
 import FiltersPanel from './components/FiltersPanel';
+
 const ProjectsTable = lazy(() => import('./components/ProjectsTable'));
 const BudgetDonut = lazy(() => import('./components/BudgetDonut'));
 const ResourceBar = lazy(() => import('./components/ResourceBar'));
@@ -17,11 +18,11 @@ const BurndownChart = lazy(() => import('./components/BurndownChart'));
 const DEMO_PROJECTS: Project[] = [
   { id: 'p1', title: 'DMS Migration MBG (Cloud)', owner: 'Christian J.', description: 'Migration d.velop DMS in die Cloud inkl. Aktenpläne & Prozesse',
     status: 'active', start: '2025-05-01', end: '2025-12-15', progress: 65, budgetPlanned: 120000, costToDate: 70000, hoursPerMonth: 8, org: 'MBG' },
-  { id: 'p2', title: 'EXEC DMS Stabilisierung (BB)', owner: 'Christian J.', description: 'Stabilisierung & Performanceoptimierung EXEC DMS im RZ',
+  { id: 'p2', title: 'EXEC DMS Stabilisierung (BB)', owner: 'Christian J.', description: 'Stabilisierung & Performanceoptimierung EXEC DMS im Rechenzentrum',
     status: 'active', start: '2025-03-10', end: '2025-10-31', progress: 80, budgetPlanned: 60000, costToDate: 58000, hoursPerMonth: 6, org: 'BB' },
   { id: 'p3', title: 'E‑Rechnung 2025 (BB/MBG)', owner: 'Christian J.', description: 'Implementierung E‑Rechnungsprozesse (EXEC/FIDES & d.velop)',
     status: 'active', start: '2025-07-01', end: '2025-11-30', progress: 35, budgetPlanned: 40000, costToDate: 12000, hoursPerMonth: 4, org: 'BB/MBG' },
-  { id: 'p4', title: 'MPLS Redesign Rechenzentrum', owner: 'Christian J.', description: 'Neukonzeption MPLS/Edge inkl. Failover & Doku',
+  { id: 'p4', title: 'MPLS Redesign Rechenzentrum', owner: 'Christian J.', description: 'Neukonzeption MPLS/Edge inkl. Failover & Dokumentation',
     status: 'planned', start: '2025-11-01', end: '2026-02-28', progress: 0, budgetPlanned: 75000, costToDate: 0, hoursPerMonth: 6, org: 'BB' },
   { id: 'p5', title: 'Placetel‑Webex Migration', owner: 'Christian J.', description: 'Migrierte Telefonie/Collab‑Plattform inkl. Endgeräte',
     status: 'done', start: '2024-09-01', end: '2025-03-31', progress: 100, budgetPlanned: 15000, costToDate: 14500, hoursPerMonth: 0, org: 'BB' },
@@ -29,24 +30,60 @@ const DEMO_PROJECTS: Project[] = [
     status: 'planned', start: '2025-09-20', end: '2025-12-20', progress: 0, budgetPlanned: 10000, costToDate: 0, hoursPerMonth: 4, org: 'BB' },
 ];
 
-// CSV-Import/Export (einfacher Parser; für produktiv ggf. PapaParse)
-function parseCSV(text: string) {
-  const cleaned = text.replace(/\r/g, '').trim();
-  const lines = cleaned.split(/\n+/).filter((l) => l.trim().length > 0);
-  if (!lines.length) return [] as Project[];
-  const headerLine = lines[0];
-  const delim = headerLine.split(';').length > headerLine.split(',').length ? ';' : ',';
-  const headers = headerLine.split(delim).map((h) => h.trim().replace(/^"|"$/g, ''));
-  const idx = (k: string) => headers.findIndex((h) => h.toLowerCase() === k.toLowerCase());
+// Robustere CSV-Verarbeitung
+function detectDelimiter(header: string): ';' | ',' {
+  let sc = 0, cc = 0, inQ = false;
+  for (let i = 0; i < header.length; i++) {
+    const ch = header[i];
+    if (ch === '"') inQ = !inQ;
+    else if (!inQ && ch === ';') sc++;
+    else if (!inQ && ch === ',') cc++;
+  }
+  return sc >= cc ? ';' : ',';
+}
 
+function parseRecords(text: string, delim: ';' | ','): string[][] {
+  const out: string[][] = [];
+  let row: string[] = [];
+  let cell = '';
+  let inQ = false;
+  const s = text.replace(/\r/g, '');
+  for (let i = 0; i < s.length; i++) {
+    const ch = s[i];
+    if (inQ) {
+      if (ch === '"') {
+        if (s[i + 1] === '"') { cell += '"'; i++; }
+        else { inQ = false; }
+      } else { cell += ch; }
+    } else {
+      if (ch === '"') { inQ = true; }
+      else if (ch === delim) { row.push(cell.trim()); cell = ''; }
+      else if (ch === '\n') { row.push(cell.trim()); out.push(row); row = []; cell = ''; }
+      else { cell += ch; }
+    }
+  }
+  if (cell.length || row.length) { row.push(cell.trim()); out.push(row); }
+  return out.filter(r => r.length && r.some(c => c !== ''));
+}
+
+function parseCSV(text: string): Project[] {
+  if (!text) return [];
+  if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
+  const cleaned = text.replace(/\u0000/g, '');
+  const tmp = cleaned.split(/\n/)[0] || '';
+  const delim = detectDelimiter(tmp);
+  const records = parseRecords(cleaned, delim);
+  if (!records.length) return [];
+  const headers = records[0].map(h => h.trim().replace(/^"|"$/g, ''));
+  const idx = (k: string) => headers.findIndex(h => h.toLowerCase() === k.toLowerCase());
+  const req = ['id','title','owner','description','status','start','end','progress','budgetPlanned','costToDate','hoursPerMonth','org'];
+  if (!req.every(k => idx(k) >= 0)) {
+    throw new Error('CSV-Header unvollständig. Erwartet: ' + req.join(';'));
+  }
   const rows: Project[] = [];
-  for (let i = 1; i < lines.length; i++) {
-    const raw = lines[i].split(delim).map((x) => x.trim().replace(/^"|"$/g, ''));
-    if (!raw.length || raw.every((c) => c === '')) continue;
-    const get = (k: string, d: string = '') => {
-      const id = idx(k);
-      return id >= 0 ? raw[id] : d;
-    };
+  for (let i = 1; i < records.length; i++) {
+    const raw = records[i];
+    const get = (k: string, d = '') => { const j = idx(k); return j >= 0 && j < raw.length ? raw[j] : d; };
     const num = (v: any) => (v === '' || v == null ? 0 : Number(v));
     rows.push({
       id: get('id') || `row-${i}`,
@@ -65,6 +102,7 @@ function parseCSV(text: string) {
   }
   return rows;
 }
+
 function toCSV(projects: Project[]) {
   const header = ['id','title','owner','description','status','start','end','progress','budgetPlanned','costToDate','hoursPerMonth','org'].join(';');
   const lines = projects.map((p) => [p.id,p.title,p.owner,p.description,p.status,p.start,p.end,p.progress,p.budgetPlanned,p.costToDate,p.hoursPerMonth,p.org||''].map(String).join(';'));
@@ -78,6 +116,7 @@ export default function App() {
   const [orgFilter, setOrgFilter] = useState<string>('all');
   const [yearOnly, setYearOnly] = useState<boolean>(true);
   const [year, setYear] = useState<number>(currentYear);
+  const [csvError, setCsvError] = useState<string | null>(null);
 
   const normalized: NormalizedProject[] = useMemo(() =>
     projects.map((p) => ({
@@ -129,8 +168,8 @@ export default function App() {
     let budgetPlannedSum = 0; let costSum = 0;
     for (const p of base) {
       if (yearOnly) {
-        budgetPlannedSum += plannedBudgetForYearD(p, year);
-        costSum += costsYTDForYearD(p, year);
+        budgetPlannedSum += plannedBudgetForYearD(p as any, year);
+        costSum += costsYTDForYearD(p as any, year);
       } else {
         budgetPlannedSum += p.budgetPlanned || 0;
         costSum += p.costToDate || 0;
@@ -150,9 +189,14 @@ export default function App() {
 
   const onCSVUpload = async (file?: File) => {
     if (!file) return;
-    const text = await file.text();
-    const rows = parseCSV(text);
-    if (rows.length) setProjects(rows as Project[]);
+    try {
+      const text = await file.text();
+      const rows = parseCSV(text);
+      if (rows.length) setProjects(rows as Project[]);
+      setCsvError(null);
+    } catch (e: any) {
+      setCsvError(e?.message || 'CSV konnte nicht geladen werden.');
+    }
   };
   const downloadCSVTemplate = () => {
     const csv = toCSV(projects);
@@ -208,6 +252,12 @@ export default function App() {
             onDownloadTemplate={downloadCSVTemplate}
           />
         </header>
+
+        {csvError && (
+          <Card>
+            <div className="text-sm text-red-600">CSV konnte nicht verarbeitet werden: {csvError}</div>
+          </Card>
+        )}
 
         {/* KPI Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -294,3 +344,4 @@ export default function App() {
     </div>
   );
 }
+
