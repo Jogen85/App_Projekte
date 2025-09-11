@@ -23,7 +23,7 @@ const DEMO_PROJECTS: Project[] = [
     status: 'active', start: '2025-07-01', end: '2025-11-30', progress: 35, budgetPlanned: 40000, costToDate: 12000, hoursPerMonth: 4, org: 'BB/MBG' },
   { id: 'p4', title: 'MPLS Redesign Rechenzentrum', owner: 'Christian J.', description: 'Neukonzeption MPLS/Edge inkl. Failover & Dokumentation',
     status: 'planned', start: '2025-11-01', end: '2026-02-28', progress: 0, budgetPlanned: 75000, costToDate: 0, hoursPerMonth: 6, org: 'BB' },
-  { id: 'p5', title: 'Placetel\u2011Webex Migration', owner: 'Christian J.', description: 'Migrierte Telefonie/Collab\u2011Plattform inkl. Endgeräte',
+  { id: 'p5', title: 'Placetel‑Webex Migration', owner: 'Christian J.', description: 'Migrierte Telefonie/Collab‑Plattform inkl. Endgeräte',
     status: 'done', start: '2024-09-01', end: '2025-03-31', progress: 100, budgetPlanned: 15000, costToDate: 14500, hoursPerMonth: 0, org: 'BB' },
   { id: 'p6', title: 'Zentrales Monitoring (Grafana)', owner: 'Christian J.', description: 'Aufbau Dashboards für Kernsysteme & Alerts',
     status: 'planned', start: '2025-09-20', end: '2025-12-20', progress: 0, budgetPlanned: 10000, costToDate: 0, hoursPerMonth: 4, org: 'BB' },
@@ -218,8 +218,8 @@ export default function App() {
       <div className="max-w-7xl mx-auto space-y-6">
         <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <h1 className="text-2xl font-bold">IT-Projektübersicht (Demo)</h1>
-            <p className={`text-sm ${COLORS.subtext}`}>Portfolio-Überblick für Gesch\u00E4ftsf\u00FChrung & Aufsichtsrat \u2014 Stand: {fmtDate(today)}</p>
+            <h1 className="text-2xl font-bold">IT-Projekt&uuml;bersicht (Demo)</h1>
+            <p className={"text-sm " + COLORS.subtext}>Portfolio-&Uuml;berblick f&uuml;r Gesch&auml;ftsf&uuml;hrung &amp; Aufsichtsrat &mdash; Stand: {fmtDate(today)}</p>
             <a href="/admin" className="text-sm text-blue-600 hover:underline">Admin</a>
           </div>
           <FiltersPanel
@@ -287,11 +287,11 @@ export default function App() {
         <Card>
           <div className="space-y-2">
             <p className="text-xs text-slate-500">
-              {"Demo: Zahlen & Projekte sind fiktiv. Ampeln basieren auf einfachen Heuristiken (Zeit vs. Fortschritt, Budgetverbrauch, Ressourcengrenze)."}
-              {" Kapazitäts\u2011Grenze oben \u00E4nderbar (Standard 16h/Monat). Jahres\u2011Sicht pro\u2011rata (Tagesanteile) für Budget/Kosten."}
+              Demo: Zahlen & Projekte sind fiktiv. Ampeln basieren auf einfachen Heuristiken (Zeit vs. Fortschritt, Budgetverbrauch, Ressourcengrenze).
+              Kapazit&auml;ts-Grenze oben &auml;nderbar (Standard 16h/Monat). Jahres-Sicht pro-rata (Tagesanteile) f&uuml;r Budget/Kosten.
             </p>
             <details className="text-xs text-slate-500">
-              <summary className="cursor-pointer font-medium">{"CSV-Spalten (erwartet)"}</summary>
+              <summary className="cursor-pointer font-medium">CSV-Spalten (erwartet)</summary>
               <div className="mt-1">{"id; title; owner; description; status; start; end; progress; budgetPlanned; costToDate; hoursPerMonth; org"}</div>
             </details>
           </div>
@@ -326,4 +326,7 @@ export default function App() {
     </div>
   );
 }
+
+
+
 
