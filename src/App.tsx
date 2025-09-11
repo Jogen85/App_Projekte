@@ -4,6 +4,28 @@ import {
 } from "recharts";
 import { Card, Badge, Ampel, ProgressBar, COLORS } from "./ui";
 
+// --- Types ---
+export type Project = {
+  id: string;
+  title: string;
+  owner: string;
+  description: string;
+  status: "planned" | "active" | "done" | string;
+  start: string; // ISO or DD.MM.YYYY
+  end: string;   // ISO or DD.MM.YYYY
+  progress: number;
+  budgetPlanned: number;
+  costToDate: number;
+  hoursPerMonth: number;
+  org?: string;
+};
+type NormalizedProject = Project & {
+  startD: Date;
+  endD: Date;
+  orgNorm: string;
+  statusNorm: string;
+};
+
 /**
  * IT‑Projektübersicht Dashboard (Demo) — 2025 Year View + CSV Import + Org‑Filter (BB/MBG)
  */
@@ -47,7 +69,7 @@ const overlapDays = (aStart: any, aEnd: any, bStart: any, bEnd: any) => {
 };
 
 // Beispiel-Projektdaten
-const DEMO_PROJECTS = [
+const DEMO_PROJECTS: Project[] = [
   { id: "p1", title: "DMS Migration MBG (Cloud)", owner: "Christian J.", description: "Migration d.velop DMS in die Cloud inkl. Aktenpläne & Prozesse",
     status: "active", start: "2025-05-01", end: "2025-12-15", progress: 65, budgetPlanned: 120000, costToDate: 70000, hoursPerMonth: 8, org: "MBG" },
   { id: "p2", title: "EXEC DMS Stabilisierung (BB)", owner: "Christian J.", description: "Stabilisierung & Performanceoptimierung EXEC DMS im RZ",
@@ -145,14 +167,14 @@ function toCSV(projects: any[]) {
 }
 
 export default function App() {
-  const [projects, setProjects] = useState<any[]>(DEMO_PROJECTS);
+  const [projects, setProjects] = useState<Project[]>(DEMO_PROJECTS);
   const [capacity, setCapacity] = useState<number>(16);
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [orgFilter, setOrgFilter] = useState<string>("all");
   const [yearOnly, setYearOnly] = useState<boolean>(true);
   const [year, setYear] = useState<number>(currentYear);
 
-  const normalized = useMemo(() =>
+  const normalized = useMemo<NormalizedProject[]>(() =>
     projects.map((p) => ({
       ...p,
       startD: toDate(p.start),
@@ -241,7 +263,7 @@ export default function App() {
     if (!file) return;
     const text = await file.text();
     const rows = parseCSV(text);
-    if (rows.length) setProjects(rows as any[]);
+    if (rows.length) setProjects(rows as unknown as Project[]);
   };
   const downloadCSVTemplate = () => {
     const csv = toCSV(projects);
@@ -254,7 +276,7 @@ export default function App() {
     URL.revokeObjectURL(url);
   };
 
-  useEffect(() => {
+  useEffect(() => { if (!import.meta.env.DEV) return;
     try {
       const assert = (name: string, cond: boolean) => { if (!cond) throw new Error(name); console.info("✓", name); };
       const csv1 = ["id;title;owner;description;status;start;end;progress;budgetPlanned;costToDate;hoursPerMonth;org","1;Test A;CJ;Desc;ACTIVE;2025-01-01;2025-12-31;50;1000;500;4;BB"].join("\r\n");
