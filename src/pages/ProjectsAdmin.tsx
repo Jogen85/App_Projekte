@@ -139,7 +139,7 @@ const ProjectsAdmin: React.FC = () => {
     <div className={`min-h-screen ${COLORS.bg} ${COLORS.text} p-6`}>
       <div className="max-w-7xl mx-auto space-y-4">
         <header className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">Admin â€“ Projekte bearbeiten</h1>
+          <h1 className="text-2xl font-bold">Admin &ndash; Projekte bearbeiten</h1>
           <Link to="/" className="text-blue-600 hover:underline">Zum Dashboard</Link>
         </header>
 
@@ -167,8 +167,8 @@ const ProjectsAdmin: React.FC = () => {
                   <th className="py-2 pr-3">Start</th>
                   <th className="py-2 pr-3">Ende</th>
                   <th className="py-2 pr-3">% prog</th>
-                  <th className="py-2 pr-3">Budget â‚¬</th>
-                  <th className="py-2 pr-3">Kosten â‚¬</th>
+                  <th className="py-2 pr-3">Budget &euro;</th>
+                  <th className="py-2 pr-3">Kosten &euro;</th>
                   <th className="py-2 pr-3">Std/Monat</th>
                   <th className="py-2 pr-3">Org</th>
                 </tr>
@@ -206,6 +206,7 @@ const ProjectsAdmin: React.FC = () => {
 };
 
 export default ProjectsAdmin;
+
 
 
 
