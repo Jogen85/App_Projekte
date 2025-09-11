@@ -1,7 +1,7 @@
 import React from 'react';
 import { ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { Badge, Card, ProgressBar, Ampel, COLORS } from '../ui';
-import { fmtDate, clamp } from '../lib';
+import { fmtDate } from '../lib';
 import type { NormalizedProject } from '../types';
 
 type Props = {
@@ -93,4 +93,3 @@ const ProjectsTable: React.FC<Props> = ({ projects, year, yearOnly, plannedBudge
 };
 
 export default ProjectsTable;
-
