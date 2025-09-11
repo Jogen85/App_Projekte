@@ -1,5 +1,5 @@
 import React from 'react';
-import { ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from 'recharts';
 import { COLORS } from '../ui';
 
 type Props = {
@@ -25,20 +25,31 @@ export const BudgetDonut: React.FC<Props> = ({ spent, remaining, height = 220 })
   const inner = Math.max(outer - 26, 20);
   const fmt = (n: number) => new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(n);
 
-  return (
-    <div className="w-full" role="img" aria-label={`Budget Donut, ${pct}% ausgegeben`}>
-      <div className="relative mx-auto" style={{ height, maxWidth: height + 60 }}>
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none">
-          <div className="text-center">
-            <div className="text-3xl font-bold leading-tight">{pct}%</div>
-          </div>
+  const CustomTooltip = ({ active, payload }: any) => {
+    if (active && payload && payload.length) {
+      const item = payload[0];
+      const isSpent = String(item.name).toLowerCase() === 'ausgegeben';
+      const p = isSpent ? pct : 100 - pct;
+      return (
+        <div className="rounded-md bg-white px-2 py-1 text-xs shadow border border-slate-200">
+          <div className="font-medium text-slate-700">{item.name}</div>
+          <div className="text-slate-600">{p}%</div>
         </div>
+      );
+    }
+    return null;
+  };
+
+  return (
+    <div className="w-full" role="img" aria-label={`Budget Donut, Ausgegeben ${pct} Prozent`}>
+      <div className="relative mx-auto" style={{ height, maxWidth: height + 60 }}>
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie data={data} dataKey="value" nameKey="name" outerRadius={outer} innerRadius={inner} strokeWidth={0} isAnimationActive animationDuration={700}>
               <Cell fill={spentColor} />
               <Cell fill={COLORS.slate} />
             </Pie>
+            <Tooltip content={<CustomTooltip />} />
           </PieChart>
         </ResponsiveContainer>
       </div>

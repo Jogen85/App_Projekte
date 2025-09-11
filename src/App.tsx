@@ -275,7 +275,12 @@ export default function App() {
             <Suspense fallback={<div className="h-48 bg-slate-100 rounded animate-pulse" />}>
               <ResourceBar capacity={capacity} usedHours={kpis.usedHours} />
             </Suspense>
-            <div className="mt-2"><span className="text-sm text-slate-600">Ampel: </span><span className="text-sm" style={{ color: resourceRAG === 'red' ? '#dc2626' : resourceRAG === 'amber' ? '#f59e0b' : '#16a34a' }}>{resourceRAG.toUpperCase()}</span></div>
+            <div className="mt-2">
+              <span className="text-sm text-slate-600">Ampel: </span>
+              {(() => { const label = resourceRAG === 'red' ? 'rot' : resourceRAG === 'amber' ? 'gelb' : 'grün';
+                const color = resourceRAG === 'red' ? '#dc2626' : resourceRAG === 'amber' ? '#f59e0b' : '#16a34a';
+                return <span className="text-sm" style={{ color }}>{label}</span>; })()}
+            </div>
           </Card>
           <Card title="Burndown (Projekt p1)">
             <Suspense fallback={<div className="h-48 bg-slate-100 rounded animate-pulse" />}>
@@ -339,4 +344,3 @@ export default function App() {
     </div>
   );
 }
-
