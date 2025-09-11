@@ -162,7 +162,7 @@ const ProjectsAdmin: React.FC = () => {
                   <th className="py-2 pr-3">Aktion</th>
                   <th className="py-2 pr-3">ID</th>
                   <th className="py-2 pr-3">Titel</th>
-                  <th className="py-2 pr-3">Verantwortliche</th>
+                  <th className="py-2 pr-3">Verantwortlicher MA</th>
                   <th className="py-2 pr-3">Status</th>
                   <th className="py-2 pr-3">Start</th>
                   <th className="py-2 pr-3">Ende</th>
