@@ -139,3 +139,26 @@ Node 18+ empfohlen (Vite 5).
 - Admin-Editor (`/admin`): Inline-Tabelle, CSV Import/Export, `localStorage`-Speichern
 - ESLint/Prettier/Vitest/CI ergänzt
 - Vercel-Rewrite (`vercel.json`) für SPA-Routen
+
+## :bookmark_tabs: Zeitachse & i18n (Dokumentation)
+
+### Zeitachse (Gantt-ähnlich)
+- Farben: Laufend Blau (#1d4ed8), Geplant Gelb mit Schraffur, Abgeschlossen Dunkelgrau (#334155)
+- Fortschritt: hellblauer Overlay-Streifen nur für laufende Projekte
+- Legende: Laufend (Gesamt), Laufend (Fortschritt), Geplant (Schraffur), Abgeschlossen
+- Heute‑Linie: dünne vertikale Linie mit hoher Sichtbarkeit in jeder Zeile + unten an der Achse
+- Monatsticks: kurze Markierungen und Monatskürzel am Achsenfuß
+
+### UI-Sprache & Bezeichnungen
+- UI konsequent Deutsch. Beispiele:
+  - „Verantwortlicher MA“ (statt Owner)
+  - „Gesellschaft“ (statt Org)
+  - „Fortschritt %“ (statt % prog)
+  - Status-Anzeigen deutsch: „geplant“, „laufend“, „abgeschlossen“
+- Daten-CSV behält Statuswerte als planned|active|done (kleingeschrieben).
+
+### Changelog – Neu
+- Zeitachse als eigene Komponente mit Legende, Heute‑Linie und Monatsticks
+- Deutlichere Farben (inkl. dunkleres Grau für abgeschlossene Projekte)
+- Fortschritts-Overlay nur für laufende Projekte
+- UI deutsch konsolidiert (Tooltip „Status/Fortschritt“, Admin‑Spalten, Filterlabels)

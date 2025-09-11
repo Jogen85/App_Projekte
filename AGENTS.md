@@ -39,3 +39,23 @@ Tip: Use Node 18+ for Vite 5 compatibility.
 - Admin: Lightweight CSV editor available at `/admin` (inline grid, CSV import/export, localStorage persistence). Dashboard reads `localStorage.projects_json` if present.
 - Performance: Prefer memoized derived data (`useMemo`/`useCallback`) in frequently re-rendered components. Lazy-load heavy chart/table components.
 - Env: Add environment variables via Vite prefixed `VITE_` if/when needed.
+
+## UI Language & Labels
+- The UI language is German. Prefer consistent German labels across dashboard, tooltips and admin.
+- Status values in data remain `planned|active|done` (lowercase), but UI renders German labels `geplant|laufend|abgeschlossen`.
+- Column/field naming in UI:
+  - `Owner` → `Verantwortlicher MA`
+  - `Org` → `Gesellschaft`
+  - `% prog` → `Fortschritt %`
+- Filters: use `Status` with options `Alle`, `Geplant`, `Laufend`, `Abgeschlossen`; `Gesellschaft` for org filter; `CSV-Export` wording.
+
+## Timeline Guidelines
+- Component: `src/components/Timeline.tsx` is the single source for the timeline.
+- Colors & semantics:
+  - Active: Blue `#1d4ed8`
+  - Planned: Amber `#f59e0b` with 45° hatch (repeating-linear-gradient)
+  - Done: Dark slate `#334155`
+  - Progress overlay: light blue strip only for `active` (not for `done`)
+- Today marker: thin vertical line per row (high contrast) and a bottom axis marker labeled “Heute”.
+- Month ticks: short marks with abbreviated month labels along the bottom axis.
+- Accessibility: keep clear outlines/rings for contrast; provide `title`/`aria-label` with German text.
