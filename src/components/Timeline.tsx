@@ -25,7 +25,7 @@ function monthTicks(minStart: Date, maxEnd: Date) {
 }
 
 const statusColor = (status: string) =>
-  status === 'done' ? COLORS.slate : status === 'planned' ? COLORS.amber : COLORS.blue;
+  status === 'done' ? '#334155' /* slate-700, dunkler */ : status === 'planned' ? COLORS.amber : COLORS.blue;
 
 const Timeline: React.FC<Props> = ({ projects, bounds, yearOnly, year }) => {
   const inRange = today >= bounds.minStart && today <= bounds.maxEnd;
@@ -37,10 +37,14 @@ const Timeline: React.FC<Props> = ({ projects, bounds, yearOnly, year }) => {
   return (
     <Card title="Zeitachse (Gantt-ähnlich)">
       {/* Legende */}
-      <div className="flex justify-end mb-2 gap-4 text-xs text-slate-600">
+      <div className="flex flex-wrap justify-end mb-2 gap-x-5 gap-y-2 text-xs text-slate-600">
         <div className="flex items-center gap-2">
           <span className="inline-block w-4 h-3 rounded" style={{ backgroundColor: COLORS.blue }} />
-          <span>Laufend</span>
+          <span>Laufend (Gesamt)</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="inline-block w-4 h-3 rounded" style={{ backgroundColor: '#60a5fa' /* blue-400 */ }} />
+          <span>Laufend (Fortschritt)</span>
         </div>
         <div className="flex items-center gap-2">
           <span
@@ -54,12 +58,8 @@ const Timeline: React.FC<Props> = ({ projects, bounds, yearOnly, year }) => {
           <span>Geplant</span>
         </div>
         <div className="flex items-center gap-2">
-          <span className="inline-block w-4 h-3 rounded opacity-70" style={{ backgroundColor: COLORS.slate }} />
+          <span className="inline-block w-4 h-3 rounded" style={{ backgroundColor: '#334155' }} />
           <span>Abgeschlossen</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="inline-block w-4 h-3 rounded border border-white/70" style={{ backgroundColor: 'rgba(255,255,255,0.35)' }} />
-          <span>Fortschritt</span>
         </div>
       </div>
 
@@ -81,18 +81,14 @@ const Timeline: React.FC<Props> = ({ projects, bounds, yearOnly, year }) => {
                 <div className="text-slate-500">{fmtDate(s)} – {fmtDate(e)}</div>
               </div>
               <div className="w-full h-6 bg-slate-100 rounded relative overflow-hidden ring-1 ring-slate-200">
-                {/* Heute-Marker je Zeile */}
-                {todayPct !== null && (
-                  <div className="absolute top-0 bottom-0 w-px bg-rose-500/80" style={{ left: `${todayPct}%` }} aria-hidden />
-                )}
                 {/* Projekt-Balken */}
                 <div
                   className="h-6 rounded relative ring-1 ring-white/70 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
                   style={{
                     marginLeft: `${startOffset}%`,
                     width: `${widthPct}%`,
-                    backgroundColor: color,
-                    opacity: isDone ? 0.75 : 1,
+                    backgroundColor: isDone ? '#334155' : color,
+                    opacity: 1,
                     backgroundImage: isPlanned
                       ? 'repeating-linear-gradient(45deg, rgba(245,158,11,0.45) 0, rgba(245,158,11,0.45) 6px, rgba(245,158,11,0.15) 6px, rgba(245,158,11,0.15) 12px)'
                       : undefined,
@@ -103,12 +99,20 @@ const Timeline: React.FC<Props> = ({ projects, bounds, yearOnly, year }) => {
                 >
                   {p.statusNorm !== 'planned' && (
                     <div
-                      className="absolute top-0 left-0 h-full rounded border-l border-white/70"
-                      style={{ width: `${clamp(p.progress, 0, 100)}%`, backgroundColor: 'rgba(255,255,255,0.35)' }}
+                      className="absolute top-0 left-0 h-full rounded border-l border-white/60"
+                      style={{ width: `${clamp(p.progress, 0, 100)}%`, backgroundColor: 'rgba(96,165,250,0.9)' }}
                       aria-hidden
                     />
                   )}
                 </div>
+                {/* Heute-Marker je Zeile: nach dem Balken, mit hoher Sichtbarkeit */}
+                {todayPct !== null && (
+                  <div
+                    className="absolute top-0 bottom-0 w-[2px] z-20 bg-rose-600 outline outline-1 outline-white/60"
+                    style={{ left: `${todayPct}%` }}
+                    aria-hidden
+                  />
+                )}
               </div>
             </div>
           );
@@ -135,4 +139,3 @@ const Timeline: React.FC<Props> = ({ projects, bounds, yearOnly, year }) => {
 };
 
 export default Timeline;
-
