@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState, Suspense, lazy } from 'react';
+﻿import React, { useEffect, useMemo, useState, Suspense, lazy } from 'react';
 import { Card, COLORS } from './ui';
 import type { Project, NormalizedProject } from './types';
 import {
@@ -16,17 +16,17 @@ const BurndownChart = lazy(() => import('./components/BurndownChart'));
 
 // Beispiel-Projektdaten
 const DEMO_PROJECTS: Project[] = [
-  { id: 'p1', title: 'DMS Migration MBG (Cloud)', owner: 'Christian J.', description: 'Migration d.velop DMS in die Cloud inkl. Aktenpläne & Prozesse',
+  { id: 'p1', title: 'DMS Migration MBG (Cloud)', owner: 'Christian J.', description: 'Migration d.velop DMS in die Cloud inkl. AktenplÃ¤ne & Prozesse',
     status: 'active', start: '2025-05-01', end: '2025-12-15', progress: 65, budgetPlanned: 120000, costToDate: 70000, hoursPerMonth: 8, org: 'MBG' },
   { id: 'p2', title: 'EXEC DMS Stabilisierung (BB)', owner: 'Christian J.', description: 'Stabilisierung & Performanceoptimierung EXEC DMS im Rechenzentrum',
     status: 'active', start: '2025-03-10', end: '2025-10-31', progress: 80, budgetPlanned: 60000, costToDate: 58000, hoursPerMonth: 6, org: 'BB' },
-  { id: 'p3', title: 'E‑Rechnung 2025 (BB/MBG)', owner: 'Christian J.', description: 'Implementierung E‑Rechnungsprozesse (EXEC/FIDES & d.velop)',
+  { id: 'p3', title: 'Eâ€‘Rechnung 2025 (BB/MBG)', owner: 'Christian J.', description: 'Implementierung Eâ€‘Rechnungsprozesse (EXEC/FIDES & d.velop)',
     status: 'active', start: '2025-07-01', end: '2025-11-30', progress: 35, budgetPlanned: 40000, costToDate: 12000, hoursPerMonth: 4, org: 'BB/MBG' },
   { id: 'p4', title: 'MPLS Redesign Rechenzentrum', owner: 'Christian J.', description: 'Neukonzeption MPLS/Edge inkl. Failover & Dokumentation',
     status: 'planned', start: '2025-11-01', end: '2026-02-28', progress: 0, budgetPlanned: 75000, costToDate: 0, hoursPerMonth: 6, org: 'BB' },
-  { id: 'p5', title: 'Placetel‑Webex Migration', owner: 'Christian J.', description: 'Migrierte Telefonie/Collab‑Plattform inkl. Endgeräte',
+  { id: 'p5', title: 'Placetelâ€‘Webex Migration', owner: 'Christian J.', description: 'Migrierte Telefonie/Collabâ€‘Plattform inkl. EndgerÃ¤te',
     status: 'done', start: '2024-09-01', end: '2025-03-31', progress: 100, budgetPlanned: 15000, costToDate: 14500, hoursPerMonth: 0, org: 'BB' },
-  { id: 'p6', title: 'Zentrales Monitoring (Grafana)', owner: 'Christian J.', description: 'Aufbau Dashboards für Kernsysteme & Alerts',
+  { id: 'p6', title: 'Zentrales Monitoring (Grafana)', owner: 'Christian J.', description: 'Aufbau Dashboards fÃ¼r Kernsysteme & Alerts',
     status: 'planned', start: '2025-09-20', end: '2025-12-20', progress: 0, budgetPlanned: 10000, costToDate: 0, hoursPerMonth: 4, org: 'BB' },
 ];
 
@@ -69,7 +69,7 @@ function parseRecords(text: string, delim: ';' | ','): string[][] {
 function parseCSV(text: string): Project[] {
   if (!text) return [];
   if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
-  const cleaned = text.replace(/\u0000/g, '');
+  const cleaned = text.split(String.fromCharCode(0)).join('');
   const tmp = cleaned.split(/\n/)[0] || '';
   const delim = detectDelimiter(tmp);
   const records = parseRecords(cleaned, delim);
@@ -78,7 +78,7 @@ function parseCSV(text: string): Project[] {
   const idx = (k: string) => headers.findIndex(h => h.toLowerCase() === k.toLowerCase());
   const req = ['id','title','owner','description','status','start','end','progress','budgetPlanned','costToDate','hoursPerMonth','org'];
   if (!req.every(k => idx(k) >= 0)) {
-    throw new Error('CSV-Header unvollständig. Erwartet: ' + req.join(';'));
+    throw new Error('CSV-Header unvollstÃ¤ndig. Erwartet: ' + req.join(';'));
   }
   const rows: Project[] = [];
   for (let i = 1; i < records.length; i++) {
@@ -239,8 +239,8 @@ export default function App() {
       <div className="max-w-7xl mx-auto space-y-6">
         <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <h1 className="text-2xl font-bold">IT‑Projektübersicht (Demo)</h1>
-            <p className={`text-sm ${COLORS.subtext}`}>Portfolio‑Überblick für Geschäftsführung & Aufsichtsrat — Stand: {fmtDate(today)}</p>
+            <h1 className="text-2xl font-bold">ITâ€‘ProjektÃ¼bersicht (Demo)</h1>
+            <p className={`text-sm ${COLORS.subtext}`}>Portfolioâ€‘Ãœberblick fÃ¼r GeschÃ¤ftsfÃ¼hrung & Aufsichtsrat â€” Stand: {fmtDate(today)}</p>
           </div>
           <FiltersPanel
             capacity={capacity} setCapacity={setCapacity}
@@ -264,7 +264,7 @@ export default function App() {
           <Card title="Laufend"><div className="text-3xl font-semibold">{kpis.activeCount}</div></Card>
           <Card title="Geplant"><div className="text-3xl font-semibold">{kpis.plannedCount}</div></Card>
           <Card title="Abgeschlossen"><div className="text-3xl font-semibold">{kpis.doneCount}</div></Card>
-          <Card title="Kapazität (Monat)"><div className="text-3xl font-semibold">{capacity} h</div></Card>
+          <Card title="KapazitÃ¤t (Monat)"><div className="text-3xl font-semibold">{capacity} h</div></Card>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -305,17 +305,17 @@ export default function App() {
           <div className="space-y-2">
             <p className="text-xs text-slate-500">
               Demo: Zahlen & Projekte sind fiktiv. Ampeln basieren auf einfachen Heuristiken (Zeit vs. Fortschritt, Budgetverbrauch, Ressourcengrenze).
-              Kapazitäts‑Grenze oben änderbar (Standard 16h/Monat). Jahres‑Sicht pro‑rata (Tagesanteile) für Budget/Kosten.
+              KapazitÃ¤tsâ€‘Grenze oben Ã¤nderbar (Standard 16h/Monat). Jahresâ€‘Sicht proâ€‘rata (Tagesanteile) fÃ¼r Budget/Kosten.
             </p>
             <details className="text-xs text-slate-500">
-              <summary className="cursor-pointer font-medium">CSV‑Spalten (erwartet)</summary>
+              <summary className="cursor-pointer font-medium">CSVâ€‘Spalten (erwartet)</summary>
               <div className="mt-1">id; title; owner; description; status; start; end; progress; budgetPlanned; costToDate; hoursPerMonth; org</div>
             </details>
           </div>
         </Card>
 
         {/* Timeline */}
-        <Card title="Zeitachse (Gantt‑ähnlich)">
+        <Card title="Zeitachse (Ganttâ€‘Ã¤hnlich)">
           <div className="space-y-3">
             {filtered.map((p) => {
               const s = yearOnly ? new Date(Math.max(yearStart(year).getTime(), p.startD.getTime())) : p.startD;
@@ -327,10 +327,10 @@ export default function App() {
                 <div key={p.id} className="text-sm">
                   <div className="flex justify-between items-center mb-1">
                     <div className="font-medium">{p.title}</div>
-                    <div className="text-slate-500">{fmtDate(s)} – {fmtDate(e)}</div>
+                    <div className="text-slate-500">{fmtDate(s)} â€“ {fmtDate(e)}</div>
                   </div>
                   <div className="w-full h-6 bg-slate-100 rounded">
-                    <div className="h-6 rounded relative" style={{ marginLeft: `${startOffset}%`, width: `${widthPct}%`, backgroundColor: color }} title={`${fmtDate(s)} – ${fmtDate(e)}`}>
+                    <div className="h-6 rounded relative" style={{ marginLeft: `${startOffset}%`, width: `${widthPct}%`, backgroundColor: color }} title={`${fmtDate(s)} â€“ ${fmtDate(e)}`}>
                       {p.statusNorm !== 'planned' && (<div className="absolute top-0 left-0 h-6 bg-black/10 rounded" style={{ width: `${clamp(p.progress, 0, 100)}%` }} aria-hidden />)}
                     </div>
                   </div>
@@ -344,4 +344,5 @@ export default function App() {
     </div>
   );
 }
+
 
