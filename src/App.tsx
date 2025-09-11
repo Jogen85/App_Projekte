@@ -270,9 +270,8 @@ export default function App() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           <Card title="Budget (Jahr)">
             <div className="flex flex-col gap-2">
-              <div className="text-sm text-slate-600">{new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR'}).format(kpis.costSum)} / {new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR'}).format(kpis.budgetPlannedSum)}</div>
-              <Suspense fallback={<div className="h-28 bg-slate-100 rounded animate-pulse" />}>
-                <BudgetDonut spent={budgetSpent} remaining={budgetRemaining} />
+              <Suspense fallback={<div className="h-56 bg-slate-100 rounded animate-pulse" />}>
+                <BudgetDonut spent={budgetSpent} remaining={budgetRemaining} height={240} />
               </Suspense>
             </div>
           </Card>
@@ -344,6 +343,7 @@ export default function App() {
     </div>
   );
 }
+
 
 
 
