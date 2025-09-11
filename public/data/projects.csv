@@ -1,0 +1,6 @@
+id;title;owner;description;status;start;end;progress;budgetPlanned;costToDate;hoursPerMonth;org
+1;DMS Migration MBG (Cloud);Christian J.;Migration d.velop DMS in die Cloud;active;01.05.2025;15.12.2025;65;120000;70000;8;MBG
+2;EXEC DMS Stabilisierung (BB);Christian J.;Stabilisierung & Performanceoptimierung;active;10.03.2025;31.10.2025;80;60000;58000;6;BB
+3;E‑Rechnung 2025 (BB/MBG);Christian J.;Implementierung E‑Rechnungsprozesse;active;01.07.2025;30.11.2025;35;40000;12000;4;BB/MBG
+4;MPLS Redesign Rechenzentrum;Christian J.;Neukonzeption MPLS/Edge;planned;01.11.2025;28.02.2026;0;75000;0;6;BB
+5;Placetel‑Webex Migration;Christian J.;Telefonie/Collab‑Plattform;done;01.09.2024;31.03.2025;100;15000;14500;0;BB
