@@ -17,12 +17,4 @@
     '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
   },
   ignorePatterns: ['dist', 'node_modules'],
-  overrides: [
-    {
-      files: ['src/components/TrafficLight3D.tsx'],
-      rules: {
-        'react/no-unknown-property': 'off',
-      },
-    },
-  ],
 };

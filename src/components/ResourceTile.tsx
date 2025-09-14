@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import ResourceBar from './ResourceBar';
-import TrafficLight3D, { type TrafficState } from './TrafficLight3D';
+import TrafficLight, { type TrafficState } from './TrafficLight';
 
 export type ResourceTileProps = {
   capacity: number;
@@ -9,19 +9,18 @@ export type ResourceTileProps = {
   height?: number;
 };
 
-export default function ResourceTile({ capacity, usedHours, rag, height = 320 }: ResourceTileProps) {
+export default function ResourceTile({ capacity, usedHours, rag, height = 200 }: ResourceTileProps) {
   const state: TrafficState = useMemo(() => rag, [rag]);
   return (
     <div className="w-full">
-      <div className="flex items-stretch gap-4" style={{ height }}>
-        <div className="hidden sm:block w-36 shrink-0">
-          <TrafficLight3D state={state} height={height} ariaLabel={`Ressourcen-Ampel: ${rag}`} />
+      <div className="flex items-center gap-4" style={{ height }}>
+        <div className="w-12 shrink-0 flex justify-center">
+          <TrafficLight state={state} size="sm" ariaLabel={`Ressourcen-Ampel: ${rag}`} />
         </div>
-        <div className="flex-1 min-w-0">
+        <div className="flex-1 min-w-0 h-full">
           <ResourceBar capacity={capacity} usedHours={usedHours} height={height} />
         </div>
       </div>
     </div>
   );
 }
-

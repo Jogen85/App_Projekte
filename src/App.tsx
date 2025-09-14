@@ -9,7 +9,6 @@ import {
 } from './lib';
 import FiltersPanel from './components/FiltersPanel';
 import Timeline from './components/Timeline';
-import ErrorBoundary from './components/ErrorBoundary';
 
 const ProjectsTable = lazy(() => import('./components/ProjectsTable'));
 const BudgetDonut = lazy(() => import('./components/BudgetDonut'));
@@ -257,11 +256,9 @@ export default function App() {
             </div>
           </Card>
           <Card title={"Ressourcen (aktueller Monat)"}>
-            <ErrorBoundary fallback={<div className="h-80 bg-slate-100 rounded animate-pulse" /> }>
-              <Suspense fallback={<div className="h-80 bg-slate-100 rounded animate-pulse" />}>
-                <ResourceTile capacity={capacity} usedHours={kpis.usedHours} rag={resourceRAG as any} height={320} />
-              </Suspense>
-            </ErrorBoundary>
+            <Suspense fallback={<div className="h-56 bg-slate-100 rounded animate-pulse" />}>
+              <ResourceTile capacity={capacity} usedHours={kpis.usedHours} rag={resourceRAG as any} height={200} />
+            </Suspense>
           </Card>
           <Card title={"Burndown (Projekt p1)"}>
             <Suspense fallback={<div className="h-48 bg-slate-100 rounded animate-pulse" />}>
