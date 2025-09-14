@@ -13,7 +13,7 @@ import Timeline from './components/Timeline';
 const ProjectsTable = lazy(() => import('./components/ProjectsTable'));
 const BudgetDonut = lazy(() => import('./components/BudgetDonut'));
 const ResourceTile = lazy(() => import('./components/ResourceTile'));
-const BurndownChart = lazy(() => import('./components/BurndownChart'));
+const ProgressDelta = lazy(() => import('./components/ProgressDelta'));
 
 const DEMO_PROJECTS: Project[] = [
   { id: 'p1', title: 'DMS Migration MBG (Cloud)', owner: 'Christian J.', description: 'Migration d.velop DMS in die Cloud inkl. Aktenpläne & Prozesse',
@@ -208,11 +208,7 @@ export default function App() {
 
   const budgetSpent = Math.min(kpis.costSum, kpis.budgetPlannedSum);
   const budgetRemaining = Math.max(kpis.budgetPlannedSum - kpis.costSum, 0);
-  const burndown = useMemo(() => {
-    const ideal = [60, 50, 40, 30, 20, 10, 0];
-    const actual = [60, 52, 45, 37, 28, 21, 8];
-    return ideal.map((v, i) => ({ Woche: i, Ideal: v, Ist: actual[i] }));
-  }, []);
+  // Burndown entfernt; Soll-Ist-Kachel ersetzt die Darstellung
 
   return (
     <div className={`min-h-screen ${COLORS.bg} ${COLORS.text} p-6`}>
@@ -260,9 +256,9 @@ export default function App() {
               <ResourceTile capacity={capacity} usedHours={kpis.usedHours} rag={resourceRAG as any} height={190} />
             </Suspense>
           </Card>
-          <Card title={"Burndown (Projekt p1)"} className="h-72">
+          <Card title={"SollIst-Fortschritt"} className="h-72">
             <Suspense fallback={<div className="h-48 bg-slate-100 rounded animate-pulse" />}>
-              <BurndownChart data={burndown} height={190} />
+              <ProgressDelta projects={filtered as any} height={190} />
             </Suspense>
           </Card>
         </div>
