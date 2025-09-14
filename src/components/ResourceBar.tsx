@@ -1,13 +1,13 @@
 import React from 'react';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 
-export const ResourceBar: React.FC<{ capacity: number; usedHours: number }> = ({ capacity, usedHours }) => {
+export const ResourceBar: React.FC<{ capacity: number; usedHours: number; height?: number }> = ({ capacity, usedHours, height = 192 }) => {
   const data = [
     { name: 'Kapazität', Stunden: capacity },
     { name: 'Geplant (akt. Monat)', Stunden: usedHours },
   ];
   return (
-    <div className="h-48">
+    <div style={{ height }}>
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
           <CartesianGrid strokeDasharray="3 3" />

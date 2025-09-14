@@ -12,6 +12,7 @@ import Timeline from './components/Timeline';
 
 const ProjectsTable = lazy(() => import('./components/ProjectsTable'));
 const BudgetDonut = lazy(() => import('./components/BudgetDonut'));
+const ResourceTile = lazy(() => import('./components/ResourceTile'));
 const ResourceBar = lazy(() => import('./components/ResourceBar'));
 const BurndownChart = lazy(() => import('./components/BurndownChart'));
 
@@ -256,6 +257,10 @@ export default function App() {
             </div>
           </Card>
           <Card title={"Ressourcen (aktueller Monat)"}>
+            <Suspense fallback={<div className="h-80 bg-slate-100 rounded animate-pulse" />}>
+              <ResourceTile capacity={capacity} usedHours={kpis.usedHours} rag={resourceRAG as any} height={320} />
+            </Suspense>
+            <div className="hidden">
             <Suspense fallback={<div className="h-48 bg-slate-100 rounded animate-pulse" />}>
               <ResourceBar capacity={capacity} usedHours={kpis.usedHours} />
             </Suspense>
@@ -265,6 +270,7 @@ export default function App() {
                 const color = resourceRAG === 'red' ? '#dc2626' : resourceRAG === 'amber' ? '#f59e0b' : '#16a34a';
                 return <span className="text-sm" style={{ color }}>{label}</span>; })()}
             </div>
+          </div>
           </Card>
           <Card title={"Burndown (Projekt p1)"}>
             <Suspense fallback={<div className="h-48 bg-slate-100 rounded animate-pulse" />}>
