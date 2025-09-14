@@ -8,7 +8,7 @@ type Props = {
   height?: number; // px height for the tile chart area
 };
 
-export const BudgetDonut: React.FC<Props> = ({ spent, remaining, height = 220 }) => {
+export const BudgetDonut: React.FC<Props> = ({ spent, remaining, height = 190 }) => {
   const spentSafe = Math.max(0, spent);
   const remSafe = Math.max(0, remaining);
   const total = Math.max(1, spentSafe + remSafe);

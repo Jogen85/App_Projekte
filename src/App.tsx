@@ -249,22 +249,20 @@ export default function App() {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           <Card title={`Budget (Jahr): ${new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR'}).format(kpis.budgetPlannedSum)}`} className="h-72">
-            <div className="flex flex-col gap-2 h-full">
-              <Suspense fallback={<div className="h-full bg-slate-100 rounded animate-pulse" />}>
-                <BudgetDonut spent={budgetSpent} remaining={budgetRemaining} height={220} />
+            <div className="flex flex-col gap-2">
+              <Suspense fallback={<div className="h-48 bg-slate-100 rounded animate-pulse" />}>
+                <BudgetDonut spent={budgetSpent} remaining={budgetRemaining} height={190} />
               </Suspense>
             </div>
           </Card>
           <Card title={"Ressourcen (aktueller Monat)"} className="h-72">
-            <div className="h-full">
-              <Suspense fallback={<div className="h-full bg-slate-100 rounded animate-pulse" />}>
-                <ResourceTile capacity={capacity} usedHours={kpis.usedHours} rag={resourceRAG as any} />
-              </Suspense>
-            </div>
+            <Suspense fallback={<div className="h-48 bg-slate-100 rounded animate-pulse" />}>
+              <ResourceTile capacity={capacity} usedHours={kpis.usedHours} rag={resourceRAG as any} height={190} />
+            </Suspense>
           </Card>
           <Card title={"Burndown (Projekt p1)"} className="h-72">
-            <Suspense fallback={<div className="h-full bg-slate-100 rounded animate-pulse" />}>
-              <BurndownChart data={burndown} />
+            <Suspense fallback={<div className="h-48 bg-slate-100 rounded animate-pulse" />}>
+              <BurndownChart data={burndown} height={190} />
             </Suspense>
           </Card>
         </div>
