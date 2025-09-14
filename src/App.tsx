@@ -184,6 +184,26 @@ export default function App() {
 
   const resourceRAG = calcResourceRAG(kpis.usedHours, capacity);
 
+  // Progress filter (Soll–Ist)
+  const [progressFilter, setProgressFilter] = useState<'all'|'behind'|'ontrack'|'ahead'>('all');
+  const categoryForProject = (p: NormalizedProject): 'behind'|'ontrack'|'ahead' => {
+    const total = Math.max(1, daysBetween(p.startD, p.endD));
+    const now = today;
+    let elapsed = daysBetween(p.startD, now);
+    if (now < p.startD) elapsed = 0;
+    if (now > p.endD) elapsed = total;
+    const soll = Math.max(0, Math.min(100, (elapsed / total) * 100));
+    const ist = Math.max(0, Math.min(100, p.progress || 0));
+    const delta = ist - soll;
+    if (delta < -10) return 'behind';
+    if (delta > 10) return 'ahead';
+    return 'ontrack';
+  };
+  const filteredByProgress = useMemo(() => {
+    if (progressFilter === 'all') return filtered;
+    return filtered.filter((p) => categoryForProject(p as any) === progressFilter);
+  }, [filtered, progressFilter]);
+
   const onCSVUpload = async (file?: File) => {
     if (!file) return;
     try {
@@ -256,16 +276,19 @@ export default function App() {
               <ResourceTile capacity={capacity} usedHours={kpis.usedHours} rag={resourceRAG as any} height={190} />
             </Suspense>
           </Card>
-          <Card title={"SollIst-Fortschritt"} className="h-72">
+          <Card title={"Soll–Ist-Fortschritt"} className="h-72">
             <Suspense fallback={<div className="h-48 bg-slate-100 rounded animate-pulse" />}>
-              <ProgressDelta projects={filtered as any} height={190} />
+              <ProgressDelta projects={filtered as any} height={190}
+                onSelectCategory={(c) => setProgressFilter((prev) => prev === c ? 'all' : c)}
+                selectedCategory={progressFilter === 'all' ? null : progressFilter}
+              />
             </Suspense>
           </Card>
         </div>
 
         <Suspense fallback={<Card title={"Projekte"}><div className="h-32 bg-slate-100 rounded animate-pulse" /></Card>}>
           <ProjectsTable
-            projects={filtered}
+            projects={filteredByProgress}
             year={year}
             yearOnly={yearOnly}
             plannedBudgetForYearD={plannedBudgetForYearD as any}

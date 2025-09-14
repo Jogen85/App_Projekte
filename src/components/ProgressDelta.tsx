@@ -5,11 +5,13 @@ import { today, daysBetween, fmtDate } from '../lib';
 export type ProgressDeltaProps = {
   projects: NormalizedProject[];
   height?: number;
+  onSelectCategory?: (cat: 'behind' | 'ontrack' | 'ahead') => void;
+  selectedCategory?: 'behind' | 'ontrack' | 'ahead' | null;
 };
 
 function clamp(n: number, min = 0, max = 100) { return Math.max(min, Math.min(max, n)); }
 
-export default function ProgressDelta({ projects, height = 190 }: ProgressDeltaProps) {
+export default function ProgressDelta({ projects, height = 190, onSelectCategory, selectedCategory = null }: ProgressDeltaProps) {
   const data = useMemo(() => {
     const list: Array<{
       id: string;
@@ -46,18 +48,18 @@ export default function ProgressDelta({ projects, height = 190 }: ProgressDeltaP
   return (
     <div className="w-full" style={{ height }}>
       <div className="grid grid-cols-3 gap-2 text-center mb-3">
-        <div className="rounded-md bg-red-50 text-red-700 py-2">
+        <button type="button" onClick={() => onSelectCategory?.('behind')} className={`rounded-md py-2 transition-colors ${selectedCategory==='behind' ? 'ring-2 ring-red-400 bg-red-100 text-red-800' : 'bg-red-50 text-red-700 hover:bg-red-100'}`}>
           <div className="text-xs">Hinter Plan</div>
           <div className="text-lg font-semibold">{data.behind.length}</div>
-        </div>
-        <div className="rounded-md bg-amber-50 text-amber-700 py-2">
+        </button>
+        <button type="button" onClick={() => onSelectCategory?.('ontrack')} className={`rounded-md py-2 transition-colors ${selectedCategory==='ontrack' ? 'ring-2 ring-amber-400 bg-amber-100 text-amber-800' : 'bg-amber-50 text-amber-700 hover:bg-amber-100'}`}>
           <div className="text-xs">Im Plan</div>
           <div className="text-lg font-semibold">{data.ontrack.length}</div>
-        </div>
-        <div className="rounded-md bg-green-50 text-green-700 py-2">
+        </button>
+        <button type="button" onClick={() => onSelectCategory?.('ahead')} className={`rounded-md py-2 transition-colors ${selectedCategory==='ahead' ? 'ring-2 ring-green-400 bg-green-100 text-green-800' : 'bg-green-50 text-green-700 hover:bg-green-100'}`}>
           <div className="text-xs">Vor Plan</div>
           <div className="text-lg font-semibold">{data.ahead.length}</div>
-        </div>
+        </button>
       </div>
 
       <div className="text-xs text-slate-600 mb-1">Top 3 Verzögerungen</div>
@@ -81,4 +83,3 @@ export default function ProgressDelta({ projects, height = 190 }: ProgressDeltaP
     </div>
   );
 }
-
