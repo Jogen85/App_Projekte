@@ -56,20 +56,39 @@ function bezelStyle(): React.CSSProperties {
 export default function TrafficLight({ state, className, size = 'sm', ariaLabel }: Props) {
   const on = (k: TrafficState) => state === k;
   const wrap = size === 'sm' ? 'w-11 h-28 p-1.5' : 'w-14 h-32 p-2';
+  const ring = size === 'sm' ? 'w-8 h-8 p-[1px]' : 'w-9 h-9 p-[1px]';
   const bezel = size === 'sm' ? 'w-7 h-7 p-[2px]' : 'w-8 h-8 p-[3px]';
   const lens = 'rounded-full w-full h-full';
   const rimShadow = 'inset 0 1px 2px rgba(255,255,255,0.06), 0 1px 3px rgba(0,0,0,0.35)';
+  const ringStyle: React.CSSProperties = {
+    backgroundImage: [
+      'radial-gradient(circle at 50% 35%, rgba(255,255,255,0.65) 0%, rgba(255,255,255,0.0) 48%)',
+      'conic-gradient(from 200deg, #cbd5e1, #f8fafc 20%, #cbd5e1 40%, #64748b 60%, #cbd5e1 80%, #f1f5f9)'
+    ].join(','),
+    boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.45), inset 0 -1px 1px rgba(0,0,0,0.35)'
+  };
   return (
     <div className={className} role="img" aria-label={ariaLabel || `Ampel ${state}`}>
-      <div className={`rounded-xl ${wrap} flex flex-col items-center justify-between`} style={bezelStyle()}>
-        <div className={`rounded-full ${bezel}`} style={{ background: 'linear-gradient(180deg,#101826,#0b1220)', boxShadow: rimShadow }}>
-          <div className={lens} style={lensStyle('red', on('red'))} />
+      <div className={`relative overflow-hidden rounded-xl ${wrap} flex flex-col items-center justify-between`} style={bezelStyle()}>
+        {/* side gloss overlay */}
+        <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(90deg, rgba(255,255,255,0.08) 10%, rgba(255,255,255,0) 35% 65%, rgba(255,255,255,0.06) 90%)' }} />
+
+        <div className={`rounded-full ${ring}`} style={ringStyle}>
+          <div className={`rounded-full ${bezel}`} style={{ background: 'linear-gradient(180deg,#101826,#0b1220)', boxShadow: rimShadow }}>
+            <div className={lens} style={lensStyle('red', on('red'))} />
+          </div>
         </div>
-        <div className={`rounded-full ${bezel}`} style={{ background: 'linear-gradient(180deg,#101826,#0b1220)', boxShadow: rimShadow }}>
-          <div className={lens} style={lensStyle('amber', on('amber'))} />
+
+        <div className={`rounded-full ${ring}`} style={ringStyle}>
+          <div className={`rounded-full ${bezel}`} style={{ background: 'linear-gradient(180deg,#101826,#0b1220)', boxShadow: rimShadow }}>
+            <div className={lens} style={lensStyle('amber', on('amber'))} />
+          </div>
         </div>
-        <div className={`rounded-full ${bezel}`} style={{ background: 'linear-gradient(180deg,#101826,#0b1220)', boxShadow: rimShadow }}>
-          <div className={lens} style={lensStyle('green', on('green'))} />
+
+        <div className={`rounded-full ${ring}`} style={ringStyle}>
+          <div className={`rounded-full ${bezel}`} style={{ background: 'linear-gradient(180deg,#101826,#0b1220)', boxShadow: rimShadow }}>
+            <div className={lens} style={lensStyle('green', on('green'))} />
+          </div>
         </div>
       </div>
     </div>
