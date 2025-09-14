@@ -12,9 +12,17 @@ type Props = {
   costsYTDForYearD: (p: any, y: number) => number;
   calcTimeRAGD: (p: any) => 'green' | 'amber' | 'red' | string;
   calcBudgetRAG: (p: any) => 'green' | 'amber' | 'red' | string;
+  highlightId?: string | null;
 };
 
-const ProjectsTable: React.FC<Props> = ({ projects, year, yearOnly, plannedBudgetForYearD, costsYTDForYearD, calcTimeRAGD, calcBudgetRAG }) => {
+const ProjectsTable: React.FC<Props> = ({ projects, year, yearOnly, plannedBudgetForYearD, costsYTDForYearD, calcTimeRAGD, calcBudgetRAG, highlightId = null }) => {
+  React.useEffect(() => {
+    if (!highlightId) return;
+    const el = document.getElementById(`proj-${highlightId}`);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [highlightId]);
   return (
     <Card title={"Projekte"}>
       <div className="overflow-x-auto">
@@ -41,8 +49,9 @@ const ProjectsTable: React.FC<Props> = ({ projects, year, yearOnly, plannedBudge
               const timeRAG = calcTimeRAGD(p as any);
               const budgetRAG = calcBudgetRAG(p as any);
               const resttage = Math.max(0, Math.round((p.endD.getTime() - Date.now()) / (1000 * 60 * 60 * 24)));
+              const isHL = highlightId === p.id;
               return (
-                <tr key={p.id} className="border-t border-slate-200">
+                <tr key={p.id} id={`proj-${p.id}`} className={`border-t border-slate-200 ${isHL ? 'bg-sky-50' : ''}`}>
                   <td className="py-3 pr-4">
                     <div className="font-medium">{p.title}</div>
                     <div className="text-slate-500 text-xs">{"Verantwortlicher MA: "}{p.owner}</div>

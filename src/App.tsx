@@ -186,7 +186,9 @@ export default function App() {
 
   // Progress filter (Soll–Ist)
   const [progressFilter, setProgressFilter] = useState<'all'|'behind'|'ontrack'|'ahead'>('all');
-  const categoryForProject = (p: NormalizedProject): 'behind'|'ontrack'|'ahead' => {
+  const [progressTolerance, setProgressTolerance] = useState<number>(10);
+  const [highlightProjectId, setHighlightProjectId] = useState<string | null>(null);
+  const categoryForProject = React.useCallback((p: NormalizedProject): 'behind'|'ontrack'|'ahead' => {
     const total = Math.max(1, daysBetween(p.startD, p.endD));
     const now = today;
     let elapsed = daysBetween(p.startD, now);
@@ -195,14 +197,15 @@ export default function App() {
     const soll = Math.max(0, Math.min(100, (elapsed / total) * 100));
     const ist = Math.max(0, Math.min(100, p.progress || 0));
     const delta = ist - soll;
-    if (delta < -10) return 'behind';
-    if (delta > 10) return 'ahead';
+    const tol = Math.max(0, Math.min(50, progressTolerance));
+    if (delta < -tol) return 'behind';
+    if (delta > tol) return 'ahead';
     return 'ontrack';
-  };
+  }, [progressTolerance]);
   const filteredByProgress = useMemo(() => {
     if (progressFilter === 'all') return filtered;
     return filtered.filter((p) => categoryForProject(p as any) === progressFilter);
-  }, [filtered, progressFilter]);
+  }, [filtered, progressFilter, categoryForProject]);
 
   const onCSVUpload = async (file?: File) => {
     if (!file) return;
@@ -281,12 +284,25 @@ export default function App() {
               <ProgressDelta projects={filtered as any} height={190}
                 onSelectCategory={(c) => setProgressFilter((prev) => prev === c ? 'all' : c)}
                 selectedCategory={progressFilter === 'all' ? null : progressFilter}
+                tolerance={progressTolerance}
+                onChangeTolerance={(t) => setProgressTolerance(isNaN(t) ? 10 : t)}
+                onSelectProject={(id) => setHighlightProjectId(id)}
               />
             </Suspense>
           </Card>
         </div>
 
         <Suspense fallback={<Card title={"Projekte"}><div className="h-32 bg-slate-100 rounded animate-pulse" /></Card>}>
+          {progressFilter !== 'all' && (
+            <div className="mb-2 flex items-center justify-between text-xs rounded border border-slate-200 bg-slate-50 px-3 py-2">
+              <div>
+                Filter aktiv: Soll–Ist {progressFilter === 'behind' ? 'Hinter Plan' : progressFilter === 'ontrack' ? 'Im Plan' : 'Vor Plan'} (±{progressTolerance} pp)
+              </div>
+              <button className="px-2 py-1 rounded border border-slate-300 hover:bg-white" onClick={() => { setProgressFilter('all'); setHighlightProjectId(null); }}>
+                Zurücksetzen
+              </button>
+            </div>
+          )}
           <ProjectsTable
             projects={filteredByProgress}
             year={year}
@@ -295,6 +311,7 @@ export default function App() {
             costsYTDForYearD={costsYTDForYearD as any}
             calcTimeRAGD={calcTimeRAGD as any}
             calcBudgetRAG={calcBudgetRAG as any}
+            highlightId={highlightProjectId}
           />
         </Suspense>
 
