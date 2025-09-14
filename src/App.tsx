@@ -255,10 +255,12 @@ export default function App() {
               </Suspense>
             </div>
           </Card>
-          <Card title={"Ressourcen (aktueller Monat)"}>
-            <Suspense fallback={<div className="h-56 bg-slate-100 rounded animate-pulse" />}>
-              <ResourceTile capacity={capacity} usedHours={kpis.usedHours} rag={resourceRAG as any} height={200} />
-            </Suspense>
+          <Card title={"Ressourcen (aktueller Monat)"} className="h-64 sm:h-72">
+            <div className="h-full">
+              <Suspense fallback={<div className="h-full bg-slate-100 rounded animate-pulse" />}>
+                <ResourceTile capacity={capacity} usedHours={kpis.usedHours} rag={resourceRAG as any} />
+              </Suspense>
+            </div>
           </Card>
           <Card title={"Burndown (Projekt p1)"}>
             <Suspense fallback={<div className="h-48 bg-slate-100 rounded animate-pulse" />}>

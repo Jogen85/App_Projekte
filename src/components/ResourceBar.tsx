@@ -1,7 +1,7 @@
 import React from 'react';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 
-export const ResourceBar: React.FC<{ capacity: number; usedHours: number; height?: number }> = ({ capacity, usedHours, height = 192 }) => {
+export const ResourceBar: React.FC<{ capacity: number; usedHours: number; height?: number | string }> = ({ capacity, usedHours, height = '100%' }) => {
   const data = [
     { name: 'Kapazität', Stunden: capacity },
     { name: 'Geplant (akt. Monat)', Stunden: usedHours },
@@ -23,3 +23,4 @@ export const ResourceBar: React.FC<{ capacity: number; usedHours: number; height
 };
 
 export default ResourceBar;
+
