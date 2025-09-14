@@ -71,6 +71,31 @@ function TrafficLight({ state }: { state: TrafficState }) {
 }
 
 export default function TrafficLight3D({ state, ariaLabel, className, height = 280 }: Props) {
+  const isClient = typeof window !== 'undefined';
+  const hasGL = (() => {
+    if (!isClient) return false;
+    try {
+      const c = document.createElement('canvas');
+      return !!(c.getContext('webgl') || c.getContext('experimental-webgl'));
+    } catch { return false; }
+  })();
+
+  if (!hasGL) {
+    // Fallback: einfache, visuell ansprechende 2D-Ampel (CSS)
+    const on = (k: TrafficState) => state === k;
+    return (
+      <div className={className} style={{ height }} aria-label={ariaLabel || `Ampel ${state}`}>
+        <div className="h-full w-full flex items-center justify-center">
+          <div className="w-24 h-[80%] rounded-lg shadow-inner bg-slate-800 p-2 flex flex-col justify-between" role="img" aria-label={ariaLabel || `Ampel ${state}`}>
+            <div className={`aspect-square rounded-full ${on('red') ? 'bg-red-600' : 'bg-red-900'} shadow`} />
+            <div className={`aspect-square rounded-full ${on('amber') ? 'bg-amber-400' : 'bg-amber-900'} shadow`} />
+            <div className={`aspect-square rounded-full ${on('green') ? 'bg-green-600' : 'bg-green-900'} shadow`} />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={className} style={{ height }} aria-label={ariaLabel || `Ampel ${state}`}>
       <Canvas camera={{ position: [3.5, 2.5, 6.5], fov: 35 }}>
