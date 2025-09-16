@@ -1,8 +1,9 @@
 import React, { Suspense, lazy, useEffect, useMemo, useState } from 'react';
 import { Card, COLORS } from './ui';
+import { parseProjectsCSV, projectsToCSV } from './lib/csv';
 import type { Project, NormalizedProject } from './types';
 import {
-  toDate, fmtDate, today, currentYear, daysBetween,
+  toDate, fmtDate, getToday, getCurrentYear, daysBetween,
   yearStart, yearEnd, overlapDays,
   calcTimeRAGD, calcBudgetRAG, calcResourceRAG,
   plannedBudgetForYearD, costsYTDForYearD,
@@ -24,94 +25,20 @@ const DEMO_PROJECTS: Project[] = [
     status: 'active', start: '2025-07-01', end: '2025-11-30', progress: 35, budgetPlanned: 40000, costToDate: 12000, hoursPerMonth: 4, org: 'BB/MBG' },
   { id: 'p4', title: 'MPLS Redesign Rechenzentrum', owner: 'Christian J.', description: 'Neukonzeption MPLS/Edge inkl. Failover & Dokumentation',
     status: 'planned', start: '2025-11-01', end: '2026-02-28', progress: 0, budgetPlanned: 75000, costToDate: 0, hoursPerMonth: 6, org: 'BB' },
-  { id: 'p5', title: 'Placetel‑Webex Migration', owner: 'Christian J.', description: 'Migrierte Telefonie/Collab‑Plattform inkl. Endgeräte',
+  { id: 'p5', title: 'Placetel-Webex Migration', owner: 'Christian J.', description: 'Migrierte Telefonie/Collab-Plattform inkl. Endgeräte',
     status: 'done', start: '2024-09-01', end: '2025-03-31', progress: 100, budgetPlanned: 15000, costToDate: 14500, hoursPerMonth: 0, org: 'BB' },
   { id: 'p6', title: 'Zentrales Monitoring (Grafana)', owner: 'Christian J.', description: 'Aufbau Dashboards für Kernsysteme & Alerts',
     status: 'planned', start: '2025-09-20', end: '2025-12-20', progress: 0, budgetPlanned: 10000, costToDate: 0, hoursPerMonth: 4, org: 'BB' },
 ];
 
-function detectDelimiter(header: string): ';' | ',' {
-  let sc = 0, cc = 0, inQ = false;
-  for (let i = 0; i < header.length; i++) {
-    const ch = header[i];
-    if (ch === '"') inQ = !inQ;
-    else if (!inQ && ch === ';') sc++;
-    else if (!inQ && ch === ',') cc++;
-  }
-  return sc >= cc ? ';' : ',';
-}
-function parseRecords(text: string, delim: ';' | ','): string[][] {
-  const out: string[][] = [];
-  let row: string[] = [];
-  let cell = '';
-  let inQ = false;
-  const s = text.replace(/\r/g, '');
-  for (let i = 0; i < s.length; i++) {
-    const ch = s[i];
-    if (inQ) {
-      if (ch === '"') {
-        if (s[i + 1] === '"') { cell += '"'; i++; }
-        else { inQ = false; }
-      } else { cell += ch; }
-    } else {
-      if (ch === '"') { inQ = true; }
-      else if (ch === delim) { row.push(cell.trim()); cell = ''; }
-      else if (ch === '\n') { row.push(cell.trim()); out.push(row); row = []; cell = ''; }
-      else { cell += ch; }
-    }
-  }
-  if (cell.length || row.length) { row.push(cell.trim()); out.push(row); }
-  return out.filter(r => r.length && r.some(c => c !== ''));
-}
-function parseCSV(text: string): Project[] {
-  if (!text) return [];
-  if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
-  const cleaned = text.split(String.fromCharCode(0)).join('');
-  const headerLine = (cleaned.split(/\n/)[0] || '').trim();
-  const delim = detectDelimiter(headerLine);
-  const records = parseRecords(cleaned, delim);
-  if (!records.length) return [];
-  const headers = records[0].map(h => h.trim().replace(/^"|"$/g, ''));
-  const idx = (k: string) => headers.findIndex(h => h.toLowerCase() === k.toLowerCase());
-  const req = ['id','title','owner','description','status','start','end','progress','budgetPlanned','costToDate','hoursPerMonth','org'];
-  if (!req.every(k => idx(k) >= 0)) {
-    throw new Error('CSV-Header unvollständig. Erwartet: ' + req.join(';'));
-  }
-  const rows: Project[] = [];
-  for (let i = 1; i < records.length; i++) {
-    const raw = records[i];
-    const get = (k: string, d = '') => { const j = idx(k); return j >= 0 && j < raw.length ? raw[j] : d; };
-    const num = (v: any) => (v === '' || v == null ? 0 : Number(v));
-    rows.push({
-      id: get('id') || `row-${i}`,
-      title: get('title'),
-      owner: get('owner'),
-      description: get('description'),
-      status: (get('status') || '').toLowerCase() || 'planned',
-      start: get('start'),
-      end: get('end'),
-      progress: num(get('progress')),
-      budgetPlanned: num(get('budgetPlanned')),
-      costToDate: num(get('costToDate')),
-      hoursPerMonth: num(get('hoursPerMonth')),
-      org: get('org') || 'BB',
-    });
-  }
-  return rows;
-}
-function toCSV(projects: Project[]) {
-  const header = ['id','title','owner','description','status','start','end','progress','budgetPlanned','costToDate','hoursPerMonth','org'].join(';');
-  const lines = projects.map((p) => [p.id,p.title,p.owner,p.description,p.status,p.start,p.end,p.progress,p.budgetPlanned,p.costToDate,p.hoursPerMonth,p.org||''].map(String).join(';'));
-  return [header, ...lines].join('\n');
-}
-
 export default function App() {
+  const today = getToday();
   const [projects, setProjects] = useState<Project[]>(DEMO_PROJECTS);
   const [capacity, setCapacity] = useState<number>(16);
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [orgFilter, setOrgFilter] = useState<string>('all');
   const [yearOnly, setYearOnly] = useState<boolean>(true);
-  const [year, setYear] = useState<number>(currentYear);
+  const [year, setYear] = useState<number>(() => getCurrentYear());
   const [csvError, setCsvError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -184,7 +111,7 @@ export default function App() {
 
   const resourceRAG = calcResourceRAG(kpis.usedHours, capacity);
 
-  // Progress filter (Soll–Ist)
+  // Progress filter (Soll-Ist)
   const [progressFilter, setProgressFilter] = useState<'all'|'behind'|'ontrack'|'ahead'>('all');
   const [progressTolerance, setProgressTolerance] = useState<number>(10);
   const [highlightProjectId, setHighlightProjectId] = useState<string | null>(null);
@@ -211,7 +138,7 @@ export default function App() {
     if (!file) return;
     try {
       const text = await file.text();
-      const rows = parseCSV(text);
+      const rows = parseProjectsCSV(text);
       if (rows.length) setProjects(rows as Project[]);
       setCsvError(null);
     } catch (e: any) {
@@ -219,7 +146,7 @@ export default function App() {
     }
   };
   const downloadCSVTemplate = () => {
-    const csv = toCSV(projects);
+    const csv = projectsToCSV(projects);
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -232,6 +159,7 @@ export default function App() {
   const budgetSpent = Math.min(kpis.costSum, kpis.budgetPlannedSum);
   const budgetRemaining = Math.max(kpis.budgetPlannedSum - kpis.costSum, 0);
   // Burndown entfernt; Soll-Ist-Kachel ersetzt die Darstellung
+
 
   return (
     <div className={`min-h-screen ${COLORS.bg} ${COLORS.text} p-6`}>
@@ -279,7 +207,7 @@ export default function App() {
               <ResourceTile capacity={capacity} usedHours={kpis.usedHours} rag={resourceRAG as any} height={190} />
             </Suspense>
           </Card>
-          <Card title={"Soll–Ist-Fortschritt"} className="h-72">
+          <Card title={"Soll-Ist-Fortschritt"} className="h-72">
             <Suspense fallback={<div className="h-48 bg-slate-100 rounded animate-pulse" />}>
               <ProgressDelta projects={filtered as any} height={190}
                 onSelectCategory={(c) => setProgressFilter((prev) => prev === c ? 'all' : c)}
@@ -296,7 +224,7 @@ export default function App() {
           {progressFilter !== 'all' && (
             <div className="mb-2 flex items-center justify-between text-xs rounded border border-slate-200 bg-slate-50 px-3 py-2">
               <div>
-                Filter aktiv: Soll–Ist {progressFilter === 'behind' ? 'Hinter Plan' : progressFilter === 'ontrack' ? 'Im Plan' : 'Vor Plan'} (±{progressTolerance} pp)
+                Filter aktiv: Soll-Ist {progressFilter === 'behind' ? 'Hinter Plan' : progressFilter === 'ontrack' ? 'Im Plan' : 'Vor Plan'} (±{progressTolerance} pp)
               </div>
               <button className="px-2 py-1 rounded border border-slate-300 hover:bg-white" onClick={() => { setProgressFilter('all'); setHighlightProjectId(null); }}>
                 Zurücksetzen

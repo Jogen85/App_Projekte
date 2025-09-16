@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import type { NormalizedProject } from '../types';
-import { today, daysBetween, fmtDate } from '../lib';
+import { getToday, daysBetween, fmtDate } from '../lib';
 
 export type ProgressDeltaProps = {
   projects: NormalizedProject[];
@@ -27,7 +27,7 @@ export default function ProgressDelta({ projects, height = 190, onSelectCategory
       status: string;
     }> = [];
 
-    const t = today;
+    const t = getToday();
     for (const p of projects) {
       if (!p.startD || !p.endD) continue;
       const total = Math.max(1, daysBetween(p.startD, p.endD));

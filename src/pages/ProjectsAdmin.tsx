@@ -2,78 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import type { Project } from '../types';
 import { Card, COLORS } from '../ui';
-
-// Minimal CSV helpers (simplified, mirrors App.tsx logic)
-function detectDelimiter(header: string): ';' | ',' {
-  let sc = 0, cc = 0, inQ = false;
-  for (let i = 0; i < header.length; i++) {
-    const ch = header[i];
-    if (ch === '"') inQ = !inQ;
-    else if (!inQ && ch === ';') sc++;
-    else if (!inQ && ch === ',') cc++;
-  }
-  return sc >= cc ? ';' : ',';
-}
-function parseRecords(text: string, delim: ';' | ','): string[][] {
-  const out: string[][] = [];
-  let row: string[] = [];
-  let cell = '';
-  let inQ = false;
-  const s = text.replace(/\r/g, '');
-  for (let i = 0; i < s.length; i++) {
-    const ch = s[i];
-    if (inQ) {
-      if (ch === '"') {
-        if (s[i + 1] === '"') { cell += '"'; i++; }
-        else { inQ = false; }
-      } else { cell += ch; }
-    } else {
-      if (ch === '"') { inQ = true; }
-      else if (ch === delim) { row.push(cell.trim()); cell = ''; }
-      else if (ch === '\n') { row.push(cell.trim()); out.push(row); row = []; cell = ''; }
-      else { cell += ch; }
-    }
-  }
-  if (cell.length || row.length) { row.push(cell.trim()); out.push(row); }
-  return out.filter(r => r.length && r.some(c => c !== ''));
-}
-function parseCSV(text: string): Project[] {
-  if (!text) return [];
-  if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
-  const cleaned = text.split(String.fromCharCode(0)).join('');
-  const headerLine = (cleaned.split(/\n/)[0] || '').trim();
-  const delim = detectDelimiter(headerLine);
-  const records = parseRecords(cleaned, delim);
-  if (!records.length) return [];
-  const headers = records[0].map(h => h.trim().replace(/^"|"$/g, ''));
-  const idx = (k: string) => headers.findIndex(h => h.toLowerCase() === k.toLowerCase());
-  const rows: Project[] = [];
-  for (let i = 1; i < records.length; i++) {
-    const raw = records[i];
-    const get = (k: string, d = '') => { const j = idx(k); return j >= 0 && j < raw.length ? raw[j] : d; };
-    const num = (v: any) => (v === '' || v == null ? 0 : Number(v));
-    rows.push({
-      id: get('id') || `row-${i}`,
-      title: get('title'),
-      owner: get('owner'),
-      description: get('description'),
-      status: (get('status') || '').toLowerCase() || 'planned',
-      start: get('start'),
-      end: get('end'),
-      progress: num(get('progress')),
-      budgetPlanned: num(get('budgetPlanned')),
-      costToDate: num(get('costToDate')),
-      hoursPerMonth: num(get('hoursPerMonth')),
-      org: get('org') || 'BB',
-    });
-  }
-  return rows;
-}
-function toCSV(projects: Project[]) {
-  const header = ['id','title','owner','description','status','start','end','progress','budgetPlanned','costToDate','hoursPerMonth','org'].join(';');
-  const lines = projects.map((p) => [p.id,p.title,p.owner,p.description,p.status,p.start,p.end,p.progress,p.budgetPlanned,p.costToDate,p.hoursPerMonth,p.org||''].map(String).join(';'));
-  return [header, ...lines].join('\n');
-}
+import { parseProjectsCSV, projectsToCSV } from '../lib/csv';
 
 const emptyProject = (): Project => ({
   id: `p-${Math.random().toString(36).slice(2,8)}`,
@@ -96,7 +25,7 @@ const ProjectsAdmin: React.FC = () => {
         const res = await fetch('/data/projects.csv');
         if (res.ok) {
           const text = await res.text();
-          setProjects(parseCSV(text));
+          try { setProjects(parseProjectsCSV(text)); } catch (err) { setMsg((err as Error)?.message || 'CSV konnte nicht geladen werden.'); }
         }
       } catch (e) { /* ignore */ }
     })();
@@ -104,14 +33,18 @@ const ProjectsAdmin: React.FC = () => {
 
   const onImportCSV = async (file?: File) => {
     if (!file) return;
-    const text = await file.text();
-    const rows = parseCSV(text);
-    setProjects(rows);
-    setDirty(true);
-    setMsg(`CSV importiert: ${rows.length} Zeilen`);
+    try {
+      const text = await file.text();
+      const rows = parseProjectsCSV(text);
+      setProjects(rows);
+      setDirty(true);
+      setMsg(`CSV importiert: ${rows.length} Zeilen`);
+    } catch (err) {
+      setMsg((err as Error)?.message || 'CSV konnte nicht geladen werden.');
+    }
   };
   const onExportCSV = () => {
-    const csv = toCSV(projects);
+    const csv = projectsToCSV(projects);
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');

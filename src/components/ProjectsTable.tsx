@@ -63,7 +63,7 @@ const ProjectsTable: React.FC<Props> = ({ projects, year, yearOnly, plannedBudge
                     {p.statusNorm === 'planned' && <Badge tone="amber">{"geplant"}</Badge>}
                     {p.statusNorm === 'done' && <Badge tone="slate">{"abgeschlossen"}</Badge>}
                   </td>
-                  <td className="py-3 pr-4 whitespace-nowrap">{fmtDate(p.startD)} – {fmtDate(p.endD)}</td>
+                  <td className="py-3 pr-4 whitespace-nowrap">{fmtDate(p.startD)} - {fmtDate(p.endD)}</td>
                   <td className="py-3 pr-4">
                     {p.statusNorm === 'done' ? <span className="text-slate-500">{"abgeschlossen"}</span> : <><div>{resttage} {"Tage"}</div><div className="text-xs text-slate-500">{"bis "}{fmtDate(p.endD)}</div></>}
                   </td>

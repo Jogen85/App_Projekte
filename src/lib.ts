@@ -1,6 +1,6 @@
 // Date and math helpers
-export const today = new Date();
-export const currentYear = today.getFullYear();
+export const getToday = () => new Date();
+export const getCurrentYear = () => getToday().getFullYear();
 
 export const toDate = (s: any): Date => {
   if (s instanceof Date) return s;
@@ -43,10 +43,11 @@ export const overlapDays = (aStart: any, aEnd: any, bStart: any, bEnd: any) => {
 export function calcTimeRAGD(p: { startD: Date; endD: Date; progress: number }) {
   const start = p.startD; const end = p.endD;
   const total = Math.max(1, end.getTime() - start.getTime());
-  const elapsed = clamp(today.getTime() - start.getTime(), 0, total);
+  const now = getToday();
+  const elapsed = clamp(now.getTime() - start.getTime(), 0, total);
   const expected = Math.round((elapsed / total) * 100);
   const delta = (p.progress || 0) - expected;
-  if (today > end && (p.progress || 0) < 100) return 'red';
+  if (now > end && (p.progress || 0) < 100) return 'red';
   if (delta < -15) return 'red';
   if (delta < -5) return 'amber';
   return 'green';
@@ -72,9 +73,10 @@ export function plannedBudgetForYearD(p: { startD: Date; endD: Date; budgetPlann
   return (p.budgetPlanned || 0) * (overlap / projectDaySpanD(p));
 }
 export function costsYTDForYearD(p: { startD: Date; endD: Date; costToDate: number }, y: number) {
-  const elapsedEnd = new Date(Math.min(today.getTime(), p.endD.getTime()));
+  const now = getToday();
+  const elapsedEnd = new Date(Math.min(now.getTime(), p.endD.getTime()));
   const elapsedDays = Math.max(1, daysBetween(p.startD, elapsedEnd));
-  const yEnd = y === today.getFullYear() ? elapsedEnd : yearEnd(y);
+  const yEnd = y === now.getFullYear() ? elapsedEnd : yearEnd(y);
   const yOverlap = overlapDays(p.startD, elapsedEnd, yearStart(y), yEnd);
   return (p.costToDate || 0) * (yOverlap / elapsedDays);
 }

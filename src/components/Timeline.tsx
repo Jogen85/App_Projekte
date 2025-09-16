@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { Card, COLORS } from '../ui';
-import { daysBetween, yearStart, yearEnd, fmtDate, clamp, today } from '../lib';
+import { daysBetween, yearStart, yearEnd, fmtDate, clamp, getToday } from '../lib';
 import type { NormalizedProject } from '../types';
 
 type Props = {
@@ -30,9 +30,10 @@ const statusColor = (status: string) =>
 const statusLabelDe = (s: string) => (s === 'planned' ? 'geplant' : s === 'done' ? 'abgeschlossen' : 'laufend');
 
 const Timeline: React.FC<Props> = ({ projects, bounds, yearOnly, year }) => {
-  const inRange = today >= bounds.minStart && today <= bounds.maxEnd;
+  const now = getToday();
+  const inRange = now >= bounds.minStart && now <= bounds.maxEnd;
   const todayPct = inRange
-    ? clamp(Math.round((daysBetween(bounds.minStart, today) / Math.max(1, bounds.totalDays)) * 100), 0, 100)
+    ? clamp(Math.round((daysBetween(bounds.minStart, now) / Math.max(1, bounds.totalDays)) * 100), 0, 100)
     : null;
   const ticks = useMemo(() => monthTicks(bounds.minStart, bounds.maxEnd), [bounds.minStart, bounds.maxEnd]);
 
