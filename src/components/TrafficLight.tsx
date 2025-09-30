@@ -8,7 +8,7 @@ type Props = {
 };
 
 export default function TrafficLight({ state, className, size = 'sm', ariaLabel }: Props) {
-  const dotSize = size === 'sm' ? 20 : 24;
+  const dotSize = size === 'sm' ? 32 : 40;
 
   // Modern status badge colors (GitHub/Slack/Linear style)
   const colors = {
