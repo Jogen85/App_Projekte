@@ -84,7 +84,7 @@ export default function App() {
     const maxEnd = new Date(Math.max(...base.map((p) => p.endD.getTime())));
     const totalDays = daysBetween(minStart, maxEnd) || 1;
     return { minStart, maxEnd, totalDays };
-  }, [filtered, normalized, yearOnly, year]);
+  }, [filtered, normalized, yearOnly, year, today]);
 
   const kpis = useMemo(() => {
     const base = yearOnly ? normalized.filter((p) => overlapsYearD(p, year)) : normalized;
@@ -103,11 +103,12 @@ export default function App() {
     }
     const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
     const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+    // Nur aktive Projekte zählen für Ressourcen-Auslastung (nicht geplante/abgeschlossene)
     const usedHours = normalized
-      .filter((p) => p.endD >= monthStart && p.startD <= monthEnd)
+      .filter((p) => p.statusNorm === 'active' && p.endD >= monthStart && p.startD <= monthEnd)
       .reduce((s, p) => s + (p.hoursPerMonth || 0), 0);
     return { activeCount: active.length, plannedCount: planned.length, doneCount: done.length, budgetPlannedSum, costSum, usedHours };
-  }, [normalized, yearOnly, year]);
+  }, [normalized, yearOnly, year, today]);
 
   const resourceRAG = calcResourceRAG(kpis.usedHours, capacity);
 
@@ -128,7 +129,7 @@ export default function App() {
     if (delta < -tol) return 'behind';
     if (delta > tol) return 'ahead';
     return 'ontrack';
-  }, [progressTolerance]);
+  }, [progressTolerance, today]);
   const filteredByProgress = useMemo(() => {
     if (progressFilter === 'all') return filtered;
     return filtered.filter((p) => categoryForProject(p as any) === progressFilter);
@@ -156,8 +157,9 @@ export default function App() {
     URL.revokeObjectURL(url);
   };
 
-  const budgetSpent = Math.min(kpis.costSum, kpis.budgetPlannedSum);
-  const budgetRemaining = Math.max(kpis.budgetPlannedSum - kpis.costSum, 0);
+  // Budget-Anzeige: Überschreitungen müssen transparent sein
+  const budgetSpent = kpis.costSum;
+  const budgetRemaining = kpis.budgetPlannedSum - kpis.costSum;
   // Burndown entfernt; Soll-Ist-Kachel ersetzt die Darstellung
 
 
