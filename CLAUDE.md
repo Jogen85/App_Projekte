@@ -108,31 +108,33 @@ IT Portfolio Dashboard – React/TypeScript/Vite SPA for executive project overs
 - **Green**: Otherwise
 - **Important**: Only active projects count towards used hours (excludes planned/done)
 
-## Critical Business Logic Fixes (Completed)
+## Critical Business Logic Fixes (All ✅ Implemented)
 
-### Budget Overspend Transparency (eb3c411)
+### Budget Overspend Transparency (2025-09-30, eb3c411) ✅
 **Problem**: Budget donut used `Math.min(kpis.costSum, kpis.budgetPlannedSum)` which capped display at 100%, hiding critical overspend from executives.
 
-**Solution**:
+**Solution** (✅ Implemented):
 - Removed Math.min/Math.max capping in App.tsx budget calculation
-- BudgetDonut now detects `remaining < 0` and shows:
+- BudgetDonut detects `remaining < 0` (line 14) and shows:
   - Red warning banner with precise overspend amount and percentage
   - Donut segments: Budget (threshold-colored) + Überschreitung (dark red)
   - Legend changes from "Verbleibend" to "Überschreitung"
 - 14 comprehensive tests added (BudgetDonut.test.tsx)
 
-### Resource Calculation Fix (eb3c411)
+### Resource Calculation Fix (2025-09-30, eb3c411) ✅
 **Problem**: Resource calculation included all projects (planned/done) which inflated capacity usage.
 
-**Solution**:
-- App.tsx line 107: Added `p.statusNorm === 'active'` filter
+**Solution** (✅ Implemented):
+- App.tsx line 108: Filter `p.statusNorm === 'active'` applied
 - Only active projects count towards current month resource utilization
 - More realistic capacity planning for GF oversight
 
-### React Hooks Dependencies (eb3c411)
+### React Hooks Dependencies (2025-09-30, eb3c411) ✅
 **Problem**: Missing `today` in useMemo/useCallback dependencies could cause stale date-based calculations.
 
-**Solution**: Added `today` to dependency arrays in App.tsx (lines 87, 110, 131)
+**Solution** (✅ Implemented):
+- `today` added to dependency arrays in App.tsx (lines 87, 111, 132)
+- All date-based calculations use fresh today value
 
 ## Timeline & Visualization
 
@@ -204,23 +206,31 @@ IT Portfolio Dashboard – React/TypeScript/Vite SPA for executive project overs
 
 ## Recent Changes & Evolution
 
-### Budget Transparency & Fachliche Fixes (2025-01-30)
+### Budget Transparency & Fachliche Fixes (2025-09-30, eb3c411) ✅
 - **Critical**: Budget overspend now visible to GF/Aufsichtsrat (red banner, correct donut segments)
 - **Critical**: Resource calculation only counts active projects (realistic capacity view)
 - React Hooks dependencies fixed (today in useMemo/useCallback)
 - 55 new tests added (CSV parser, RAG edge cases, budget overspend scenarios)
+- **All implementation points already applied in code**
 
-### Soll–Ist Feature (Before eb3c411)
+### Status Indicator Modernization (2025-09-30, b751ed7) ✅
+- Replaced 3D bezel traffic light with modern status badge
+- 32px dot with ping animation (only red pulses)
+- GitHub/Slack/Linear inspired design
+- Container optimized to w-16 (no overflow issues)
+- Tailwind native `animate-ping` used
+
+### Soll–Ist Feature (2025-09-14, c9ec3ed)
 - Replaced Burndown with ProgressDelta card
 - Clickable categories filter ProjectsTable
 - Adjustable tolerance for "on-track" band
 - Top 3 delays with click-to-scroll highlighting
 
-### Status Indicator Modernization (b751ed7)
-- Replaced 3D bezel traffic light with modern status badge
-- 32px dot with ping animation (only red pulses)
-- GitHub/Slack/Linear inspired design
-- Container optimized to w-16 (no overflow issues)
+### i18n & German Labels (2025-09-11 - 2025-09-16)
+- All UI text converted to German
+- "Verantwortlicher MA", "Gesellschaft", "Fortschritt %"
+- Status labels: "geplant", "laufend", "abgeschlossen"
+- German month abbreviations in timeline
 
 ## Known Considerations
 
@@ -236,10 +246,21 @@ IT Portfolio Dashboard – React/TypeScript/Vite SPA for executive project overs
 - Some legacy HTML entities in README (`&uuml;`, `&auml;`, etc.) for historical compatibility
 - All source code files are UTF-8 encoded
 
-## Important Implementation Notes
+## Important Implementation Notes (All ✅ Applied)
 
-1. **Budget overspend detection**: Check `remaining < 0`, not just color thresholds
-2. **Resource calculation**: Always filter for `statusNorm === 'active'`
-3. **Date dependencies**: Include `today` in all date-based useMemo/useCallback
-4. **Test ResizeObserver**: Mock required for Recharts components in tests
-5. **Status badge**: Use Tailwind native `animate-ping`, not custom keyframes
+These best practices are **already implemented** in the current codebase:
+
+1. ✅ **Budget overspend detection**: Check `remaining < 0`, not just color thresholds
+   - Implemented: BudgetDonut.tsx line 14
+
+2. ✅ **Resource calculation**: Always filter for `statusNorm === 'active'`
+   - Implemented: App.tsx line 108
+
+3. ✅ **Date dependencies**: Include `today` in all date-based useMemo/useCallback
+   - Implemented: App.tsx lines 87, 111, 132
+
+4. ✅ **Test ResizeObserver**: Mock required for Recharts components in tests
+   - Implemented: src/test/setup.ts lines 4-8
+
+5. ✅ **Status badge**: Use Tailwind native `animate-ping`, not custom keyframes
+   - Implemented: TrafficLight.tsx line 38

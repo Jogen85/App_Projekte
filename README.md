@@ -219,36 +219,45 @@ npm run build
 
 ## 🗒️ Wichtige Änderungen & Fixes
 
-### ✅ Budget-Transparenz & Fachliche Fixes (2025-01-30, Commit eb3c411)
-**Kritisch für GF/Aufsichtsrat-Oversight**:
+### ✅ Budget-Transparenz & Fachliche Fixes (2025-09-30, eb3c411)
+**Kritisch für GF/Aufsichtsrat-Oversight** – Alle Fixes implementiert ✅:
 
 1. **Budget-Überschreitung transparent**
    - **Problem**: `Math.min()` cappte Anzeige bei 100%, versteckte kritische Überschreitungen
    - **Lösung**: Rotes Warning-Banner, Überschreitungs-Segment im Donut, präzise Beträge
+   - ✅ Code: BudgetDonut.tsx Zeile 14 (`isOverBudget = remaining < 0`)
    - 14 neue Tests für alle Edge-Cases
 
 2. **Ressourcen nur für aktive Projekte**
    - **Problem**: Geplante/abgeschlossene Projekte inflatierten Kapazitätsauslastung
    - **Lösung**: Filter `statusNorm === 'active'` in Ressourcenberechnung
+   - ✅ Code: App.tsx Zeile 108
    - Realistischere Kapazitätsplanung
 
 3. **React Hooks Dependencies**
    - `today` zu allen date-basierten `useMemo`/`useCallback` Dependencies hinzugefügt
+   - ✅ Code: App.tsx Zeilen 87, 111, 132
    - Verhindert stale Closures bei Datumsberechnungen
 
-### ✅ Status-Indikator Modernisierung (2025-01-30, Commit b751ed7)
+### ✅ Status-Indikator Modernisierung (2025-09-30, b751ed7)
 - **Alte Version**: 3D-Bezel mit komplexen Gradienten (88 Zeilen)
 - **Neue Version**: Moderne 32px Status-Badge mit Ping-Animation
   - GitHub/Slack/Linear-inspiriert
-  - Tailwind native `animate-ping` (nur Rot pulsiert)
+  - ✅ Tailwind native `animate-ping` verwendet (TrafficLight.tsx Zeile 38)
   - Container: w-16 (64px) für genug Raum
   - Keine Overflow-Probleme mehr
 
-### ✅ Soll–Ist Feature (vor eb3c411)
+### ✅ Soll–Ist Feature (2025-09-14, c9ec3ed)
 - Ersetzt Burndown-Chart durch interaktive ProgressDelta-Karte
 - Klickbare Kategorien filtern Projekttabelle
 - Einstellbare Toleranz für "Im Plan"-Band
 - Top 3 Verzögerungen mit Click-to-Scroll Highlighting
+
+### ✅ i18n & Deutsche Labels (2025-09-11 - 2025-09-16)
+- Komplette UI-Übersetzung auf Deutsch
+- "Verantwortlicher MA", "Gesellschaft", "Fortschritt %"
+- Status-Anzeigen: "geplant", "laufend", "abgeschlossen"
+- Deutsche Monatsabkürzungen in Timeline
 
 ## 💡 Bekannte Punkte / Empfehlungen
 
@@ -270,9 +279,10 @@ npm run build
 
 ## 📋 Changelog (Relevante Highlights)
 
-- **2025-01-30**: Budget-Überschreitung transparent, Ressourcen nur aktive Projekte, Status-Badge Modernisierung, 55 neue Tests
-- **2025-01-XX**: Soll–Ist-Fortschritt-Karte, klickbare Kategorien, Top-3 Verzögerungen
-- **2024-XX-XX**: Code-Split + Komponentenstruktur, Budget-Donut Redesign, Admin-Editor, ESLint/Prettier/Vitest/CI
+- **2025-09-30**: Budget-Überschreitung transparent ✅, Ressourcen nur aktive Projekte ✅, Status-Badge Modernisierung ✅, 55 neue Tests, alle Best Practices implementiert
+- **2025-09-14**: Soll–Ist-Fortschritt-Karte, klickbare Kategorien, Top-3 Verzögerungen
+- **2025-09-11 - 2025-09-16**: Komplette deutsche UI-Übersetzung, Labels, Timeline
+- **Früher**: Code-Split + Komponentenstruktur, Budget-Donut Redesign, Admin-Editor, ESLint/Prettier/Vitest/CI
 
 ## 🔗 Links & Ressourcen
 
