@@ -1,5 +1,5 @@
 ﻿import { describe, it, expect } from 'vitest';
-import { daysBetween, overlapDays, plannedBudgetForYearD, toDate, calcBudgetRAG, calcTimeRAGD, calcResourceRAG } from './lib';
+import { daysBetween, overlapDays, plannedBudgetForYearD, toDate, calcBudgetRAG, calcTimeRAGD } from './lib';
 
 describe('date helpers', () => {
   it('parses and computes daysBetween for DD.MM.YYYY', () => {
@@ -111,37 +111,5 @@ describe('RAG Logic - Time', () => {
     const result = calcTimeRAGD(project);
     // Completed project should be green
     expect(result).toBe('green');
-  });
-});
-
-describe('RAG Logic - Resource', () => {
-  it('returns red when used hours exceed capacity', () => {
-    expect(calcResourceRAG(20, 16)).toBe('red');
-  });
-
-  it('returns amber when used hours are 90-100% of capacity', () => {
-    expect(calcResourceRAG(15, 16)).toBe('amber');
-  });
-
-  it('returns green when used hours are below 90% of capacity', () => {
-    expect(calcResourceRAG(10, 16)).toBe('green');
-  });
-
-  it('handles edge case at exactly capacity', () => {
-    // Exactly at capacity = not exceeding, so amber (>90%)
-    expect(calcResourceRAG(16, 16)).toBe('amber');
-  });
-
-  it('handles edge case at exactly 90% capacity', () => {
-    expect(calcResourceRAG(14.4, 16)).toBe('green');
-    expect(calcResourceRAG(14.5, 16)).toBe('amber');
-  });
-
-  it('handles zero capacity gracefully', () => {
-    expect(calcResourceRAG(10, 0)).toBe('red');
-  });
-
-  it('handles zero usage', () => {
-    expect(calcResourceRAG(0, 16)).toBe('green');
   });
 });

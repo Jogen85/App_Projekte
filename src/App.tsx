@@ -5,7 +5,7 @@ import type { Project, NormalizedProject } from './types';
 import {
   toDate, fmtDate, getToday, getCurrentYear, daysBetween,
   yearStart, yearEnd, overlapDays,
-  calcTimeRAGD, calcBudgetRAG, calcResourceRAG,
+  calcTimeRAGD, calcBudgetRAG,
   plannedBudgetForYearD, costsYTDForYearD,
 } from './lib';
 import FiltersPanel from './components/FiltersPanel';
@@ -13,33 +13,38 @@ import Timeline from './components/Timeline';
 
 const ProjectsTable = lazy(() => import('./components/ProjectsTable'));
 const BudgetDonut = lazy(() => import('./components/BudgetDonut'));
-const ResourceTile = lazy(() => import('./components/ResourceTile'));
 const ProgressDelta = lazy(() => import('./components/ProgressDelta'));
+const TimeStatusOverview = lazy(() => import('./components/TimeStatusOverview'));
 
 const DEMO_PROJECTS: Project[] = [
   { id: 'p1', title: 'DMS Migration MBG (Cloud)', owner: 'Christian J.', description: 'Migration d.velop DMS in die Cloud inkl. Aktenpläne & Prozesse',
-    status: 'active', start: '2025-05-01', end: '2025-12-15', progress: 65, budgetPlanned: 120000, costToDate: 70000, hoursPerMonth: 8, org: 'MBG' },
+    status: 'active', start: '2025-05-01', end: '2025-12-15', progress: 65, budgetPlanned: 120000, costToDate: 70000, org: 'MBG' },
   { id: 'p2', title: 'EXEC DMS Stabilisierung (BB)', owner: 'Christian J.', description: 'Stabilisierung & Performanceoptimierung EXEC DMS im Rechenzentrum',
-    status: 'active', start: '2025-03-10', end: '2025-10-31', progress: 80, budgetPlanned: 60000, costToDate: 58000, hoursPerMonth: 6, org: 'BB' },
+    status: 'active', start: '2025-03-10', end: '2025-10-31', progress: 80, budgetPlanned: 60000, costToDate: 58000, org: 'BB' },
   { id: 'p3', title: 'E-Rechnung 2025 (BB/MBG)', owner: 'Christian J.', description: 'Implementierung E-Rechnungsprozesse (EXEC/FIDES & d.velop)',
-    status: 'active', start: '2025-07-01', end: '2025-11-30', progress: 35, budgetPlanned: 40000, costToDate: 12000, hoursPerMonth: 4, org: 'BB/MBG' },
+    status: 'active', start: '2025-07-01', end: '2025-11-30', progress: 35, budgetPlanned: 40000, costToDate: 12000, org: 'BB/MBG' },
   { id: 'p4', title: 'MPLS Redesign Rechenzentrum', owner: 'Christian J.', description: 'Neukonzeption MPLS/Edge inkl. Failover & Dokumentation',
-    status: 'planned', start: '2025-11-01', end: '2026-02-28', progress: 0, budgetPlanned: 75000, costToDate: 0, hoursPerMonth: 6, org: 'BB' },
+    status: 'planned', start: '2025-11-01', end: '2026-02-28', progress: 0, budgetPlanned: 75000, costToDate: 0, org: 'BB' },
   { id: 'p5', title: 'Placetel-Webex Migration', owner: 'Christian J.', description: 'Migrierte Telefonie/Collab-Plattform inkl. Endgeräte',
-    status: 'done', start: '2024-09-01', end: '2025-03-31', progress: 100, budgetPlanned: 15000, costToDate: 14500, hoursPerMonth: 0, org: 'BB' },
+    status: 'done', start: '2024-09-01', end: '2025-03-31', progress: 100, budgetPlanned: 15000, costToDate: 14500, org: 'BB' },
   { id: 'p6', title: 'Zentrales Monitoring (Grafana)', owner: 'Christian J.', description: 'Aufbau Dashboards für Kernsysteme & Alerts',
-    status: 'planned', start: '2025-09-20', end: '2025-12-20', progress: 0, budgetPlanned: 10000, costToDate: 0, hoursPerMonth: 4, org: 'BB' },
+    status: 'planned', start: '2025-09-20', end: '2025-12-20', progress: 0, budgetPlanned: 10000, costToDate: 0, org: 'BB' },
 ];
 
 export default function App() {
   const today = getToday();
   const [projects, setProjects] = useState<Project[]>(DEMO_PROJECTS);
-  const [capacity, setCapacity] = useState<number>(16);
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [orgFilter, setOrgFilter] = useState<string>('all');
   const [yearOnly, setYearOnly] = useState<boolean>(true);
   const [year, setYear] = useState<number>(() => getCurrentYear());
   const [csvError, setCsvError] = useState<string | null>(null);
+
+  const handleAT82CheckChange = (projectId: string, checked: boolean) => {
+    setProjects((prev) =>
+      prev.map((p) => (p.id === projectId ? { ...p, requiresAT82Check: checked } : p))
+    );
+  };
 
   useEffect(() => {
     try { const ls = localStorage.getItem('projects_json'); if (ls) setProjects(JSON.parse(ls)); } catch (e) { /* ignore */ }
@@ -101,16 +106,8 @@ export default function App() {
         costSum += p.costToDate || 0;
       }
     }
-    const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
-    const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-    // Nur aktive Projekte zählen für Ressourcen-Auslastung (nicht geplante/abgeschlossene)
-    const usedHours = normalized
-      .filter((p) => p.statusNorm === 'active' && p.endD >= monthStart && p.startD <= monthEnd)
-      .reduce((s, p) => s + (p.hoursPerMonth || 0), 0);
-    return { activeCount: active.length, plannedCount: planned.length, doneCount: done.length, budgetPlannedSum, costSum, usedHours };
+    return { activeCount: active.length, plannedCount: planned.length, doneCount: done.length, budgetPlannedSum, costSum };
   }, [normalized, yearOnly, year, today]);
-
-  const resourceRAG = calcResourceRAG(kpis.usedHours, capacity);
 
   // Progress filter (Soll-Ist)
   const [progressFilter, setProgressFilter] = useState<'all'|'behind'|'ontrack'|'ahead'>('all');
@@ -173,7 +170,6 @@ export default function App() {
             <a href="/admin" className="text-sm text-blue-600 hover:underline">Admin</a>
           </div>
           <FiltersPanel
-            capacity={capacity} setCapacity={setCapacity}
             statusFilter={statusFilter} setStatusFilter={setStatusFilter}
             orgFilter={orgFilter} setOrgFilter={setOrgFilter}
             yearOnly={yearOnly} setYearOnly={setYearOnly}
@@ -189,11 +185,10 @@ export default function App() {
           </Card>
         )}
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <Card title={"Laufend"}><div className="text-3xl font-semibold">{kpis.activeCount}</div></Card>
           <Card title={"Geplant"}><div className="text-3xl font-semibold">{kpis.plannedCount}</div></Card>
           <Card title={"Abgeschlossen"}><div className="text-3xl font-semibold">{kpis.doneCount}</div></Card>
-          <Card title={"Kapazität (Monat)"}><div className="text-3xl font-semibold">{capacity} h</div></Card>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -204,9 +199,9 @@ export default function App() {
               </Suspense>
             </div>
           </Card>
-          <Card title={"Ressourcen (aktueller Monat)"} className="h-72">
+          <Card title={"Zeitlicher Status (laufende Projekte)"} className="h-72">
             <Suspense fallback={<div className="h-48 bg-slate-100 rounded animate-pulse" />}>
-              <ResourceTile capacity={capacity} usedHours={kpis.usedHours} rag={resourceRAG as any} height={190} />
+              <TimeStatusOverview projects={normalized} height={190} />
             </Suspense>
           </Card>
           <Card title={"Soll-Ist-Fortschritt"} className="h-72">
@@ -242,6 +237,7 @@ export default function App() {
             calcTimeRAGD={calcTimeRAGD as any}
             calcBudgetRAG={calcBudgetRAG as any}
             highlightId={highlightProjectId}
+            onAT82CheckChange={handleAT82CheckChange}
           />
         </Suspense>
 

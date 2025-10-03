@@ -61,12 +61,6 @@ export function calcBudgetRAG(p: { budgetPlanned: number; costToDate: number; pr
   return 'green';
 }
 
-export function calcResourceRAG(totalUsed: number, capacity: number) {
-  if (totalUsed > capacity) return 'red';
-  if (totalUsed > capacity * 0.9) return 'amber';
-  return 'green';
-}
-
 export const projectDaySpanD = (p: { startD: Date; endD: Date }) => Math.max(1, daysBetween(p.startD, p.endD));
 export function plannedBudgetForYearD(p: { startD: Date; endD: Date; budgetPlanned: number }, y: number) {
   const overlap = overlapDays(p.startD, p.endD, yearStart(y), yearEnd(y));

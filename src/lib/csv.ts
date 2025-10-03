@@ -116,7 +116,6 @@ export function parseProjectsCSV(text: string): Project[] {
       progress: numeric(pick('progress')),
       budgetPlanned: numeric(pick('budgetPlanned')),
       costToDate: numeric(pick('costToDate')),
-      hoursPerMonth: numeric(pick('hoursPerMonth')),
       org: pick('org') || 'BB',
     });
   }

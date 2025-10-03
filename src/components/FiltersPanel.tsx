@@ -1,8 +1,6 @@
 import React from 'react';
 
 type Props = {
-  capacity: number;
-  setCapacity: (n: number) => void;
   statusFilter: string;
   setStatusFilter: (s: string) => void;
   orgFilter: string;
@@ -16,7 +14,6 @@ type Props = {
 };
 
 const FiltersPanel: React.FC<Props> = ({
-  capacity, setCapacity,
   statusFilter, setStatusFilter,
   orgFilter, setOrgFilter,
   yearOnly, setYearOnly,
@@ -25,10 +22,6 @@ const FiltersPanel: React.FC<Props> = ({
 }) => {
   return (
     <div className="flex flex-wrap gap-3 items-center">
-      <div className="flex items-center gap-2">
-        <label className="text-sm text-slate-600">Kapazität (h/Monat):</label>
-        <input type="number" value={capacity} onChange={(e) => setCapacity(Math.max(0, Number(e.target.value)))} className="w-24 rounded-lg border border-slate-300 px-2 py-1 text-sm" min={0} />
-      </div>
       <div className="flex items-center gap-2">
         <label className="text-sm text-slate-600">Status:</label>
         <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="rounded-lg border border-slate-300 px-2 py-1 text-sm">

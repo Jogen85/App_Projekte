@@ -7,7 +7,7 @@ import { parseProjectsCSV, projectsToCSV } from '../lib/csv';
 const emptyProject = (): Project => ({
   id: `p-${Math.random().toString(36).slice(2,8)}`,
   title: '', owner: '', description: '', status: 'planned',
-  start: '', end: '', progress: 0, budgetPlanned: 0, costToDate: 0, hoursPerMonth: 0, org: 'BB',
+  start: '', end: '', progress: 0, budgetPlanned: 0, costToDate: 0, org: 'BB',
 });
 
 const ProjectsAdmin: React.FC = () => {
@@ -60,7 +60,7 @@ const ProjectsAdmin: React.FC = () => {
   const update = (i: number, k: keyof Project, v: any) => {
     setProjects((prev) => {
       const next = [...prev];
-      (next[i] as any)[k] = k === 'progress' || k === 'budgetPlanned' || k === 'costToDate' || k === 'hoursPerMonth' ? Number(v) : v;
+      (next[i] as any)[k] = k === 'progress' || k === 'budgetPlanned' || k === 'costToDate' ? Number(v) : v;
       return next;
     });
     setDirty(true);
@@ -102,7 +102,6 @@ const ProjectsAdmin: React.FC = () => {
                   <th className="py-2 pr-3">Fortschritt %</th>
                   <th className="py-2 pr-3">Budget &euro;</th>
                   <th className="py-2 pr-3">Kosten &euro;</th>
-                  <th className="py-2 pr-3">Std/Monat</th>
                   <th className="py-2 pr-3">Gesellschaft</th>
                 </tr>
               </thead>
@@ -125,7 +124,6 @@ const ProjectsAdmin: React.FC = () => {
                     <td className="py-2 pr-2"><input type="number" className="w-20 border rounded px-1" value={p.progress} min={0} max={100} onChange={(e)=>update(i,'progress',e.target.value)} /></td>
                     <td className="py-2 pr-2"><input type="number" className="w-28 border rounded px-1" value={p.budgetPlanned} min={0} onChange={(e)=>update(i,'budgetPlanned',e.target.value)} /></td>
                     <td className="py-2 pr-2"><input type="number" className="w-28 border rounded px-1" value={p.costToDate} min={0} onChange={(e)=>update(i,'costToDate',e.target.value)} /></td>
-                    <td className="py-2 pr-2"><input type="number" className="w-24 border rounded px-1" value={p.hoursPerMonth} min={0} onChange={(e)=>update(i,'hoursPerMonth',e.target.value)} /></td>
                     <td className="py-2 pr-2"><input className="w-24 border rounded px-1" value={p.org||''} onChange={(e)=>update(i,'org',e.target.value)} /></td>
                   </tr>
                 ))}
