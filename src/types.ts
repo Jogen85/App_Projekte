@@ -11,6 +11,7 @@ export type Project = {
   costToDate: number;
   org?: string;
   requiresAT82Check?: boolean;
+  at82Completed?: boolean;
 };
 
 export type NormalizedProject = Project & {

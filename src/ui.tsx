@@ -34,11 +34,24 @@ export const Badge: React.FC<{ tone?: "green"|"amber"|"slate"; children?: React.
 );
 
 const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
-export const ProgressBar: React.FC<{ value: number }> = ({ value }) => (
-  <div className="w-full bg-slate-100 rounded-full h-2" aria-label="Fortschritt">
-    <div className="h-2 rounded-full" style={{ width: `${clamp(value, 0, 100)}%`, backgroundColor: COLORS.blue }} />
-  </div>
-);
+
+export const ProgressBar: React.FC<{ value: number; targetValue?: number }> = ({ value, targetValue }) => {
+  const clampedValue = clamp(value, 0, 100);
+  const hasTarget = targetValue !== undefined && targetValue >= 0 && targetValue <= 100;
+
+  return (
+    <div className="w-full bg-slate-100 rounded-full h-2 relative" aria-label="Fortschritt">
+      <div className="h-2 rounded-full" style={{ width: `${clampedValue}%`, backgroundColor: COLORS.blue }} />
+      {hasTarget && (
+        <div
+          className="absolute top-0 bottom-0 w-0.5 bg-slate-800"
+          style={{ left: `${targetValue}%` }}
+          title={`Soll: ${Math.round(targetValue)}%`}
+        />
+      )}
+    </div>
+  );
+};
 
 export const Ampel: React.FC<{ color?: "green"|"amber"|"red"|"slate"; label?: string }> = ({ color = "green", label }) => (
   <div className="flex items-center gap-2">

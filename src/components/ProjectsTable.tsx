@@ -12,10 +12,9 @@ type Props = {
   calcTimeRAGD: (p: any) => 'green' | 'amber' | 'red' | string;
   calcBudgetRAG: (p: any) => 'green' | 'amber' | 'red' | string;
   highlightId?: string | null;
-  onAT82CheckChange?: (projectId: string, checked: boolean) => void;
 };
 
-const ProjectsTable: React.FC<Props> = ({ projects, year, yearOnly, plannedBudgetForYearD, costsYTDForYearD, calcTimeRAGD, calcBudgetRAG, highlightId = null, onAT82CheckChange }) => {
+const ProjectsTable: React.FC<Props> = ({ projects, year, yearOnly, plannedBudgetForYearD, costsYTDForYearD, calcTimeRAGD, calcBudgetRAG, highlightId = null }) => {
   React.useEffect(() => {
     if (!highlightId) return;
     const el = document.getElementById(`proj-${highlightId}`);
@@ -46,28 +45,20 @@ const ProjectsTable: React.FC<Props> = ({ projects, year, yearOnly, plannedBudge
               const budgetRAG = calcBudgetRAG(p as any);
               const resttage = Math.max(0, Math.round((p.endD.getTime() - Date.now()) / (1000 * 60 * 60 * 24)));
               const isHL = highlightId === p.id;
+
+              // Calculate target progress (Soll-Fortschritt)
+              const totalDays = Math.max(1, (p.endD.getTime() - p.startD.getTime()) / (1000 * 60 * 60 * 24));
+              const now = new Date();
+              let elapsedDays = (now.getTime() - p.startD.getTime()) / (1000 * 60 * 60 * 24);
+              if (now < p.startD) elapsedDays = 0;
+              if (now > p.endD) elapsedDays = totalDays;
+              const targetProgress = (elapsedDays / totalDays) * 100;
               return (
                 <tr key={p.id} id={`proj-${p.id}`} className={`border-t border-slate-200 ${isHL ? 'bg-sky-50' : ''}`}>
                   <td className="py-3 pr-4">
                     <div className="font-medium">{p.title}</div>
                     <div className="text-slate-500 text-xs">{"Verantwortlicher MA: "}{p.owner}</div>
                     <div className="text-slate-500 text-xs mt-1 max-w-md">{p.description}</div>
-                    <div className="mt-2 flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        id={`at82-${p.id}`}
-                        checked={p.requiresAT82Check || false}
-                        onChange={(e) => onAT82CheckChange?.(p.id, e.target.checked)}
-                        className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
-                        aria-describedby={`at82-help-${p.id}`}
-                      />
-                      <label htmlFor={`at82-${p.id}`} className="text-xs text-slate-600 cursor-pointer">
-                        Prüfung nach AT 8.2 notwendig
-                      </label>
-                      <span id={`at82-help-${p.id}`} className="sr-only">
-                        Kennzeichnet Projekte mit erforderlicher AT-8.2-Prüfung
-                      </span>
-                    </div>
                   </td>
                   <td className="py-3 pr-4 whitespace-nowrap">{p.org || '-'}</td>
                   <td className="py-3 pr-4">
@@ -83,7 +74,7 @@ const ProjectsTable: React.FC<Props> = ({ projects, year, yearOnly, plannedBudge
                     <div className="mb-3">
                       <div className="text-xs text-slate-600 mb-1">Fortschritt</div>
                       <div className="flex items-center gap-2">
-                        <ProgressBar value={p.progress} />
+                        <ProgressBar value={p.progress} targetValue={targetProgress} />
                         <span className="text-xs w-10 text-right">{p.progress}%</span>
                       </div>
                     </div>

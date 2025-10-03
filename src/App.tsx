@@ -39,12 +39,8 @@ export default function App() {
   const [yearOnly, setYearOnly] = useState<boolean>(true);
   const [year, setYear] = useState<number>(() => getCurrentYear());
   const [csvError, setCsvError] = useState<string | null>(null);
-
-  const handleAT82CheckChange = (projectId: string, checked: boolean) => {
-    setProjects((prev) =>
-      prev.map((p) => (p.id === projectId ? { ...p, requiresAT82Check: checked } : p))
-    );
-  };
+  const [at82RequiredFilter, setAt82RequiredFilter] = useState<string>('all');
+  const [at82CompletedFilter, setAt82CompletedFilter] = useState<string>('all');
 
   useEffect(() => {
     try { const ls = localStorage.getItem('projects_json'); if (ls) setProjects(JSON.parse(ls)); } catch (e) { /* ignore */ }
@@ -69,9 +65,13 @@ export default function App() {
       if (yearOnly && !overlapsYearD(p, year)) return false;
       if (sFilter !== 'all' && p.statusNorm !== sFilter) return false;
       if (oFilter !== 'all' && p.orgNorm !== oFilter) return false;
+      if (at82RequiredFilter === 'yes' && !p.requiresAT82Check) return false;
+      if (at82RequiredFilter === 'no' && p.requiresAT82Check) return false;
+      if (at82CompletedFilter === 'yes' && !p.at82Completed) return false;
+      if (at82CompletedFilter === 'no' && p.at82Completed) return false;
       return true;
     });
-  }, [normalized, statusFilter, orgFilter, yearOnly, year]);
+  }, [normalized, statusFilter, orgFilter, yearOnly, year, at82RequiredFilter, at82CompletedFilter]);
 
   const bounds = useMemo(() => {
     if (yearOnly) {
@@ -174,6 +174,8 @@ export default function App() {
             orgFilter={orgFilter} setOrgFilter={setOrgFilter}
             yearOnly={yearOnly} setYearOnly={setYearOnly}
             year={year} setYear={setYear}
+            at82RequiredFilter={at82RequiredFilter} setAt82RequiredFilter={setAt82RequiredFilter}
+            at82CompletedFilter={at82CompletedFilter} setAt82CompletedFilter={setAt82CompletedFilter}
             onCSVUpload={onCSVUpload}
             onDownloadTemplate={downloadCSVTemplate}
           />
@@ -237,7 +239,6 @@ export default function App() {
             calcTimeRAGD={calcTimeRAGD as any}
             calcBudgetRAG={calcBudgetRAG as any}
             highlightId={highlightProjectId}
-            onAT82CheckChange={handleAT82CheckChange}
           />
         </Suspense>
 

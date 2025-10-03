@@ -9,6 +9,10 @@ type Props = {
   setYearOnly: (b: boolean) => void;
   year: number;
   setYear: (y: number) => void;
+  at82RequiredFilter: string;
+  setAt82RequiredFilter: (s: string) => void;
+  at82CompletedFilter: string;
+  setAt82CompletedFilter: (s: string) => void;
   onCSVUpload: (file?: File) => Promise<void> | void;
   onDownloadTemplate: () => void;
 };
@@ -18,6 +22,8 @@ const FiltersPanel: React.FC<Props> = ({
   orgFilter, setOrgFilter,
   yearOnly, setYearOnly,
   year, setYear,
+  at82RequiredFilter, setAt82RequiredFilter,
+  at82CompletedFilter, setAt82CompletedFilter,
   onCSVUpload, onDownloadTemplate,
 }) => {
   return (
@@ -38,6 +44,22 @@ const FiltersPanel: React.FC<Props> = ({
           <option value="BB">BB</option>
           <option value="MBG">MBG</option>
           <option value="BB/MBG">BB/MBG</option>
+        </select>
+      </div>
+      <div className="flex items-center gap-2">
+        <label className="text-sm text-slate-600">AT 8.2 erforderlich:</label>
+        <select value={at82RequiredFilter} onChange={(e) => setAt82RequiredFilter(e.target.value)} className="rounded-lg border border-slate-300 px-2 py-1 text-sm">
+          <option value="all">Alle</option>
+          <option value="yes">Ja</option>
+          <option value="no">Nein</option>
+        </select>
+      </div>
+      <div className="flex items-center gap-2">
+        <label className="text-sm text-slate-600">AT 8.2 durchgeführt:</label>
+        <select value={at82CompletedFilter} onChange={(e) => setAt82CompletedFilter(e.target.value)} className="rounded-lg border border-slate-300 px-2 py-1 text-sm">
+          <option value="all">Alle</option>
+          <option value="yes">Ja</option>
+          <option value="no">Nein</option>
         </select>
       </div>
       <div className="flex items-center gap-2">

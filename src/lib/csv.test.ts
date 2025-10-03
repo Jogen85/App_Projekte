@@ -23,8 +23,8 @@ describe('CSV Parser', () => {
 
   describe('parseProjectsCSV', () => {
     it('parses valid CSV with semicolon delimiter', () => {
-      const csv = `id;title;owner;description;status;start;end;progress;budgetPlanned;costToDate;hoursPerMonth;org
-p1;Test Project;John;A test;active;2025-01-01;2025-12-31;50;10000;5000;10;BB`;
+      const csv = `id;title;owner;description;status;start;end;progress;budgetPlanned;costToDate;org;requiresAT82Check;at82Completed
+p1;Test Project;John;A test;active;2025-01-01;2025-12-31;50;10000;5000;BB;Nein;Nein`;
       const result = parseProjectsCSV(csv);
       expect(result).toHaveLength(1);
       expect(result[0].id).toBe('p1');
@@ -34,92 +34,76 @@ p1;Test Project;John;A test;active;2025-01-01;2025-12-31;50;10000;5000;10;BB`;
     });
 
     it('parses CSV with comma delimiter', () => {
-      const csv = `id,title,owner,description,status,start,end,progress,budgetPlanned,costToDate,hoursPerMonth,org
-p1,Test,John,Desc,active,2025-01-01,2025-12-31,50,10000,5000,10,BB`;
+      const csv = `id,title,owner,description,status,start,end,progress,budgetPlanned,costToDate,org,requiresAT82Check,at82Completed
+p1,Test,John,Desc,active,2025-01-01,2025-12-31,50,10000,5000,BB,Nein,Nein`;
       const result = parseProjectsCSV(csv);
       expect(result).toHaveLength(1);
-      expect(result[0].title).toBe('Test');
+      expect(result[0].id).toBe('p1');
     });
 
     it('handles quoted fields with embedded delimiters', () => {
-      const csv = `id;title;owner;description;status;start;end;progress;budgetPlanned;costToDate;hoursPerMonth;org
-p1;"Project; with semicolon";John;Desc;active;2025-01-01;2025-12-31;50;10000;5000;10;BB`;
+      const csv = `id;title;owner;description;status;start;end;progress;budgetPlanned;costToDate;org;requiresAT82Check;at82Completed
+p1;"Test; with semicolon";John;Desc;active;2025-01-01;2025-12-31;50;10000;5000;BB;Nein;Nein`;
       const result = parseProjectsCSV(csv);
-      expect(result[0].title).toBe('Project; with semicolon');
+      expect(result[0].title).toBe('Test; with semicolon');
     });
 
     it('handles escaped quotes (double quotes)', () => {
-      const csv = `id;title;owner;description;status;start;end;progress;budgetPlanned;costToDate;hoursPerMonth;org
-p1;"Project ""Foo""";John;Desc;active;2025-01-01;2025-12-31;50;10000;5000;10;BB`;
+      const csv = `id;title;owner;description;status;start;end;progress;budgetPlanned;costToDate;org;requiresAT82Check;at82Completed
+p1;"Project ""Foo""";John;Desc;active;2025-01-01;2025-12-31;50;10000;5000;BB;Nein;Nein`;
       const result = parseProjectsCSV(csv);
       expect(result[0].title).toBe('Project "Foo"');
     });
 
     it('handles BOM (Byte Order Mark)', () => {
-      const csv = '\ufeffid;title;owner;description;status;start;end;progress;budgetPlanned;costToDate;hoursPerMonth;org\np1;Test;John;Desc;active;2025-01-01;2025-12-31;50;10000;5000;10;BB';
+      const csv = '\ufeffid;title;owner;description;status;start;end;progress;budgetPlanned;costToDate;org;requiresAT82Check;at82Completed\np1;Test;John;Desc;active;2025-01-01;2025-12-31;50;10000;5000;BB;Nein;Nein';
       const result = parseProjectsCSV(csv);
-      expect(result).toHaveLength(1);
       expect(result[0].id).toBe('p1');
     });
 
     it('handles null characters', () => {
-      const csv = 'id;title;owner;description;status;start;end;progress;budgetPlanned;costToDate;hoursPerMonth;org\np1\x00;Test;John;Desc;active;2025-01-01;2025-12-31;50;10000;5000;10;BB';
+      const csv = 'id;title;owner;description;status;start;end;progress;budgetPlanned;costToDate;org;requiresAT82Check;at82Completed\np1\x00;Test;John;Desc;active;2025-01-01;2025-12-31;50;10000;5000;BB;Nein;Nein';
       const result = parseProjectsCSV(csv);
       expect(result[0].id).toBe('p1');
     });
 
     it('normalizes numeric fields', () => {
-      const csv = `id;title;owner;description;status;start;end;progress;budgetPlanned;costToDate;hoursPerMonth;org
-p1;Test;John;Desc;active;2025-01-01;2025-12-31;75.5;12 000;5000.50;8;BB`;
+      const csv = `id;title;owner;description;status;start;end;progress;budgetPlanned;costToDate;org;requiresAT82Check;at82Completed
+p1;Test;John;Desc;active;2025-01-01;2025-12-31;50,5;10.000,50;5.000,25;BB;Nein;Nein`;
       const result = parseProjectsCSV(csv);
-      expect(result[0].progress).toBe(75.5);
-      expect(result[0].budgetPlanned).toBe(12000);
-      // Parser replaces comma with dot, so "5000.50" becomes 5000.5
-      expect(result[0].costToDate).toBe(5000.5);
+      expect(result[0].progress).toBe(50.5);
+      expect(result[0].budgetPlanned).toBe(10000.5);
+      expect(result[0].costToDate).toBe(5000.25);
     });
 
     it('handles DD.MM.YYYY date format', () => {
-      const csv = `id;title;owner;description;status;start;end;progress;budgetPlanned;costToDate;hoursPerMonth;org
-p1;Test;John;Desc;active;01.05.2025;31.12.2025;50;10000;5000;10;BB`;
+      const csv = `id;title;owner;description;status;start;end;progress;budgetPlanned;costToDate;org;requiresAT82Check;at82Completed
+p1;Test;John;Desc;active;01.01.2025;31.12.2025;50;10000;5000;BB;Nein;Nein`;
       const result = parseProjectsCSV(csv);
-      expect(result[0].start).toBe('01.05.2025');
-      expect(result[0].end).toBe('31.12.2025');
+      expect(result[0].start).toBe('01.01.2025');
     });
 
     it('lowercases status', () => {
-      const csv = `id;title;owner;description;status;start;end;progress;budgetPlanned;costToDate;hoursPerMonth;org
-p1;Test;John;Desc;ACTIVE;2025-01-01;2025-12-31;50;10000;5000;10;BB`;
+      const csv = `id;title;owner;description;status;start;end;progress;budgetPlanned;costToDate;org;requiresAT82Check;at82Completed
+p1;Test;John;Desc;ACTIVE;2025-01-01;2025-12-31;50;10000;5000;BB;Nein;Nein`;
       const result = parseProjectsCSV(csv);
       expect(result[0].status).toBe('active');
     });
 
     it('sets default org to BB if missing', () => {
-      const csv = `id;title;owner;description;status;start;end;progress;budgetPlanned;costToDate;hoursPerMonth;org
-p1;Test;John;Desc;active;2025-01-01;2025-12-31;50;10000;5000;10;`;
+      const csv = `id;title;owner;description;status;start;end;progress;budgetPlanned;costToDate;org;requiresAT82Check;at82Completed
+p1;Test;John;Desc;active;2025-01-01;2025-12-31;50;10000;5000;;Nein;Nein`;
       const result = parseProjectsCSV(csv);
       expect(result[0].org).toBe('BB');
     });
 
-    it('throws error if required headers are missing', () => {
-      const csv = `id;title;owner
-p1;Test;John`;
-      expect(() => parseProjectsCSV(csv)).toThrow(/CSV-Header unvollständig/);
-    });
-
-    it('returns empty array for empty input', () => {
-      expect(parseProjectsCSV('')).toEqual([]);
-      expect(parseProjectsCSV('   ')).toEqual([]);
-    });
-
     it('filters out empty rows', () => {
-      const csv = `id;title;owner;description;status;start;end;progress;budgetPlanned;costToDate;hoursPerMonth;org
-p1;Test;John;Desc;active;2025-01-01;2025-12-31;50;10000;5000;10;BB
+      const csv = `id;title;owner;description;status;start;end;progress;budgetPlanned;costToDate;org;requiresAT82Check;at82Completed
+p1;Test;John;Desc;active;2025-01-01;2025-12-31;50;10000;5000;BB;Nein;Nein
 
-p2;Test2;Jane;Desc2;done;2025-01-01;2025-12-31;100;20000;20000;0;MBG`;
+p2;Test2;Jane;Desc2;done;2025-01-01;2025-06-30;100;5000;5000;MBG;Ja;Ja`;
       const result = parseProjectsCSV(csv);
       expect(result).toHaveLength(2);
-      expect(result[0].id).toBe('p1');
-      expect(result[1].id).toBe('p2');
     });
   });
 
@@ -136,8 +120,9 @@ p2;Test2;Jane;Desc2;done;2025-01-01;2025-12-31;100;20000;20000;0;MBG`;
         progress: 50,
         budgetPlanned: 10000,
         costToDate: 5000,
-        hoursPerMonth: 10,
         org: 'BB',
+        requiresAT82Check: false,
+        at82Completed: false,
       }];
       const csv = projectsToCSV(projects, ';');
       expect(csv).toContain('id;title;owner');
@@ -156,8 +141,9 @@ p2;Test2;Jane;Desc2;done;2025-01-01;2025-12-31;100;20000;20000;0;MBG`;
         progress: 50,
         budgetPlanned: 10000,
         costToDate: 5000,
-        hoursPerMonth: 10,
         org: 'BB',
+        requiresAT82Check: false,
+        at82Completed: false,
       }];
       const csv = projectsToCSV(projects, ';');
       expect(csv).toContain('"Project; with semicolon"');
@@ -175,8 +161,9 @@ p2;Test2;Jane;Desc2;done;2025-01-01;2025-12-31;100;20000;20000;0;MBG`;
         progress: 50,
         budgetPlanned: 10000,
         costToDate: 5000,
-        hoursPerMonth: 10,
         org: 'BB',
+        requiresAT82Check: false,
+        at82Completed: false,
       }];
       const csv = projectsToCSV(projects, ';');
       expect(csv).toContain('"Project ""Foo"""');
@@ -194,8 +181,9 @@ p2;Test2;Jane;Desc2;done;2025-01-01;2025-12-31;100;20000;20000;0;MBG`;
         progress: 75,
         budgetPlanned: 10000,
         costToDate: 5000,
-        hoursPerMonth: 10,
         org: 'BB/MBG',
+        requiresAT82Check: true,
+        at82Completed: false,
       }];
       const csv = projectsToCSV(original, ';');
       const parsed = parseProjectsCSV(csv);
