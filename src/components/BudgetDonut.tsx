@@ -18,24 +18,27 @@ export const BudgetDonut: React.FC<Props> = ({ spent, remaining, height = 190 })
   const spentWithinBudget = isOverBudget ? budgetPlanned : spentSafe;
   const remainingSafe = Math.max(0, remaining);
 
+  // Neue Logik: Verbleibend = wichtig (grün/gelb/rot), Ausgegeben = neutral (blau)
+  const remainingPct = (remainingSafe / Math.max(1, budgetPlanned)) * 100;
+  const spentPct = Math.round((spentSafe / Math.max(1, budgetPlanned)) * 100);
+
+  const remainingColor = remainingPct > 20 ? COLORS.green   // >20% frei = gut
+                       : remainingPct > 10 ? COLORS.amber   // 10-20% frei = Warnung
+                       : COLORS.red;                         // <10% frei = kritisch
+  const spentColor = COLORS.blue;  // immer blau (neutral)
+  const overspendColor = '#991b1b'; // red-800 for overspend
+
   const data = isOverBudget
     ? [
-        { name: 'Ausgegeben (Budget)', value: spentWithinBudget },
+        { name: 'Ausgegeben', value: spentWithinBudget },
         { name: 'Überschreitung', value: overspend },
       ]
     : [
-        { name: 'Ausgegeben', value: spentSafe },
         { name: 'Verbleibend', value: remainingSafe },
+        { name: 'Ausgegeben', value: spentSafe },
       ];
 
   const total = budgetPlanned + overspend;
-  const spentPct = Math.round((spentSafe / Math.max(1, budgetPlanned)) * 100);
-
-  // Threshold coloring based on percentage of planned budget
-  const spentColor = spentPct <= 90 ? COLORS.green
-                   : spentPct <= 105 ? COLORS.amber
-                   : COLORS.red;
-  const overspendColor = '#991b1b'; // red-800 for overspend
   const fmt = (n: number) => new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(n);
 
   const chartHeight = 150;
@@ -50,12 +53,12 @@ export const BudgetDonut: React.FC<Props> = ({ spent, remaining, height = 190 })
 
       if (name.includes('überschreitung')) {
         pct = Math.round((overspend / Math.max(1, total)) * 100);
-      } else if (name.includes('ausgegeben')) {
+      } else if (name.includes('verbleibend')) {
+        pct = Math.round((remainingSafe / Math.max(1, total)) * 100);
+      } else {
         pct = isOverBudget
           ? Math.round((spentWithinBudget / Math.max(1, total)) * 100)
           : Math.round((spentSafe / Math.max(1, total)) * 100);
-      } else {
-        pct = Math.round((remainingSafe / Math.max(1, total)) * 100);
       }
 
       return (
@@ -74,8 +77,8 @@ export const BudgetDonut: React.FC<Props> = ({ spent, remaining, height = 190 })
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie data={data} dataKey="value" nameKey="name" outerRadius={outer} innerRadius={inner} strokeWidth={0} isAnimationActive animationDuration={700}>
-              <Cell fill={spentColor} />
-              <Cell fill={isOverBudget ? overspendColor : COLORS.slate} />
+              <Cell fill={isOverBudget ? spentColor : remainingColor} />
+              <Cell fill={isOverBudget ? overspendColor : spentColor} />
             </Pie>
             <Tooltip content={<CustomTooltip />} />
           </PieChart>
@@ -95,23 +98,32 @@ export const BudgetDonut: React.FC<Props> = ({ spent, remaining, height = 190 })
         )}
 
         <div className="flex items-center justify-center gap-4 text-xs flex-shrink-0">
-          <div className="flex items-center gap-2">
-            <span className="inline-block w-2.5 h-2.5 rounded-full" style={{ backgroundColor: spentColor }} aria-hidden />
-            <span className="text-slate-700">{"Ausgegeben"}</span>
-            <span className="text-slate-500">{fmt(spentSafe)} ({spentPct}%)</span>
-          </div>
           {isOverBudget ? (
-            <div className="flex items-center gap-2">
-              <span className="inline-block w-2.5 h-2.5 rounded-full" style={{ backgroundColor: overspendColor }} aria-hidden />
-              <span className="text-slate-700">{"Überschreitung"}</span>
-              <span className="text-red-600 font-medium">{fmt(overspend)}</span>
-            </div>
+            <>
+              <div className="flex items-center gap-2">
+                <span className="inline-block w-2.5 h-2.5 rounded-full" style={{ backgroundColor: spentColor }} aria-hidden />
+                <span className="text-slate-700">{"Ausgegeben"}</span>
+                <span className="text-slate-500">{fmt(spentSafe)} ({spentPct}%)</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="inline-block w-2.5 h-2.5 rounded-full" style={{ backgroundColor: overspendColor }} aria-hidden />
+                <span className="text-slate-700">{"Überschreitung"}</span>
+                <span className="text-red-600 font-medium">{fmt(overspend)}</span>
+              </div>
+            </>
           ) : (
-            <div className="flex items-center gap-2">
-              <span className="inline-block w-2.5 h-2.5 rounded-full" style={{ backgroundColor: COLORS.slate }} aria-hidden />
-              <span className="text-slate-700">{"Verbleibend"}</span>
-              <span className="text-slate-500">{fmt(remainingSafe)}</span>
-            </div>
+            <>
+              <div className="flex items-center gap-2">
+                <span className="inline-block w-2.5 h-2.5 rounded-full" style={{ backgroundColor: remainingColor }} aria-hidden />
+                <span className="text-slate-700 font-medium">{"Verbleibend"}</span>
+                <span className="text-slate-800 font-medium">{fmt(remainingSafe)} ({Math.round(remainingPct)}%)</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="inline-block w-2.5 h-2.5 rounded-full" style={{ backgroundColor: spentColor }} aria-hidden />
+                <span className="text-slate-700">{"Ausgegeben"}</span>
+                <span className="text-slate-500">{fmt(spentSafe)} ({spentPct}%)</span>
+              </div>
+            </>
           )}
         </div>
       </div>

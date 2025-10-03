@@ -88,7 +88,7 @@ export default function ProgressDelta({ projects, height = 190, onSelectCategory
               <div className="text-xs text-slate-500">Fällig: {fmtDate(p.end)} • {p.daysLeft} Tage</div>
             </div>
             <div className="text-right">
-              <div className="text-sm font-medium" style={{ color: p.delta < -10 ? '#dc2626' : p.delta > 10 ? '#16a34a' : '#334155' }}>{p.delta.toFixed(1)} pp</div>
+              <div className="text-sm font-medium" style={{ color: p.delta < -10 ? '#dc2626' : p.delta > 10 ? '#16a34a' : '#334155' }}>{p.delta.toFixed(1)}%</div>
               <div className="text-[11px] text-slate-500">Soll {Math.round(p.soll)}% • Ist {Math.round(p.ist)}%</div>
             </div>
           </button>
