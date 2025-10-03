@@ -133,7 +133,9 @@ const Timeline: React.FC<Props> = ({ projects, bounds, yearOnly, year }) => {
         ))}
         {todayPct !== null && (
           <div className="absolute top-[-2px] bottom-0 w-[2px] bg-rose-500 shadow-[0_0_0_1px_rgba(244,63,94,0.25)]" style={{ left: `${todayPct}%` }}>
-            <div className="absolute -top-5 -left-3 text-[10px] text-rose-600 font-medium select-none">Heute</div>
+            <div className="absolute -top-5 -left-[18px] text-[10px] text-rose-600 font-medium select-none bg-white px-1 rounded border border-rose-200 shadow-sm">
+              Heute
+            </div>
           </div>
         )}
       </div>

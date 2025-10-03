@@ -18,17 +18,17 @@ const TimeStatusOverview = lazy(() => import('./components/TimeStatusOverview'))
 
 const DEMO_PROJECTS: Project[] = [
   { id: 'p1', title: 'DMS Migration MBG (Cloud)', owner: 'Christian J.', description: 'Migration d.velop DMS in die Cloud inkl. Aktenpläne & Prozesse',
-    status: 'active', start: '2025-05-01', end: '2025-12-15', progress: 65, budgetPlanned: 120000, costToDate: 70000, org: 'MBG' },
+    status: 'active', start: '2025-05-01', end: '2025-12-15', progress: 65, budgetPlanned: 120000, costToDate: 70000, org: 'MBG', requiresAT82Check: true, at82Completed: false },
   { id: 'p2', title: 'EXEC DMS Stabilisierung (BB)', owner: 'Christian J.', description: 'Stabilisierung & Performanceoptimierung EXEC DMS im Rechenzentrum',
-    status: 'active', start: '2025-03-10', end: '2025-10-31', progress: 80, budgetPlanned: 60000, costToDate: 58000, org: 'BB' },
+    status: 'active', start: '2025-03-10', end: '2025-10-31', progress: 80, budgetPlanned: 60000, costToDate: 58000, org: 'BB', requiresAT82Check: false, at82Completed: false },
   { id: 'p3', title: 'E-Rechnung 2025 (BB/MBG)', owner: 'Christian J.', description: 'Implementierung E-Rechnungsprozesse (EXEC/FIDES & d.velop)',
-    status: 'active', start: '2025-07-01', end: '2025-11-30', progress: 35, budgetPlanned: 40000, costToDate: 12000, org: 'BB/MBG' },
+    status: 'active', start: '2025-07-01', end: '2025-11-30', progress: 35, budgetPlanned: 40000, costToDate: 12000, org: 'BB/MBG', requiresAT82Check: true, at82Completed: true },
   { id: 'p4', title: 'MPLS Redesign Rechenzentrum', owner: 'Christian J.', description: 'Neukonzeption MPLS/Edge inkl. Failover & Dokumentation',
-    status: 'planned', start: '2025-11-01', end: '2026-02-28', progress: 0, budgetPlanned: 75000, costToDate: 0, org: 'BB' },
+    status: 'planned', start: '2025-11-01', end: '2026-02-28', progress: 0, budgetPlanned: 75000, costToDate: 0, org: 'BB', requiresAT82Check: true, at82Completed: false },
   { id: 'p5', title: 'Placetel-Webex Migration', owner: 'Christian J.', description: 'Migrierte Telefonie/Collab-Plattform inkl. Endgeräte',
-    status: 'done', start: '2024-09-01', end: '2025-03-31', progress: 100, budgetPlanned: 15000, costToDate: 14500, org: 'BB' },
+    status: 'done', start: '2024-09-01', end: '2025-03-31', progress: 100, budgetPlanned: 15000, costToDate: 14500, org: 'BB', requiresAT82Check: false, at82Completed: false },
   { id: 'p6', title: 'Zentrales Monitoring (Grafana)', owner: 'Christian J.', description: 'Aufbau Dashboards für Kernsysteme & Alerts',
-    status: 'planned', start: '2025-09-20', end: '2025-12-20', progress: 0, budgetPlanned: 10000, costToDate: 0, org: 'BB' },
+    status: 'planned', start: '2025-09-20', end: '2025-12-20', progress: 0, budgetPlanned: 10000, costToDate: 0, org: 'BB', requiresAT82Check: true, at82Completed: true },
 ];
 
 export default function App() {
