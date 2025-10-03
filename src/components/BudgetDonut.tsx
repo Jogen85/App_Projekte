@@ -38,9 +38,9 @@ export const BudgetDonut: React.FC<Props> = ({ spent, remaining, height = 190 })
   const overspendColor = '#991b1b'; // red-800 for overspend
   const fmt = (n: number) => new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(n);
 
-  const chartHeight = Math.min(160, height * 0.7);
-  const outer = Math.min(70, Math.floor(chartHeight * 0.42));
-  const inner = Math.max(outer - 26, 20);
+  const chartHeight = 150;
+  const outer = 60;
+  const inner = 40;
 
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
@@ -70,7 +70,7 @@ export const BudgetDonut: React.FC<Props> = ({ spent, remaining, height = 190 })
 
   return (
     <div className="w-full h-full flex flex-col overflow-hidden" role="img" aria-label={`Budget Donut, Ausgegeben ${spentPct} Prozent${isOverBudget ? ', Überschreitung' : ''}`}>
-      <div className="relative mx-auto flex-shrink-0" style={{ height: chartHeight, maxWidth: chartHeight + 60 }}>
+      <div className="relative flex-shrink-0" style={{ height: chartHeight, width: '100%' }}>
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie data={data} dataKey="value" nameKey="name" outerRadius={outer} innerRadius={inner} strokeWidth={0} isAnimationActive animationDuration={700}>
