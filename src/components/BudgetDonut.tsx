@@ -67,9 +67,11 @@ export const BudgetDonut: React.FC<Props> = ({ spent, remaining, height = 190 })
     return null;
   };
 
+  const chartHeight = Math.min(160, height * 0.7);
+
   return (
-    <div className="w-full" role="img" aria-label={`Budget Donut, Ausgegeben ${spentPct} Prozent${isOverBudget ? ', Überschreitung' : ''}`}>
-      <div className="relative mx-auto" style={{ height, maxWidth: height + 60 }}>
+    <div className="w-full h-full flex flex-col overflow-hidden" role="img" aria-label={`Budget Donut, Ausgegeben ${spentPct} Prozent${isOverBudget ? ', Überschreitung' : ''}`}>
+      <div className="relative mx-auto flex-shrink-0" style={{ height: chartHeight, maxWidth: chartHeight + 60 }}>
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie data={data} dataKey="value" nameKey="name" outerRadius={outer} innerRadius={inner} strokeWidth={0} isAnimationActive animationDuration={700}>
@@ -81,36 +83,38 @@ export const BudgetDonut: React.FC<Props> = ({ spent, remaining, height = 190 })
         </ResponsiveContainer>
       </div>
 
-      {isOverBudget && (
-        <div className="mt-2 px-3 py-2 bg-red-50 border border-red-200 rounded-md">
-          <div className="flex items-center gap-2 text-xs text-red-800">
-            <svg className="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-            </svg>
-            <span className="font-medium">Budget überschritten: {fmt(overspend)} ({Math.round((overspend / budgetPlanned) * 100)}%)</span>
-          </div>
-        </div>
-      )}
-
-      <div className="mt-3 flex items-center justify-center gap-4 text-xs">
-        <div className="flex items-center gap-2">
-          <span className="inline-block w-2.5 h-2.5 rounded-full" style={{ backgroundColor: spentColor }} aria-hidden />
-          <span className="text-slate-700">{"Ausgegeben"}</span>
-          <span className="text-slate-500">{fmt(spentSafe)} ({spentPct}%)</span>
-        </div>
-        {isOverBudget ? (
-          <div className="flex items-center gap-2">
-            <span className="inline-block w-2.5 h-2.5 rounded-full" style={{ backgroundColor: overspendColor }} aria-hidden />
-            <span className="text-slate-700">{"Überschreitung"}</span>
-            <span className="text-red-600 font-medium">{fmt(overspend)}</span>
-          </div>
-        ) : (
-          <div className="flex items-center gap-2">
-            <span className="inline-block w-2.5 h-2.5 rounded-full" style={{ backgroundColor: COLORS.slate }} aria-hidden />
-            <span className="text-slate-700">{"Verbleibend"}</span>
-            <span className="text-slate-500">{fmt(remainingSafe)}</span>
+      <div className="flex-1 min-h-0 overflow-y-auto flex flex-col gap-2 mt-2">
+        {isOverBudget && (
+          <div className="px-3 py-2 bg-red-50 border border-red-200 rounded-md flex-shrink-0">
+            <div className="flex items-center gap-2 text-xs text-red-800">
+              <svg className="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
+              <span className="font-medium">Budget überschritten: {fmt(overspend)} ({Math.round((overspend / budgetPlanned) * 100)}%)</span>
+            </div>
           </div>
         )}
+
+        <div className="flex items-center justify-center gap-4 text-xs flex-shrink-0">
+          <div className="flex items-center gap-2">
+            <span className="inline-block w-2.5 h-2.5 rounded-full" style={{ backgroundColor: spentColor }} aria-hidden />
+            <span className="text-slate-700">{"Ausgegeben"}</span>
+            <span className="text-slate-500">{fmt(spentSafe)} ({spentPct}%)</span>
+          </div>
+          {isOverBudget ? (
+            <div className="flex items-center gap-2">
+              <span className="inline-block w-2.5 h-2.5 rounded-full" style={{ backgroundColor: overspendColor }} aria-hidden />
+              <span className="text-slate-700">{"Überschreitung"}</span>
+              <span className="text-red-600 font-medium">{fmt(overspend)}</span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              <span className="inline-block w-2.5 h-2.5 rounded-full" style={{ backgroundColor: COLORS.slate }} aria-hidden />
+              <span className="text-slate-700">{"Verbleibend"}</span>
+              <span className="text-slate-500">{fmt(remainingSafe)}</span>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

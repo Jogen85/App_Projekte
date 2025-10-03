@@ -167,6 +167,7 @@ export default function App() {
           <div>
             <h1 className="text-2xl font-bold">IT-Projekt&uuml;bersicht (Demo)</h1>
             <p className={"text-sm " + COLORS.subtext}>Portfolio-&Uuml;berblick f&uuml;r Gesch&auml;ftsf&uuml;hrung &amp; Aufsichtsrat &mdash; Stand: {fmtDate(today)}</p>
+            <a href="/admin" className="text-sm text-blue-600 hover:underline">Admin</a>
           </div>
           <FiltersPanel
             statusFilter={statusFilter} setStatusFilter={setStatusFilter}
@@ -208,11 +209,9 @@ export default function App() {
         {/* Chart-Zeile */}
         <div className="grid grid-cols-3 gap-3">
           <Card title={`Budget (Jahr): ${new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR'}).format(kpis.budgetPlannedSum)}`} className="h-chart">
-            <div className="flex flex-col justify-center h-full">
-              <Suspense fallback={<div className="h-48 bg-slate-100 rounded animate-pulse" />}>
-                <BudgetDonut spent={budgetSpent} remaining={budgetRemaining} height={220} />
-              </Suspense>
-            </div>
+            <Suspense fallback={<div className="h-48 bg-slate-100 rounded animate-pulse" />}>
+              <BudgetDonut spent={budgetSpent} remaining={budgetRemaining} height={220} />
+            </Suspense>
           </Card>
           <Card title={"Zeitlicher Status (laufende Projekte)"} className="h-chart">
             <Suspense fallback={<div className="h-48 bg-slate-100 rounded animate-pulse" />}>

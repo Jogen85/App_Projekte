@@ -50,8 +50,8 @@ export default function ProgressDelta({ projects, height = 190, onSelectCategory
   }, [projects, tolerance]);
 
   return (
-    <div className="w-full" style={{ height }}>
-      <div className="grid grid-cols-3 gap-2 text-center mb-2">
+    <div className="w-full h-full flex flex-col overflow-hidden">
+      <div className="grid grid-cols-3 gap-2 text-center mb-2 flex-shrink-0">
         <button type="button" onClick={() => onSelectCategory?.('behind')} className={`rounded-md py-2 transition-colors ${selectedCategory==='behind' ? 'ring-2 ring-red-400 bg-red-100 text-red-800' : 'bg-red-50 text-red-700 hover:bg-red-100'}`}>
           <div className="text-xs">Hinter Plan</div>
           <div className="text-lg font-semibold">{data.behind.length}</div>
@@ -65,7 +65,7 @@ export default function ProgressDelta({ projects, height = 190, onSelectCategory
           <div className="text-lg font-semibold">{data.ahead.length}</div>
         </button>
       </div>
-      <div className="flex items-center justify-end mb-2">
+      <div className="flex items-center justify-end mb-2 flex-shrink-0">
         <label className="text-xs text-slate-600 mr-2">Toleranz ±</label>
         <input
           aria-label="Toleranz in Prozentpunkten"
@@ -79,8 +79,8 @@ export default function ProgressDelta({ projects, height = 190, onSelectCategory
         <span className="text-xs text-slate-600 ml-1">pp</span>
       </div>
 
-      <div className="text-xs text-slate-600 mb-1">Top 3 Verzögerungen</div>
-      <div className="space-y-2 overflow-auto" style={{ maxHeight: height - 104 }}>
+      <div className="text-xs text-slate-600 mb-1 flex-shrink-0">Top 3 Verzögerungen</div>
+      <div className="space-y-2 overflow-y-auto flex-1 min-h-0">
         {data.top3.map((p) => (
           <button key={p.id} type="button" onClick={() => onSelectProject?.(p.id)} className="w-full flex items-center justify-between gap-3 text-left hover:bg-slate-50 rounded px-1 py-1">
             <div className="min-w-0">
