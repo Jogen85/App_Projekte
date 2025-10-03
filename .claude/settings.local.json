@@ -1,11 +1,18 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npm i:*)",
+      "Bash(git push:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nui: moderne Pulse Ring Ampel statt 3D-Bezel (Ressourcen-Kachel)\n\n## UI-Modernisierung\n- 3D-Glaseffekt durch flachen Pulse Ring ersetzt\n- Grün: statisch mit sanftem Schatten\n- Gelb: langsamer Pulse (1.5s) + mittlerer Glow\n- Rot: schneller Pulse (0.8s) + starker Glow\n- Größer (64px statt 48px) für bessere Sichtbarkeit\n\n## Technisch\n- CSS @keyframes für Pulse-Animationen\n- Tailwind-basiert (keine komplexen inline-styles)\n- 88 Zeilen komplexer Gradient-Code → 105 Zeilen einfaches CSS\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git checkout:*)",
+      "Bash(git commit:*)",
+      "Bash(git cherry-pick:*)",
+      "WebSearch",
+      "WebFetch(domain:dev.to)",
+      "WebFetch(domain:medium.com)",
+      "Bash(npm run dev:*)",
+      "Bash(git merge:*)",
       "Bash(npm run typecheck:*)",
-      "Bash(npm run lint)",
       "Bash(npm run test:*)",
-      "Bash(npm audit:*)",
       "Bash(npm run build:*)",
       "Bash(git add:*)"
     ],

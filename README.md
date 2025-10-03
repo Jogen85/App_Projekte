@@ -1,295 +1,242 @@
-# IT-Projektübersicht (React + Vite + TypeScript)
+﻿# IT-Projektübersicht (React + Vite + TypeScript)
 
-> ✨ Interaktives Dashboard zur IT-Projektübersicht (GF/Aufsichtsrat) mit CSV-Datenbasis, Jahres-Sicht, Budget/Kosten, Ressourcen-Ampel, Gantt-ähnlicher Zeitachse und einem leichten Admin-Editor (CSV-Edit ohne Backend).
+> :sparkles: Interaktives Dashboard zur IT-Projektübersicht (GF/Aufsichtsrat) mit CSV-Datenbasis, 16:9 Desktop-Layout (1920×1080), Budget/Zeitstatus, AT 8.2 Compliance, Gantt-ähnlicher Zeitachse und Admin-Editor (CSV-Edit ohne Backend).
 
-## 🚀 Features
+## :rocket: Features
 
-### Dashboard
-- **KPI-Kacheln**
-  - Projektstatus-Übersicht (laufend/geplant/abgeschlossen)
-  - Kapazitätsauslastung (aktueller Monat)
-  - **Budget (Jahr)**: Großer Donut mit Hover-Tooltip, Schwellenwert-Farben (Grün ≤90%, Gelb ≤105%, Rot >105%)
-    - **Budget-Überschreitung transparent**: Rotes Warning-Banner bei Überschreitung mit präzisem Betrag
-    - Donut-Segmente: Ausgegeben + Überschreitung (statt gedeckelt)
-  - **Ressourcen (Monat)**: Balkendiagramm + moderne Status-Badge (32px Ping-Animation)
-    - Nur **aktive Projekte** zählen zur Ressourcenauslastung
-  - **Soll–Ist-Fortschritt**: Interaktive Karte mit klickbaren Kategorien
-    - Hinter Plan (rot), Im Plan (gelb), Vor Plan (grün)
-    - Einstellbare Toleranz (±Prozentpunkte)
-    - Top 3 Verzögerungen (klickbar, scrollt zu Projekt in Tabelle)
+- **16:9 Desktop-optimiertes Dashboard** (1920×1080, kein Mobile)
+  - KPI-Kacheln (laufend/geplant/abgeschlossen) – 120px Höhe
+  - Budget (Jahr) als Donut mit UX-optimierter Farblogik
+    - **Verbleibend** = Grün (>20%), Gelb (10-20%), Rot (<10%)
+    - **Ausgegeben** = Blau (neutral)
+    - Rote Warnung bei Budgetüberschreitung
+  - Zeitstatus-Übersicht (laufende Projekte): Aggregierte Ampel-Verteilung
+  - Soll–Ist-Fortschritt mit Top 3 Verzögerungen (klickbar)
+  - Projekttabelle mit Budget-Fortschrittsbalken, AT 8.2 Compliance-Spalten, Ampeln Zeit/Budget
+  - Zeitachse (Gantt-ähnlich) mit Heute-Marker
+- **AT 8.2 Compliance-Tracking**
+  - Zwei Felder: "erforderlich" und "durchgeführt" (boolean)
+  - Filter-Dropdowns im Filterpanel
+  - Checkboxen im Admin CSV Editor
+- **Admin-Editor** (ohne Server)
+  - `/admin` Route mit Inline-Tabelle: Projekte anlegen, bearbeiten, löschen
+  - CSV importieren/exportieren, lokal speichern (localStorage) → Dashboard liest lokale Daten automatisch
+- **Technisch**
+  - React 18 + Vite 5 + TypeScript Strict
+  - TailwindCSS 3 (Custom Utilities: max-w-presentation, h-chart, h-kpi, h-table)
+  - Recharts (Charts) mit Code-Splitting (`React.lazy` + `manualChunks`)
+  - ESLint + Prettier, Vitest (58 Tests passing), GitHub Actions CI
 
-- **Projekttabelle**
-  - Filter: Status, Gesellschaft, Jahr-Sicht, Soll-Ist-Kategorie
-  - Mini-Budget-Donuts je Projekt (Ausgegeben/Verbleibend)
-  - RAG-Ampeln (Zeit/Budget) pro Projekt
-  - Highlight & Scroll-to bei Klick aus Soll–Ist-Karte
-  - Fortschrittsbalken, Restzeit-Anzeige
-
-- **Zeitachse (Gantt-ähnlich)**
-  - Status-basierte Farben (Blau: laufend, Gelb mit Schraffur: geplant, Dunkelgrau: abgeschlossen)
-  - Fortschritts-Overlay für laufende Projekte
-  - Heute-Markierung (vertikale Linie)
-  - Monatsticks mit deutschen Abkürzungen
-
-### Admin-Editor (ohne Server)
-- `/admin` Route mit Inline-Tabelle
-- Projekte anlegen, bearbeiten, löschen
-- **CSV importieren/exportieren**
-- Lokal speichern (localStorage) → Dashboard liest lokale Daten automatisch
-- Optional: Demo-CSV laden von `public/data/projects.csv`
-
-### Technisch
-- **React 18** + **Vite 5** + **TypeScript** (Strict Mode)
-- **TailwindCSS 3** für modernes UI-Design
-- **Recharts** mit Code-Splitting (`React.lazy` + `manualChunks`)
-- **Vitest** (58 Tests: RAG-Logik, CSV-Parser, Budget-Überschreitung)
-- **ESLint** + **Prettier**, **GitHub Actions CI**
-
-## 📂 Projektstruktur
+## :file_folder: Projektstruktur
 
 ```
 public/
-  data/projects.csv        # Demo-CSV (optionaler Import)
+  data/projects.csv        # Demo-CSV (wird nicht automatisch geladen)
 src/
-  App.tsx                  # Dashboard (orchestriert alle KPI-Karten)
+  App.tsx                  # Dashboard (16:9 Layout, 1800px Container)
   main.tsx                 # App-Entry, Router ("/", "/admin")
-  ui.tsx                   # UI-Primitives (Card, Badge, ProgressBar, COLORS)
-  lib.ts                   # Zeit/Datums-Hilfen, RAG-Logik, Budget-Berechnungen
+  ui.tsx                   # UI-Primitives (Card, Badge, ProgressBar mit Target-Linie)
+  lib.ts                   # Zeit/Datums-Hilfen, RAG-Logik, Budgetfunktionen
+  lib/csv.ts               # CSV Parser (BOM, German numbers, boolean parsing)
   types.ts                 # Typen (Project, NormalizedProject)
-  lib/
-    csv.ts                 # CSV-Parser/Serializer (BOM, Quotes, Delimiter-Erkennung)
   components/
-    BudgetDonut.tsx        # Budget-Donut mit Überschreitungs-Detektion
-    ResourceTile.tsx       # Ressourcen-Balken + Status-Badge
-    ProgressDelta.tsx      # Soll–Ist-Karte (klickbare Kategorien, Top-3)
-    ProjectsTable.tsx      # Projekttabelle mit Filtern, Mini-Donuts, RAG-Ampeln
-    TrafficLight.tsx       # Moderne Status-Badge (32px Ping-Animation)
-    Timeline.tsx           # Gantt-Style Timeline
-    FiltersPanel.tsx       # Status/Gesellschaft/Jahr-Filter
+    BudgetDonut.tsx        # Budget-Kachel Donut (Neue Farblogik, Overspend Detection)
+    TimeStatusOverview.tsx # Zeitstatus-Übersicht (Ampel-Verteilung)
+    ProgressDelta.tsx      # Soll–Ist-Fortschritt (Top 3 Verzögerungen)
+    ProjectsTable.tsx      # Projekttabelle (AT 8.2, Budget-Bars, Target-Progress)
+    Timeline.tsx           # Gantt-Zeitachse (Heute-Marker)
+    FiltersPanel.tsx       # Filter (Status, Org, Year, AT 8.2)
+    TrafficLight.tsx       # Status Badge (32px Dot mit Ping Animation)
   pages/
     ProjectsAdmin.tsx      # Admin-Editor (CSV/Inline, localStorage)
   test/
     setup.ts               # Vitest Setup (ResizeObserver Mock)
-index.html                 # HTML, UTF-8
+index.html                 # HTML, UTF-8, min-width: 1440px
 vercel.json                # SPA-Rewrite für Vercel
+tailwind.config.js         # Custom Utilities (max-w-presentation, h-chart, etc.)
+CHANGELOG.md               # Ausführliche Änderungshistorie
 ```
 
-## 🔧 Setup & Skripte
+## :wrench: Setup & Skripte
 
 ```bash
-npm ci                 # Dependencies installieren
-npm run dev            # Vite-Devserver (HMR, http://localhost:5173)
-npm run build          # TypeScript Check + Production Build
-npm run preview        # Lokale Preview des Production Builds
+npm ci                 # Dependencies
+npm run dev            # Vite-Devserver (HMR)
+npm run build          # Typecheck + Production-Build
+npm run preview        # Lokale Preview des Builds
 npm run typecheck      # TypeScript Build (no emit)
-npm run lint           # ESLint Check
-npm run format         # Prettier formatieren
-npm run test           # Vitest (58 Tests)
-npm run test:watch     # Vitest Watch-Modus
+npm run lint           # ESLint
+npm run test           # Vitest (Beispiele)
 ```
 
-**Node 18+ empfohlen** (Vite 5 Requirement)
+Node 18+ empfohlen (Vite 5).
 
-## 🗂️ Datenbasis (CSV)
+## :card_index_dividers: Datenbasis (CSV)
 
-### Format
-Erwartete Spalten (Semikolon `;` oder automatische Erkennung):
-```
-id;title;owner;description;status;start;end;progress;budgetPlanned;costToDate;hoursPerMonth;org
-```
+- **Erwartete Spalten** (Semikolon `;`):
+  ```
+  id;title;owner;description;status;start;end;progress;budgetPlanned;costToDate;org;requiresAT82Check;at82Completed
+  ```
+- **Felder**
+  - `id`: frei (z. B. `p-...`), string
+  - `title`, `owner`, `description`: string
+  - `status`: `planned` | `active` | `done` (kleingeschrieben)
+  - `start`, `end`: Datum `YYYY-MM-DD` oder `DD.MM.YYYY`
+  - `progress`: 0..100 (Prozent)
+  - `budgetPlanned`, `costToDate`: Zahl >= 0 (unterstützt deutsches Format: `10.000,50` → 10000.5)
+  - `org`: z. B. `BB`, `MBG`, `BB/MBG`
+  - `requiresAT82Check`, `at82Completed`: Boolean (`true`/`false`, `Ja`/`Nein`, `yes`/`no`, `1`/`0`)
+- **Parser** (`src/lib/csv.ts`)
+  - Erkennt `;`/`,` automatisch (auch in Anführungszeichen)
+  - Unterstützt `"..."`-Felder inkl. `""`-Escapes, BOM/NUL-Cleanup, `\r`-Entfernung
+  - Deutsche Zahlenformate: `10.000,50` → 10000.5
+  - Boolean-Parsing: `Ja`/`true`/`yes`/`1` → `true`, `Nein`/`false`/`no`/`0` → `false`
 
-### Felder
-- `id`: String (z.B. `p-...`)
-- `title`, `owner`, `description`: String
-- `status`: `planned` | `active` | `done` (kleingeschrieben in CSV)
-- `start`, `end`: Datum `YYYY-MM-DD` oder `DD.MM.YYYY`
-- `progress`: 0..100 (Prozent)
-- `budgetPlanned`, `costToDate`, `hoursPerMonth`: Zahl ≥ 0
-- `org`: z.B. `BB`, `MBG`, `BB/MBG`
+## :pencil: Admin-Editor (ohne Backend)
 
-### Parser-Features
-- Erkennt `;` oder `,` automatisch
-- Unterstützt `"..."` Felder mit `""` Escapes
-- BOM/NUL-Cleanup, `\r`-Entfernung
-- Numerische Normalisierung (Dezimal-Komma/Punkt)
+- **Aufruf**: `/admin` (Direktaufruf funktioniert auf Vercel dank `vercel.json` Rewrite)
+- **Funktionen**:
+  - Neu anlegen („Neu"), inline editieren, löschen
+  - CSV importieren (ersetzt aktuelle Liste)
+  - CSV exportieren (Download)
+  - Speichern (lokal): schreibt die aktuelle Liste in `localStorage` (`projects_json`)
+  - **AT 8.2 Compliance**: Zwei Checkbox-Spalten („erforderlich" und „durchgeführt")
+- **Dashboard-Quelle**:
+  - Dashboard lädt automatisch `localStorage.projects_json`, falls vorhanden
+  - Fallback: `DEMO_PROJECTS` in `App.tsx` (6 Projekte mit AT 8.2 Daten)
 
-## ✏️ Admin-Editor (ohne Backend)
+## :bar_chart: Anzeige-Logik (Ist-Stand)
 
-### Aufruf
-`/admin` – Direktaufruf funktioniert auf Vercel dank `vercel.json` SPA-Rewrite
+### Budget (Jahr) Kachel – **Neue UX-optimierte Farblogik** ✅
+- **Großer Donut** mit Hover-Tooltip pro Segment
+- **Neue Logik** (intuitiv):
+  - **Verbleibend** = wichtig (fokussiert):
+    - Grün: >20% Budget frei (gut)
+    - Gelb: 10-20% Budget frei (Warnung)
+    - Rot: <10% Budget frei (kritisch)
+  - **Ausgegeben** = neutral: Immer Blau
+- **Budgetüberschreitung**: Roter Banner + dark-red Segment bei `remaining < 0`
+- Legende zeigt "Verbleibend" zuerst (prominent), "Ausgegeben" sekundär
 
-### Funktionen
-- **Neu anlegen**: Button „Neu" erstellt leeres Projekt
-- **Inline editieren**: Direkt in Tabellenzellen
-- **Löschen**: Pro Zeile
-- **CSV importieren**: Ersetzt aktuelle Liste (mit Delimiter-Erkennung)
-- **CSV exportieren**: Download als `.csv`
-- **Speichern (lokal)**: Schreibt in `localStorage.projects_json`
+### Zeitstatus-Übersicht (Laufende Projekte)
+- **Aggregierte Ampel-Verteilung** statt Projekt-Liste
+- 3 große Status-Kreise (48px): Grün (Im Plan), Gelb (Verzug), Rot (Kritisch)
+- Prozentuale Verteilung + Gesamtzähler
+- Kategorisierung:
+  - **Rot**: Überfällig ODER >15pp hinter Plan
+  - **Gelb**: >5pp hinter Plan
+  - **Grün**: Im Plan oder voraus
 
-### Dashboard-Integration
-- Dashboard lädt automatisch `localStorage.projects_json`, falls vorhanden
-- Sonst Fallback zu `DEMO_PROJECTS` in App.tsx
-- Optional: Demo-CSV aus `public/data/` importieren
-
-## 📊 Anzeige-Logik (Aktueller Stand)
-
-### Budget (Jahr) – Kachel
-- **Großer Donut** mit Hover-Tooltip (Prozent + Euro pro Segment)
-- **Farb-Schwellen** (Ausgegeben-Segment):
-  - Grün: ≤ 90% Jahresbudget
-  - Gelb: ≤ 105%
-  - Rot: > 105%
-- **Budget-Überschreitung** (Kritischer Fix):
-  - Rotes Warning-Banner bei Überschreitung
-  - Präziser Betrag und Prozentsatz
-  - Donut zeigt **Überschreitungs-Segment** (dunkelrot)
-  - Legende ändert sich von "Verbleibend" zu "Überschreitung"
-
-### Ressourcen (Monat) – Kachel
-- **Balkendiagramm**: Kapazität vs. geplante Stunden
-- **Status-Badge**: Moderne 32px-Dot mit Ping-Animation (GitHub/Slack-Style)
-  - Nur **Rot pulsiert** (Gelb/Grün statisch)
-  - Tailwind native `animate-ping`
-- **Kritischer Fix**: Nur **aktive Projekte** zählen zur Ressourcenauslastung
-
-### Soll–Ist-Fortschritt – Kachel
-- **3 klickbare Kategorien**:
-  - Hinter Plan (rot): Delta < -Toleranz
-  - Im Plan (gelb): Delta innerhalb ±Toleranz
-  - Vor Plan (grün): Delta > +Toleranz
-- **Einstellbare Toleranz**: ±Prozentpunkte (Standard: 10pp)
-- **Top 3 Verzögerungen**: Liste mit größten negativen Deltas
-  - Klickbar: Scrollt zu Projekt in Tabelle und hebt es hervor
-- **Delta-Berechnung**: Ist-Fortschritt % − Soll-Fortschritt %
-  - Soll = (verstrichene Zeit / Gesamtzeit) × 100
+### Soll–Ist-Fortschritt (ProgressDelta)
+- **3 klickbare Kategorien**: Hinter Plan (rot), Im Plan (gelb), Vor Plan (grün)
+- **Einstellbare Toleranz**: ±% für "Im Plan"-Band
+- **Top 3 Verzögerungen**: Klickbar, scrollt zu Projekt in Tabelle
+- **Delta-Anzeige**: `%` statt `pp` (z.B. `-5.3%` für bessere Verständlichkeit)
 
 ### Projekttabelle
-- **Mini-Donuts**: Ausgegeben (Blau) / Verbleibend (Grau) – statisch, kein Threshold-Coloring
-- **RAG-Ampeln** pro Projekt:
-  - **Budget-Ampel**: Rot (>105%), Gelb (>90% & Fortschritt <80%), Grün (sonst)
-  - **Zeit-Ampel**: Basiert auf Delta (Fortschritt vs. erwarteter Fortschritt) und Überfälligkeit
-- **Filter**: Status, Gesellschaft, Jahr, Soll-Ist-Kategorie, Projekt-Highlight
-- **Scroll-to-Highlight**: Bei Klick aus Soll–Ist-Karte
+- **Budget-Fortschrittsbalken** (horizontal) statt Mini-Donuts
+- **Target-Progress-Visualisierung**: Schwarze Linie zeigt Soll-Fortschritt (erwarteter Fortschritt basierend auf Zeit)
+- **AT 8.2 Spalten**: "erforderlich" und "durchgeführt" (Checkmarks)
+- **Ampeln pro Projekt**:
+  - **Budget-Ampel**: Rot bei Kosten >105%, Gelb bei Kosten >90% und Fortschritt <80%, sonst Grün
+  - **Zeit-Ampel**: Rot bei Überfällig oder Delta <-15%, Gelb bei Delta <-5%, sonst Grün
 
-## 🔍 RAG-Logik (Traffic Light)
+### Timeline (Gantt-ähnlich)
+- **Farben**: Laufend Blau, Geplant Gelb (Schraffur), Abgeschlossen Dunkelgrau
+- **Fortschritts-Overlay**: Nur bei laufenden Projekten (hellblau)
+- **Heute-Marker**: Vertikale Linie mit Label (rechts der Linie, 28px über Achse, weißer Hintergrund)
+- **Monatsticks**: Deutsche Abkürzungen (Jan, Feb, Mär, ...)
 
-### Budget RAG
-- **Rot**: Kosten > 105% des geplanten Budgets
-- **Gelb**: Kosten > 90% UND Fortschritt < 80%
-- **Grün**: Sonst
+## :triangular_ruler: Entwicklung & Qualität
 
-### Zeit RAG
-- **Rot**: Überfällig (heute > Enddatum) UND Fortschritt < 100%, ODER Delta < -15pp
-- **Gelb**: Delta < -5pp
-- **Grün**: Sonst
-- Delta = Ist-Fortschritt % − erwarteter Fortschritt %
+- **Lint/Format**: ESLint + Prettier
+- **Tests**: Vitest (58 Tests passing)
+  - `lib.test.ts`: 23 Tests (Date utils, RAG logic)
+  - `csv.test.ts`: 21 Tests (Delimiter detection, quote escaping, BOM, German numbers)
+  - `BudgetDonut.test.tsx`: 14 Tests (Overspend detection, thresholds, edge cases)
+  - **ResizeObserver Mock**: `src/test/setup.ts` (für Recharts)
+- **Code-Splitting**: Charts und Tabelle via `React.lazy`; Vite `manualChunks` für `react`/`recharts` Vendor-Bundles
+- **A11y**: Aria-Labels/Tooltip; weitere Verbesserungen möglich
 
-### Ressourcen RAG
-- **Rot**: Genutzte Stunden > Kapazität
-- **Gelb**: Genutzte Stunden > 90% Kapazität
-- **Grün**: Sonst
-- **Wichtig**: Nur **aktive Projekte** zählen
+## :truck: Deployment (Vercel)
 
-## 🧪 Tests & Qualität
+- Build: `npm run build`
+- SPA-Rewrite: `vercel.json`
+  ```json
+  {"rewrites":[{"source":"/(.*)","destination":"/index.html"}]}
+  ```
+- Damit funktionieren Direktaufrufe wie `/admin` (Client-Router übernimmt)
 
-### Test-Suites (58 Tests, alle passing)
-- **`lib.test.ts`** (23 Tests): Datums-Utils, RAG-Logik Edge-Cases
-- **`csv.test.ts`** (21 Tests): Delimiter-Erkennung, Quote-Escaping, BOM-Handling, Numerische Normalisierung
-- **`BudgetDonut.test.tsx`** (14 Tests): Überschreitungs-Detektion, Schwellenwerte, Edge-Cases
+## :bulb: Bekannte Punkte / Empfehlungen
 
-### Tooling
-- **ESLint** + **Prettier** für Code-Qualität
-- **Vitest** + `@testing-library/react` (jsdom)
-- **ResizeObserver Mock** für Recharts-Komponenten
-- **Code-Splitting**: Charts/Tabelle via `React.lazy`, Vite `manualChunks` für Vendor-Bundles
+### Encoding/Typografie
+- Projekt nutzt UTF-8; an einzelnen UI-Stellen wurden HTML-Entities verwendet
+- Empfohlen: Dateien durchgängig als UTF-8 speichern
 
-## 🚢 Deployment (Vercel)
+### Desktop-Only Approach (16:9)
+- **Bewusst keine Mobile-Optimierung**: Dashboard für Business-Präsentationen (Beamer, 1920×1080)
+- **Min-Width**: 1440px erforderlich
+- **Container**: `max-w-presentation` (1800px, 90% von 1920px)
 
-### Build
-```bash
-npm run build
-```
+### Technische Schulden
+1. **TimelineCompact.tsx**: Erstellt aber nicht verwendet (kann gelöscht werden)
+2. **Budget-Donut**: Feste Werte (150px, outer=60, inner=40) statt dynamischer Berechnung
 
-### SPA-Rewrite
-`vercel.json`:
-```json
-{"rewrites":[{"source":"/(.*)","destination":"/index.html"}]}
-```
-→ Funktioniert mit Direktaufrufen wie `/admin` (Client-Router übernimmt)
+### Optional (nicht implementiert)
+- **Time-weighted budget evaluation**: YTD costs vs. expected YTD budget
+- **Consistent delta-based RAG**: Ausgaben% − Fortschritt% Threshold
+- **CSV validation UI**: Preview/Fehlerliste vor Import
+- **Backend/Sync**: Serverless-Persistenz oder Git-PR-Flow
 
-## 🗒️ Wichtige Änderungen & Fixes
+## :memo: Changelog
 
-### ✅ Budget-Transparenz & Fachliche Fixes (2025-09-30, eb3c411)
-**Kritisch für GF/Aufsichtsrat-Oversight** – Alle Fixes implementiert ✅:
+**Siehe ausführliche Dokumentation in `CHANGELOG.md`**
 
-1. **Budget-Überschreitung transparent**
-   - **Problem**: `Math.min()` cappte Anzeige bei 100%, versteckte kritische Überschreitungen
-   - **Lösung**: Rotes Warning-Banner, Überschreitungs-Segment im Donut, präzise Beträge
-   - ✅ Code: BudgetDonut.tsx Zeile 14 (`isOverBudget = remaining < 0`)
-   - 14 neue Tests für alle Edge-Cases
+### Highlights (2025-01-03)
+- **16:9 Desktop-Layout** (1800px Container, kein Mobile)
+- **AT 8.2 Compliance** (Filter + Admin Editor)
+- **Budget-Donut UX-Redesign** (Grün für Verbleibend, Blau für Ausgegeben)
+- **Zeitstatus-Übersicht** (Aggregierte Ampel-Verteilung)
+- **ProgressDelta** (Soll–Ist mit Top 3 Verzögerungen)
+- **Ressourcen-Features entfernt** (hoursPerMonth, ResourceTile, Capacity)
+- **Timeline Heute-Label optimiert** (rechts der Linie, weißer Hintergrund)
 
-2. **Ressourcen nur für aktive Projekte**
-   - **Problem**: Geplante/abgeschlossene Projekte inflatierten Kapazitätsauslastung
-   - **Lösung**: Filter `statusNorm === 'active'` in Ressourcenberechnung
-   - ✅ Code: App.tsx Zeile 108
-   - Realistischere Kapazitätsplanung
+### Ältere Änderungen
+- Code-Split + Komponentenstruktur (`components/` + `pages/`)
+- Admin-Editor (`/admin`): Inline-Tabelle, CSV Import/Export, `localStorage`
+- ESLint/Prettier/Vitest/CI ergänzt
+- Vercel-Rewrite (`vercel.json`) für SPA-Routen
+- Zeitachse mit Legende, Heute-Linie, Monatsticks
+- UI komplett auf Deutsch umgestellt
 
-3. **React Hooks Dependencies**
-   - `today` zu allen date-basierten `useMemo`/`useCallback` Dependencies hinzugefügt
-   - ✅ Code: App.tsx Zeilen 87, 111, 132
-   - Verhindert stale Closures bei Datumsberechnungen
+## :page_facing_up: Migrationsleitfaden
 
-### ✅ Status-Indikator Modernisierung (2025-09-30, b751ed7)
-- **Alte Version**: 3D-Bezel mit komplexen Gradienten (88 Zeilen)
-- **Neue Version**: Moderne 32px Status-Badge mit Ping-Animation
-  - GitHub/Slack/Linear-inspiriert
-  - ✅ Tailwind native `animate-ping` verwendet (TrafficLight.tsx Zeile 38)
-  - Container: w-16 (64px) für genug Raum
-  - Keine Overflow-Probleme mehr
+### Von altem Layout zu 16:9 Desktop
 
-### ✅ Soll–Ist Feature (2025-09-14, c9ec3ed)
-- Ersetzt Burndown-Chart durch interaktive ProgressDelta-Karte
-- Klickbare Kategorien filtern Projekttabelle
-- Einstellbare Toleranz für "Im Plan"-Band
-- Top 3 Verzögerungen mit Click-to-Scroll Highlighting
+**Breaking Changes**:
+1. **CSV-Format geändert**:
+   - **Entfernt**: `hoursPerMonth`
+   - **Neu**: `requiresAT82Check`, `at82Completed`
 
-### ✅ i18n & Deutsche Labels (2025-09-11 - 2025-09-16)
-- Komplette UI-Übersetzung auf Deutsch
-- "Verantwortlicher MA", "Gesellschaft", "Fortschritt %"
-- Status-Anzeigen: "geplant", "laufend", "abgeschlossen"
-- Deutsche Monatsabkürzungen in Timeline
+2. **Layout nicht mehr responsive**:
+   - Min-width: 1440px erforderlich
+   - Nicht für Tablets/Phones geeignet
 
-## 💡 Bekannte Punkte / Empfehlungen
+**Migration Steps**:
+1. CSV-Dateien aktualisieren:
+   ```csv
+   # Alt: id;title;owner;...;hoursPerMonth;org
+   # Neu: id;title;owner;...;org;requiresAT82Check;at82Completed
+   ```
 
-### Optional für zukünftige Verbesserungen
-- **Zeitgewichtete Budget-Bewertung**: AusgabenYTD vs. erwarteter Budget-YTD (weniger Verzerrung am Jahresende)
-- **Konsistente Delta-basierte RAG**: Ausgaben% − Fortschritt% Schwellenwerte für alle Indikatoren
-- **Mini-Donut-Farbe an Ampel koppeln**: Threshold-Coloring auch in Projekttabelle
-- **CSV-Validierung**: Preview/Fehlerliste vor Import im Admin
-- **Backend/Sync**: Serverless Persistence oder Git-PR-Flow für Zusammenarbeit
+2. Boolean-Werte in CSV:
+   - `true`, `Ja`, `yes`, `1` → true
+   - `false`, `Nein`, `no`, `0` → false
 
-### Encoding & i18n
-- **UTF-8** durchgängig
-- **UI komplett Deutsch**:
-  - "Verantwortlicher MA" (nicht "Owner")
-  - "Gesellschaft" (nicht "Org")
-  - "Fortschritt %" (nicht "% prog")
-  - Status: "geplant", "laufend", "abgeschlossen"
-- Legacy HTML-Entities in README für historische Kompatibilität
+3. localStorage prüfen:
+   - Falls `projects_json` existiert → CSV neu importieren oder manuell AT 8.2 Felder hinzufügen
 
-## 📋 Changelog (Relevante Highlights)
+## :busts_in_silhouette: Contributors
 
-- **2025-09-30**: Budget-Überschreitung transparent ✅, Ressourcen nur aktive Projekte ✅, Status-Badge Modernisierung ✅, 55 neue Tests, alle Best Practices implementiert
-- **2025-09-14**: Soll–Ist-Fortschritt-Karte, klickbare Kategorien, Top-3 Verzögerungen
-- **2025-09-11 - 2025-09-16**: Komplette deutsche UI-Übersetzung, Labels, Timeline
-- **Früher**: Code-Split + Komponentenstruktur, Budget-Donut Redesign, Admin-Editor, ESLint/Prettier/Vitest/CI
-
-## 🔗 Links & Ressourcen
-
-- **Vercel Deployment**: Auto-Deploy aus `main` Branch
-- **Tech Stack**: React 18, Vite 5, TypeScript, TailwindCSS 3, Recharts
-- **Testing**: Vitest mit jsdom, 58 Tests passing
-
----
-
-**Entwickelt für GF/Aufsichtsrat-Reporting mit Fokus auf Transparenz, Usability und Performance.**
+- **Claude Code** (AI Assistant) – Implementierung & Dokumentation
+- **Christian J.** – Requirements & UX Feedback

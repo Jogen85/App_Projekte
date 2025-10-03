@@ -1,6 +1,6 @@
 ﻿import type { Project } from '../types';
 
-const REQUIRED_FIELDS = ['id','title','owner','description','status','start','end','progress','budgetPlanned','costToDate','hoursPerMonth','org'] as const;
+const REQUIRED_FIELDS = ['id','title','owner','description','status','start','end','progress','budgetPlanned','costToDate','org','requiresAT82Check','at82Completed'] as const;
 const NULL_CHAR = String.fromCharCode(0);
 
 export type CsvDelimiter = ';' | ',';
@@ -100,9 +100,23 @@ export function parseProjectsCSV(text: string): Project[] {
     };
     const numeric = (value: string) => {
       if (value == null || value === '') return 0;
-      const normalized = value.replace(/\s+/g, '');
-      const num = Number(normalized.replace(',', '.'));
+      let normalized = value.trim().replace(/\s+/g, '');
+      // Handle German number format: 10.000,50 -> 10000.50
+      if (normalized.includes(',') && normalized.includes('.')) {
+        normalized = normalized.replace(/\./g, '').replace(',', '.');
+      } else if (normalized.includes(',')) {
+        // Only comma, assume decimal separator: 50,5 -> 50.5
+        normalized = normalized.replace(',', '.');
+      }
+      const num = Number(normalized);
       return Number.isFinite(num) ? num : 0;
+    };
+
+    const parseBoolean = (val: string): boolean | undefined => {
+      const v = val?.toLowerCase().trim();
+      if (v === 'true' || v === 'ja' || v === 'yes' || v === '1') return true;
+      if (v === 'false' || v === 'nein' || v === 'no' || v === '0') return false;
+      return undefined;
     };
 
     projects.push({
@@ -116,8 +130,9 @@ export function parseProjectsCSV(text: string): Project[] {
       progress: numeric(pick('progress')),
       budgetPlanned: numeric(pick('budgetPlanned')),
       costToDate: numeric(pick('costToDate')),
-      hoursPerMonth: numeric(pick('hoursPerMonth')),
       org: pick('org') || 'BB',
+      requiresAT82Check: parseBoolean(pick('requiresAT82Check')),
+      at82Completed: parseBoolean(pick('at82Completed')),
     });
   }
 
@@ -134,8 +149,12 @@ function escapeField(value: unknown, delimiter: CsvDelimiter): string {
 export function projectsToCSV(projects: Project[], delimiter: CsvDelimiter = ';'): string {
   const header = REQUIRED_FIELDS.join(delimiter);
   const lines = projects.map((project) => REQUIRED_FIELDS.map((field) => {
-    const value = (project as Record<string, unknown>)[field] ?? '';
-    return escapeField(value, delimiter);
+    let value = (project as Record<string, unknown>)[field];
+    // Convert booleans to Ja/Nein for better readability
+    if (typeof value === 'boolean') {
+      value = value ? 'Ja' : 'Nein';
+    }
+    return escapeField(value ?? '', delimiter);
   }).join(delimiter));
   return [header, ...lines].join('\n');
 }

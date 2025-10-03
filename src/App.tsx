@@ -5,7 +5,7 @@ import type { Project, NormalizedProject } from './types';
 import {
   toDate, fmtDate, getToday, getCurrentYear, daysBetween,
   yearStart, yearEnd, overlapDays,
-  calcTimeRAGD, calcBudgetRAG, calcResourceRAG,
+  calcTimeRAGD, calcBudgetRAG,
   plannedBudgetForYearD, costsYTDForYearD,
 } from './lib';
 import FiltersPanel from './components/FiltersPanel';
@@ -13,33 +13,34 @@ import Timeline from './components/Timeline';
 
 const ProjectsTable = lazy(() => import('./components/ProjectsTable'));
 const BudgetDonut = lazy(() => import('./components/BudgetDonut'));
-const ResourceTile = lazy(() => import('./components/ResourceTile'));
 const ProgressDelta = lazy(() => import('./components/ProgressDelta'));
+const TimeStatusOverview = lazy(() => import('./components/TimeStatusOverview'));
 
 const DEMO_PROJECTS: Project[] = [
   { id: 'p1', title: 'DMS Migration MBG (Cloud)', owner: 'Christian J.', description: 'Migration d.velop DMS in die Cloud inkl. Aktenpläne & Prozesse',
-    status: 'active', start: '2025-05-01', end: '2025-12-15', progress: 65, budgetPlanned: 120000, costToDate: 70000, hoursPerMonth: 8, org: 'MBG' },
+    status: 'active', start: '2025-05-01', end: '2025-12-15', progress: 65, budgetPlanned: 120000, costToDate: 70000, org: 'MBG', requiresAT82Check: true, at82Completed: false },
   { id: 'p2', title: 'EXEC DMS Stabilisierung (BB)', owner: 'Christian J.', description: 'Stabilisierung & Performanceoptimierung EXEC DMS im Rechenzentrum',
-    status: 'active', start: '2025-03-10', end: '2025-10-31', progress: 80, budgetPlanned: 60000, costToDate: 58000, hoursPerMonth: 6, org: 'BB' },
+    status: 'active', start: '2025-03-10', end: '2025-10-31', progress: 80, budgetPlanned: 60000, costToDate: 58000, org: 'BB', requiresAT82Check: false, at82Completed: false },
   { id: 'p3', title: 'E-Rechnung 2025 (BB/MBG)', owner: 'Christian J.', description: 'Implementierung E-Rechnungsprozesse (EXEC/FIDES & d.velop)',
-    status: 'active', start: '2025-07-01', end: '2025-11-30', progress: 35, budgetPlanned: 40000, costToDate: 12000, hoursPerMonth: 4, org: 'BB/MBG' },
+    status: 'active', start: '2025-07-01', end: '2025-11-30', progress: 35, budgetPlanned: 40000, costToDate: 12000, org: 'BB/MBG', requiresAT82Check: true, at82Completed: true },
   { id: 'p4', title: 'MPLS Redesign Rechenzentrum', owner: 'Christian J.', description: 'Neukonzeption MPLS/Edge inkl. Failover & Dokumentation',
-    status: 'planned', start: '2025-11-01', end: '2026-02-28', progress: 0, budgetPlanned: 75000, costToDate: 0, hoursPerMonth: 6, org: 'BB' },
+    status: 'planned', start: '2025-11-01', end: '2026-02-28', progress: 0, budgetPlanned: 75000, costToDate: 0, org: 'BB', requiresAT82Check: true, at82Completed: false },
   { id: 'p5', title: 'Placetel-Webex Migration', owner: 'Christian J.', description: 'Migrierte Telefonie/Collab-Plattform inkl. Endgeräte',
-    status: 'done', start: '2024-09-01', end: '2025-03-31', progress: 100, budgetPlanned: 15000, costToDate: 14500, hoursPerMonth: 0, org: 'BB' },
+    status: 'done', start: '2024-09-01', end: '2025-03-31', progress: 100, budgetPlanned: 15000, costToDate: 14500, org: 'BB', requiresAT82Check: false, at82Completed: false },
   { id: 'p6', title: 'Zentrales Monitoring (Grafana)', owner: 'Christian J.', description: 'Aufbau Dashboards für Kernsysteme & Alerts',
-    status: 'planned', start: '2025-09-20', end: '2025-12-20', progress: 0, budgetPlanned: 10000, costToDate: 0, hoursPerMonth: 4, org: 'BB' },
+    status: 'planned', start: '2025-09-20', end: '2025-12-20', progress: 0, budgetPlanned: 10000, costToDate: 0, org: 'BB', requiresAT82Check: true, at82Completed: true },
 ];
 
 export default function App() {
   const today = getToday();
   const [projects, setProjects] = useState<Project[]>(DEMO_PROJECTS);
-  const [capacity, setCapacity] = useState<number>(16);
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [orgFilter, setOrgFilter] = useState<string>('all');
   const [yearOnly, setYearOnly] = useState<boolean>(true);
   const [year, setYear] = useState<number>(() => getCurrentYear());
   const [csvError, setCsvError] = useState<string | null>(null);
+  const [at82RequiredFilter, setAt82RequiredFilter] = useState<string>('all');
+  const [at82CompletedFilter, setAt82CompletedFilter] = useState<string>('all');
 
   useEffect(() => {
     try { const ls = localStorage.getItem('projects_json'); if (ls) setProjects(JSON.parse(ls)); } catch (e) { /* ignore */ }
@@ -64,9 +65,13 @@ export default function App() {
       if (yearOnly && !overlapsYearD(p, year)) return false;
       if (sFilter !== 'all' && p.statusNorm !== sFilter) return false;
       if (oFilter !== 'all' && p.orgNorm !== oFilter) return false;
+      if (at82RequiredFilter === 'yes' && !p.requiresAT82Check) return false;
+      if (at82RequiredFilter === 'no' && p.requiresAT82Check) return false;
+      if (at82CompletedFilter === 'yes' && !p.at82Completed) return false;
+      if (at82CompletedFilter === 'no' && p.at82Completed) return false;
       return true;
     });
-  }, [normalized, statusFilter, orgFilter, yearOnly, year]);
+  }, [normalized, statusFilter, orgFilter, yearOnly, year, at82RequiredFilter, at82CompletedFilter]);
 
   const bounds = useMemo(() => {
     if (yearOnly) {
@@ -101,16 +106,8 @@ export default function App() {
         costSum += p.costToDate || 0;
       }
     }
-    const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
-    const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-    // Nur aktive Projekte zählen für Ressourcen-Auslastung (nicht geplante/abgeschlossene)
-    const usedHours = normalized
-      .filter((p) => p.statusNorm === 'active' && p.endD >= monthStart && p.startD <= monthEnd)
-      .reduce((s, p) => s + (p.hoursPerMonth || 0), 0);
-    return { activeCount: active.length, plannedCount: planned.length, doneCount: done.length, budgetPlannedSum, costSum, usedHours };
+    return { activeCount: active.length, plannedCount: planned.length, doneCount: done.length, budgetPlannedSum, costSum };
   }, [normalized, yearOnly, year, today]);
-
-  const resourceRAG = calcResourceRAG(kpis.usedHours, capacity);
 
   // Progress filter (Soll-Ist)
   const [progressFilter, setProgressFilter] = useState<'all'|'behind'|'ontrack'|'ahead'>('all');
@@ -164,20 +161,21 @@ export default function App() {
 
 
   return (
-    <div className={`min-h-screen ${COLORS.bg} ${COLORS.text} p-6`}>
-      <div className="max-w-7xl mx-auto space-y-6">
-        <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+    <div className={`min-h-screen ${COLORS.bg} ${COLORS.text} px-8 py-4`}>
+      <div className="max-w-presentation mx-auto space-y-3">
+        <header className="flex items-end justify-between">
           <div>
             <h1 className="text-2xl font-bold">IT-Projekt&uuml;bersicht (Demo)</h1>
             <p className={"text-sm " + COLORS.subtext}>Portfolio-&Uuml;berblick f&uuml;r Gesch&auml;ftsf&uuml;hrung &amp; Aufsichtsrat &mdash; Stand: {fmtDate(today)}</p>
             <a href="/admin" className="text-sm text-blue-600 hover:underline">Admin</a>
           </div>
           <FiltersPanel
-            capacity={capacity} setCapacity={setCapacity}
             statusFilter={statusFilter} setStatusFilter={setStatusFilter}
             orgFilter={orgFilter} setOrgFilter={setOrgFilter}
             yearOnly={yearOnly} setYearOnly={setYearOnly}
             year={year} setYear={setYear}
+            at82RequiredFilter={at82RequiredFilter} setAt82RequiredFilter={setAt82RequiredFilter}
+            at82CompletedFilter={at82CompletedFilter} setAt82CompletedFilter={setAt82CompletedFilter}
             onCSVUpload={onCSVUpload}
             onDownloadTemplate={downloadCSVTemplate}
           />
@@ -189,29 +187,40 @@ export default function App() {
           </Card>
         )}
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card title={"Laufend"}><div className="text-3xl font-semibold">{kpis.activeCount}</div></Card>
-          <Card title={"Geplant"}><div className="text-3xl font-semibold">{kpis.plannedCount}</div></Card>
-          <Card title={"Abgeschlossen"}><div className="text-3xl font-semibold">{kpis.doneCount}</div></Card>
-          <Card title={"Kapazität (Monat)"}><div className="text-3xl font-semibold">{capacity} h</div></Card>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          <Card title={`Budget (Jahr): ${new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR'}).format(kpis.budgetPlannedSum)}`} className="h-72">
-            <div className="flex flex-col gap-2">
-              <Suspense fallback={<div className="h-48 bg-slate-100 rounded animate-pulse" />}>
-                <BudgetDonut spent={budgetSpent} remaining={budgetRemaining} height={190} />
-              </Suspense>
+        {/* KPI-Zeile */}
+        <div className="grid grid-cols-3 gap-3">
+          <Card title={"Laufend"} className="h-kpi">
+            <div className="flex items-center justify-center h-full">
+              <div className="text-3xl font-semibold">{kpis.activeCount}</div>
             </div>
           </Card>
-          <Card title={"Ressourcen (aktueller Monat)"} className="h-72">
+          <Card title={"Geplant"} className="h-kpi">
+            <div className="flex items-center justify-center h-full">
+              <div className="text-3xl font-semibold">{kpis.plannedCount}</div>
+            </div>
+          </Card>
+          <Card title={"Abgeschlossen"} className="h-kpi">
+            <div className="flex items-center justify-center h-full">
+              <div className="text-3xl font-semibold">{kpis.doneCount}</div>
+            </div>
+          </Card>
+        </div>
+
+        {/* Chart-Zeile */}
+        <div className="grid grid-cols-3 gap-3">
+          <Card title={`Budget (Jahr): ${new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR'}).format(kpis.budgetPlannedSum)}`} className="h-chart">
             <Suspense fallback={<div className="h-48 bg-slate-100 rounded animate-pulse" />}>
-              <ResourceTile capacity={capacity} usedHours={kpis.usedHours} rag={resourceRAG as any} height={190} />
+              <BudgetDonut spent={budgetSpent} remaining={budgetRemaining} height={220} />
             </Suspense>
           </Card>
-          <Card title={"Soll-Ist-Fortschritt"} className="h-72">
+          <Card title={"Zeitlicher Status (laufende Projekte)"} className="h-chart">
             <Suspense fallback={<div className="h-48 bg-slate-100 rounded animate-pulse" />}>
-              <ProgressDelta projects={filtered as any} height={190}
+              <TimeStatusOverview projects={normalized} height={220} />
+            </Suspense>
+          </Card>
+          <Card title={"Soll-Ist-Fortschritt"} className="h-chart">
+            <Suspense fallback={<div className="h-48 bg-slate-100 rounded animate-pulse" />}>
+              <ProgressDelta projects={filtered as any} height={220}
                 onSelectCategory={(c) => setProgressFilter((prev) => prev === c ? 'all' : c)}
                 selectedCategory={progressFilter === 'all' ? null : progressFilter}
                 tolerance={progressTolerance}
@@ -222,6 +231,7 @@ export default function App() {
           </Card>
         </div>
 
+        {/* ProjectsTable mit fester Höhe und Scrollbar */}
         <Suspense fallback={<Card title={"Projekte"}><div className="h-32 bg-slate-100 rounded animate-pulse" /></Card>}>
           {progressFilter !== 'all' && (
             <div className="mb-2 flex items-center justify-between text-xs rounded border border-slate-200 bg-slate-50 px-3 py-2">
@@ -233,35 +243,24 @@ export default function App() {
               </button>
             </div>
           )}
-          <ProjectsTable
-            projects={filteredByProgress}
-            year={year}
-            yearOnly={yearOnly}
-            plannedBudgetForYearD={plannedBudgetForYearD as any}
-            costsYTDForYearD={costsYTDForYearD as any}
-            calcTimeRAGD={calcTimeRAGD as any}
-            calcBudgetRAG={calcBudgetRAG as any}
-            highlightId={highlightProjectId}
-          />
+          <Card title={"Projekte"}>
+            <div className="max-h-table overflow-y-auto">
+              <ProjectsTable
+                projects={filteredByProgress}
+                year={year}
+                yearOnly={yearOnly}
+                plannedBudgetForYearD={plannedBudgetForYearD as any}
+                costsYTDForYearD={costsYTDForYearD as any}
+                calcTimeRAGD={calcTimeRAGD as any}
+                calcBudgetRAG={calcBudgetRAG as any}
+                highlightId={highlightProjectId}
+              />
+            </div>
+          </Card>
         </Suspense>
 
-        <Card>
-          <div className="space-y-2">
-            <p className="text-xs text-slate-500">
-              Demo: Zahlen & Projekte sind fiktiv. Ampeln basieren auf einfachen Heuristiken (Zeit vs. Fortschritt, Budgetverbrauch, Ressourcengrenze).
-              Kapazit&auml;ts-Grenze oben &auml;nderbar (Standard 16h/Monat). Jahres-Sicht pro-rata (Tagesanteile) f&uuml;r Budget/Kosten.
-            </p>
-            <details className="text-xs text-slate-500">
-              <summary className="cursor-pointer font-medium">CSV-Spalten (erwartet)</summary>
-              <div className="mt-1">{"id; title; owner; description; status; start; end; progress; budgetPlanned; costToDate; hoursPerMonth; org"}</div>
-            </details>
-          </div>
-        </Card>
-
+        {/* Timeline am Ende */}
         <Timeline projects={filtered} bounds={bounds} yearOnly={yearOnly} year={year} />
-
-        {/* Alte Zeitachse entfernt zugunsten der neuen Timeline-Komponente */}
-
       </div>
     </div>
   );

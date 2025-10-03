@@ -9,8 +9,9 @@ export type Project = {
   progress: number;
   budgetPlanned: number;
   costToDate: number;
-  hoursPerMonth: number;
   org?: string;
+  requiresAT82Check?: boolean;
+  at82Completed?: boolean;
 };
 
 export type NormalizedProject = Project & {
