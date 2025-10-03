@@ -9,7 +9,7 @@ import {
   plannedBudgetForYearD, costsYTDForYearD,
 } from './lib';
 import FiltersPanel from './components/FiltersPanel';
-import TimelineCompact from './components/TimelineCompact';
+import Timeline from './components/Timeline';
 
 const ProjectsTable = lazy(() => import('./components/ProjectsTable'));
 const BudgetDonut = lazy(() => import('./components/BudgetDonut'));
@@ -186,19 +186,22 @@ export default function App() {
           </Card>
         )}
 
-        {/* KPI-Zeile mit kompakter Timeline */}
-        <div className="grid grid-cols-4 gap-3">
-          <Card title={"Laufend"} className="h-kpi flex items-center">
-            <div className="text-3xl font-semibold">{kpis.activeCount}</div>
+        {/* KPI-Zeile */}
+        <div className="grid grid-cols-3 gap-3">
+          <Card title={"Laufend"} className="h-kpi">
+            <div className="flex items-center justify-center h-full">
+              <div className="text-3xl font-semibold">{kpis.activeCount}</div>
+            </div>
           </Card>
-          <Card title={"Geplant"} className="h-kpi flex items-center">
-            <div className="text-3xl font-semibold">{kpis.plannedCount}</div>
+          <Card title={"Geplant"} className="h-kpi">
+            <div className="flex items-center justify-center h-full">
+              <div className="text-3xl font-semibold">{kpis.plannedCount}</div>
+            </div>
           </Card>
-          <Card title={"Abgeschlossen"} className="h-kpi flex items-center">
-            <div className="text-3xl font-semibold">{kpis.doneCount}</div>
-          </Card>
-          <Card title={"Zeitachse (Auswahl)"} className="h-kpi">
-            <TimelineCompact projects={filtered} bounds={bounds} yearOnly={yearOnly} year={year} />
+          <Card title={"Abgeschlossen"} className="h-kpi">
+            <div className="flex items-center justify-center h-full">
+              <div className="text-3xl font-semibold">{kpis.doneCount}</div>
+            </div>
           </Card>
         </div>
 
@@ -256,6 +259,9 @@ export default function App() {
             </div>
           </Card>
         </Suspense>
+
+        {/* Timeline am Ende */}
+        <Timeline projects={filtered} bounds={bounds} yearOnly={yearOnly} year={year} />
       </div>
     </div>
   );

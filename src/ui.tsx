@@ -18,9 +18,9 @@ export const ragColorDot = (status: string) =>
   ({ green: COLORS.green, amber: COLORS.amber, red: COLORS.red } as Record<string,string>)[status] || COLORS.slate;
 
 export const Card: React.FC<{ title?: string; className?: string; children?: React.ReactNode }> = ({ title, children, className = "" }) => (
-  <div className={`rounded-2xl shadow-sm border ${COLORS.border} ${COLORS.card} p-4 ${className}`}>
-    {title && <h3 className="font-semibold text-slate-700 mb-3">{title}</h3>}
-    {children}
+  <div className={`rounded-2xl shadow-sm border ${COLORS.border} ${COLORS.card} p-4 flex flex-col ${className}`}>
+    {title && <h3 className="font-semibold text-slate-700 mb-3 flex-shrink-0">{title}</h3>}
+    <div className="flex-1 min-h-0">{children}</div>
   </div>
 );
 
