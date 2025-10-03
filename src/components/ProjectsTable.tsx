@@ -30,6 +30,8 @@ const ProjectsTable: React.FC<Props> = ({ projects, year, yearOnly, plannedBudge
             <tr className="text-left text-slate-600">
               <th className="py-2 pr-4">{"Projekt"}</th>
               <th className="py-2 pr-4">{"Gesellschaft"}</th>
+              <th className="py-2 pr-3 text-center">{"AT 8.2 erf."}</th>
+              <th className="py-2 pr-3 text-center">{"AT 8.2 durchgef."}</th>
               <th className="py-2 pr-4">{"Status"}</th>
               <th className="py-2 pr-4">{"Zeitraum"}</th>
               <th className="py-2 pr-4">{"Restzeit"}</th>
@@ -61,6 +63,12 @@ const ProjectsTable: React.FC<Props> = ({ projects, year, yearOnly, plannedBudge
                     <div className="text-slate-500 text-xs mt-1 max-w-md">{p.description}</div>
                   </td>
                   <td className="py-3 pr-4 whitespace-nowrap">{p.org || '-'}</td>
+                  <td className="py-3 pr-3 text-center">
+                    {p.requiresAT82Check ? <span className="text-green-600">✓</span> : <span className="text-slate-300">—</span>}
+                  </td>
+                  <td className="py-3 pr-3 text-center">
+                    {p.at82Completed ? <span className="text-green-600">✓</span> : <span className="text-slate-300">—</span>}
+                  </td>
                   <td className="py-3 pr-4">
                     {p.statusNorm === 'active' && <Badge tone="green">{"laufend"}</Badge>}
                     {p.statusNorm === 'planned' && <Badge tone="amber">{"geplant"}</Badge>}
