@@ -1,5 +1,5 @@
 import React from 'react';
-import { Badge, Card, ProgressBar, Ampel } from '../ui';
+import { Badge, ProgressBar, Ampel } from '../ui';
 import { fmtDate } from '../lib';
 import type { NormalizedProject } from '../types';
 
@@ -23,8 +23,7 @@ const ProjectsTable: React.FC<Props> = ({ projects, year, yearOnly, plannedBudge
     }
   }, [highlightId]);
   return (
-    <Card title={"Projekte"}>
-      <div className="overflow-x-auto">
+    <div className="overflow-x-auto">
         <table className="min-w-full text-sm">
           <thead>
             <tr className="text-left text-slate-600">
@@ -109,7 +108,6 @@ const ProjectsTable: React.FC<Props> = ({ projects, year, yearOnly, plannedBudge
           </tbody>
         </table>
       </div>
-    </Card>
   );
 };
 

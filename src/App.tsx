@@ -9,7 +9,7 @@ import {
   plannedBudgetForYearD, costsYTDForYearD,
 } from './lib';
 import FiltersPanel from './components/FiltersPanel';
-import Timeline from './components/Timeline';
+import TimelineCompact from './components/TimelineCompact';
 
 const ProjectsTable = lazy(() => import('./components/ProjectsTable'));
 const BudgetDonut = lazy(() => import('./components/BudgetDonut'));
@@ -161,13 +161,12 @@ export default function App() {
 
 
   return (
-    <div className={`min-h-screen ${COLORS.bg} ${COLORS.text} p-6`}>
-      <div className="max-w-7xl mx-auto space-y-6">
-        <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+    <div className={`min-h-screen ${COLORS.bg} ${COLORS.text} px-8 py-4`}>
+      <div className="max-w-presentation mx-auto space-y-3">
+        <header className="flex items-end justify-between">
           <div>
             <h1 className="text-2xl font-bold">IT-Projekt&uuml;bersicht (Demo)</h1>
             <p className={"text-sm " + COLORS.subtext}>Portfolio-&Uuml;berblick f&uuml;r Gesch&auml;ftsf&uuml;hrung &amp; Aufsichtsrat &mdash; Stand: {fmtDate(today)}</p>
-            <a href="/admin" className="text-sm text-blue-600 hover:underline">Admin</a>
           </div>
           <FiltersPanel
             statusFilter={statusFilter} setStatusFilter={setStatusFilter}
@@ -187,28 +186,39 @@ export default function App() {
           </Card>
         )}
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          <Card title={"Laufend"}><div className="text-3xl font-semibold">{kpis.activeCount}</div></Card>
-          <Card title={"Geplant"}><div className="text-3xl font-semibold">{kpis.plannedCount}</div></Card>
-          <Card title={"Abgeschlossen"}><div className="text-3xl font-semibold">{kpis.doneCount}</div></Card>
+        {/* KPI-Zeile mit kompakter Timeline */}
+        <div className="grid grid-cols-4 gap-3">
+          <Card title={"Laufend"} className="h-kpi flex items-center">
+            <div className="text-3xl font-semibold">{kpis.activeCount}</div>
+          </Card>
+          <Card title={"Geplant"} className="h-kpi flex items-center">
+            <div className="text-3xl font-semibold">{kpis.plannedCount}</div>
+          </Card>
+          <Card title={"Abgeschlossen"} className="h-kpi flex items-center">
+            <div className="text-3xl font-semibold">{kpis.doneCount}</div>
+          </Card>
+          <Card title={"Zeitachse (Auswahl)"} className="h-kpi">
+            <TimelineCompact projects={filtered} bounds={bounds} yearOnly={yearOnly} year={year} />
+          </Card>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          <Card title={`Budget (Jahr): ${new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR'}).format(kpis.budgetPlannedSum)}`} className="h-72">
-            <div className="flex flex-col gap-2">
+        {/* Chart-Zeile */}
+        <div className="grid grid-cols-3 gap-3">
+          <Card title={`Budget (Jahr): ${new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR'}).format(kpis.budgetPlannedSum)}`} className="h-chart">
+            <div className="flex flex-col justify-center h-full">
               <Suspense fallback={<div className="h-48 bg-slate-100 rounded animate-pulse" />}>
-                <BudgetDonut spent={budgetSpent} remaining={budgetRemaining} height={190} />
+                <BudgetDonut spent={budgetSpent} remaining={budgetRemaining} height={220} />
               </Suspense>
             </div>
           </Card>
-          <Card title={"Zeitlicher Status (laufende Projekte)"} className="h-72">
+          <Card title={"Zeitlicher Status (laufende Projekte)"} className="h-chart">
             <Suspense fallback={<div className="h-48 bg-slate-100 rounded animate-pulse" />}>
-              <TimeStatusOverview projects={normalized} height={190} />
+              <TimeStatusOverview projects={normalized} height={220} />
             </Suspense>
           </Card>
-          <Card title={"Soll-Ist-Fortschritt"} className="h-72">
+          <Card title={"Soll-Ist-Fortschritt"} className="h-chart">
             <Suspense fallback={<div className="h-48 bg-slate-100 rounded animate-pulse" />}>
-              <ProgressDelta projects={filtered as any} height={190}
+              <ProgressDelta projects={filtered as any} height={220}
                 onSelectCategory={(c) => setProgressFilter((prev) => prev === c ? 'all' : c)}
                 selectedCategory={progressFilter === 'all' ? null : progressFilter}
                 tolerance={progressTolerance}
@@ -219,6 +229,7 @@ export default function App() {
           </Card>
         </div>
 
+        {/* ProjectsTable mit fester Höhe und Scrollbar */}
         <Suspense fallback={<Card title={"Projekte"}><div className="h-32 bg-slate-100 rounded animate-pulse" /></Card>}>
           {progressFilter !== 'all' && (
             <div className="mb-2 flex items-center justify-between text-xs rounded border border-slate-200 bg-slate-50 px-3 py-2">
@@ -230,35 +241,21 @@ export default function App() {
               </button>
             </div>
           )}
-          <ProjectsTable
-            projects={filteredByProgress}
-            year={year}
-            yearOnly={yearOnly}
-            plannedBudgetForYearD={plannedBudgetForYearD as any}
-            costsYTDForYearD={costsYTDForYearD as any}
-            calcTimeRAGD={calcTimeRAGD as any}
-            calcBudgetRAG={calcBudgetRAG as any}
-            highlightId={highlightProjectId}
-          />
+          <Card title={"Projekte"}>
+            <div className="max-h-table overflow-y-auto">
+              <ProjectsTable
+                projects={filteredByProgress}
+                year={year}
+                yearOnly={yearOnly}
+                plannedBudgetForYearD={plannedBudgetForYearD as any}
+                costsYTDForYearD={costsYTDForYearD as any}
+                calcTimeRAGD={calcTimeRAGD as any}
+                calcBudgetRAG={calcBudgetRAG as any}
+                highlightId={highlightProjectId}
+              />
+            </div>
+          </Card>
         </Suspense>
-
-        <Card>
-          <div className="space-y-2">
-            <p className="text-xs text-slate-500">
-              Demo: Zahlen & Projekte sind fiktiv. Ampeln basieren auf einfachen Heuristiken (Zeit vs. Fortschritt, Budgetverbrauch, Ressourcengrenze).
-              Kapazit&auml;ts-Grenze oben &auml;nderbar (Standard 16h/Monat). Jahres-Sicht pro-rata (Tagesanteile) f&uuml;r Budget/Kosten.
-            </p>
-            <details className="text-xs text-slate-500">
-              <summary className="cursor-pointer font-medium">CSV-Spalten (erwartet)</summary>
-              <div className="mt-1">{"id; title; owner; description; status; start; end; progress; budgetPlanned; costToDate; hoursPerMonth; org"}</div>
-            </details>
-          </div>
-        </Card>
-
-        <Timeline projects={filtered} bounds={bounds} yearOnly={yearOnly} year={year} />
-
-        {/* Alte Zeitachse entfernt zugunsten der neuen Timeline-Komponente */}
-
       </div>
     </div>
   );
