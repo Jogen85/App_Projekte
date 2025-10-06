@@ -16,7 +16,8 @@
       "Bash(npm run build:*)",
       "Bash(git add:*)",
       "Bash(node:*)",
-      "Read(//c/Users/cjuer/Downloads/**)"
+      "Read(//c/Users/cjuer/Downloads/**)",
+      "Bash(git branch:*)"
     ],
     "deny": [],
     "ask": []

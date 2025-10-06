@@ -35,12 +35,15 @@ IT Portfolio Dashboard – React/TypeScript/Vite SPA for executive project overs
 ### Data Flow
 1. **Dashboard data source priority**:
    - `localStorage.projects_json` (if exists, set via Admin)
-   - Fallback: hardcoded `DEMO_PROJECTS` in `App.tsx` (6 projects with AT 8.2 data)
+   - Fallback: hardcoded `DEMO_PROJECTS` in `App.tsx` (21 projects with full data)
 2. **Admin editor**: Import CSV → edit inline → export CSV or save to localStorage
 3. **CSV format**: Semicolon-delimited (auto-detects `;` or `,`), expects columns:
    ```
-   id;title;owner;description;status;start;end;progress;budgetPlanned;costToDate;org;requiresAT82Check;at82Completed
+   id;projectNumberInternal;projectNumberExternal;classification;title;owner;description;status;start;end;progress;budgetPlanned;costToDate;org;requiresAT82Check;at82Completed
    ```
+   - `projectNumberInternal`: Required (e.g., PINT-2025-001)
+   - `projectNumberExternal`: Optional (e.g., VDB-2025-042)
+   - `classification`: `internal_dev` | `project` | `project_vdbs` | `task`
    - `status`: `planned` | `active` | `done` (lowercase in CSV)
    - Dates: `YYYY-MM-DD` or `DD.MM.YYYY`
    - Boolean fields: `requiresAT82Check`, `at82Completed` (supports `Ja`/`Nein`, `true`/`false`, `yes`/`no`, `1`/`0`)
@@ -48,11 +51,13 @@ IT Portfolio Dashboard – React/TypeScript/Vite SPA for executive project overs
 
 ### Core Modules
 - **`src/types.ts`**: `Project` (raw CSV), `NormalizedProject` (with parsed dates)
-  - Added fields: `requiresAT82Check`, `at82Completed` (boolean)
+  - Fields: `projectNumberInternal` (string), `projectNumberExternal` (optional string), `classification` ('internal_dev' | 'project' | 'project_vdbs' | 'task')
+  - Fields: `requiresAT82Check`, `at82Completed` (boolean)
   - Removed field: `hoursPerMonth`
 - **`src/lib.ts`**: Date/time utilities, RAG (Red-Amber-Green) logic, budget calculations
 - **`src/lib/csv.ts`**: CSV parser/serializer (BOM handling, quote escaping, delimiter detection, German numbers, boolean parsing)
-- **`src/ui.tsx`**: Reusable UI primitives (`Card`, `Badge`, `ProgressBar` with targetValue support)
+- **`src/ui.tsx`**: Reusable UI primitives (`Card`, `Badge` with 6 colors, `ProgressBar` with targetValue support)
+  - Badge colors: green, amber, slate, blue, purple, cyan
 - **`src/main.tsx`**: App entry, React Router setup
 - **`src/App.tsx`**: Main dashboard, orchestrates all KPI cards, filters, table, timeline (16:9 layout, 1800px container)
 
@@ -69,14 +74,16 @@ IT Portfolio Dashboard – React/TypeScript/Vite SPA for executive project overs
   - Adjustable tolerance (±pp)
   - Top 3 delays clickable (scrolls to project in table)
   - Shows `%` instead of `pp` for delta values
-- **`ProjectsTable.tsx`**: Filterable project table with budget progress bars, RAG indicators
+- **`ProjectsTable.tsx`**: Filterable project table with project numbers, classification, budget progress bars, RAG indicators
+  - **Projektnummer** column: Internal (font-mono) + external (small, gray, optional)
+  - **Klassifizierung** column: Badge with color-coding (Purple/Blue/Cyan/Slate)
   - AT 8.2 columns with two-line headers ("erforderlich" / "durchgeführt")
   - Budget progress bars (horizontal) instead of mini-donuts
   - Target progress visualization (black line showing expected progress)
-  - Filters: Status, Org, Year, AT 8.2, highlighted project
+  - Filters: Status, Org, Classification, Year, AT 8.2, highlighted project
 - **`Timeline.tsx`**: Gantt-style timeline with status-based colors, progress overlay, today marker
   - "Heute" label positioned right of line (-top-7 left-1) with white background
-- **`FiltersPanel.tsx`**: Status/org/year/AT 8.2 filters with active filter banner
+- **`FiltersPanel.tsx`**: Status/org/classification/year/AT 8.2 filters with active filter banner
 - **`TrafficLight.tsx`**: Modern status badge (32px dot) with ping animation (Tailwind native)
 
 ### Pages (`src/pages/`)
@@ -150,9 +157,9 @@ IT Portfolio Dashboard – React/TypeScript/Vite SPA for executive project overs
 - **Vitest** + `@testing-library/react`, `jsdom` environment
 - Config: `vitest.config.ts` (globals enabled, setup in `src/test/setup.ts`)
 - Run `npm run test -- --coverage` before major refactors
-- **Current Coverage**: 58 Tests passing
-  - `lib.test.ts`: 23 Tests (Date utils, RAG logic)
-  - `csv.test.ts`: 21 Tests (Delimiter detection, quote escaping, BOM, German numbers, boolean parsing)
+- **Current Coverage**: 49 Tests passing
+  - `lib.test.ts`: 16 Tests (Date utils, RAG logic)
+  - `csv.test.ts`: 19 Tests (Delimiter detection, quote escaping, BOM, German numbers, boolean parsing, new fields)
   - `BudgetDonut.test.tsx`: 14 Tests (Overspend detection, thresholds, edge cases)
 - **ResizeObserver Mock**: `src/test/setup.ts` (required for Recharts components)
 
@@ -171,7 +178,38 @@ IT Portfolio Dashboard – React/TypeScript/Vite SPA for executive project overs
 
 ## Recent Changes & Evolution
 
-### 16:9 Desktop-Optimierung & UX-Verbesserungen (2025-01-03)
+### Projektnummern & Klassifizierung (2025-10-06) - v1.2.0
+
+**Major Changes**:
+1. **Projektnummern-System**: Internal (required) + External (optional)
+   - Format: PINT-2025-001 (intern), VDB-2025-042 (extern)
+   - Display: Dashboard table with font-mono styling
+   - Admin: 2 new input columns (w-32)
+2. **Klassifizierung**: 4 types with color-coded badges
+   - internal_dev → Purple, project → Blue, project_vdbs → Cyan, task → Slate
+   - Filter dropdown in FiltersPanel
+   - Admin: Select dropdown with 4 options
+3. **21 Real Projects**: Replaced 6 demo projects
+   - Data from: `projekte_template_2025-10-06.csv`
+   - All names corrected (Jürgens, Körtge, etc.)
+   - Project numbers deterministical generated (70% with external)
+   - Classification distributed: 33% VDB-S, 38% Project, 19% Internal, 10% Task
+4. **Badge Component Extended**: 3 new colors (blue, purple, cyan)
+5. **localStorage Reset**: One-time clear to load new DEMO_PROJECTS
+
+**Breaking Changes**:
+- CSV format: 13 → 16 fields (+projectNumberInternal, +projectNumberExternal, +classification)
+- Dashboard table: 7 → 9 columns
+- Admin table: +3 columns
+
+**Layout Structure** (no changes):
+- Header: 80px, KPI Row: 3×120px, Chart Row: 3×280px, Table: 520px, Timeline: full-width
+
+**Files Modified**: 10 files, +290 lines, -80 lines
+
+---
+
+### 16:9 Desktop-Optimierung & UX-Verbesserungen (2025-01-03) - v1.0.0
 
 **Major Changes**:
 1. **Desktop-Only Approach**: No mobile optimization, 1440px min-width, 1800px container

@@ -6,6 +6,108 @@ Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
 ## [Unreleased]
 
+## [1.2.0] - 2025-10-06
+
+### Projektnummern & Klassifizierung (Phase 5 #1 komplett)
+
+#### Added
+- **Projektnummern-System**
+  - `projectNumberInternal` (Pflichtfeld): z.B. PINT-2025-001
+  - `projectNumberExternal` (Optional): z.B. VDB-2025-042, ERECH-2025-01
+  - Anzeige in Dashboard-Tabelle (neue Spalte "Projektnummer")
+    - Intern: font-mono, normale Größe
+    - Extern: font-mono, klein, grau (falls vorhanden)
+  - Eingabe im Admin-Portal (2 neue Spalten: w-32)
+    - Intern: Pflicht, Placeholder "PINT-YYYY-NNN"
+    - Extern: Optional, Placeholder "VDB-YYYY-NNN"
+
+- **Klassifizierung-System** (4 Typen)
+  - `classification`: 'internal_dev' | 'project' | 'project_vdbs' | 'task'
+  - Badge-Anzeige in Dashboard-Tabelle mit Farbcodierung:
+    - **Interne Weiterentwicklung** → Purple (`bg-purple-100 text-purple-700`)
+    - **Projekt** → Blue (`bg-blue-100 text-blue-700`)
+    - **Projekt VDB-S** → Cyan (`bg-cyan-100 text-cyan-700`)
+    - **Aufgabe** → Slate (`bg-slate-100 text-slate-700`)
+  - Admin-Portal: Select-Dropdown (4 Optionen, w-40)
+  - Filter: Klassifizierung-Dropdown in FiltersPanel
+
+- **21 reale Projekte** als DEMO_PROJECTS
+  - Basis: `projekte_template_2025-10-06.csv`
+  - Alle Namen korrigiert (Christian Jürgens, Jens Körtge, etc.)
+  - Projektnummern deterministisch generiert:
+    - Alle: PINT-2025-001 bis PINT-2025-021
+    - 70% mit externen Nummern (VDB/CRM/ERECH/DORA)
+    - 3 ohne externe Nummer (p7, p10, p11)
+  - Klassifizierung verteilt:
+    - 7× project_vdbs (33%)
+    - 8× project (38%)
+    - 4× internal_dev (19%)
+    - 2× task (10%)
+  - Statistik:
+    - 7 laufend, 3 abgeschlossen, 11 geplant
+    - 4× AT 8.2 erforderlich, 1× durchgeführt
+    - Budget: 335.000 € geplant, 228.500 € ausgegeben
+    - Organisationen: BB (12), MBG (3), BB/MBG (3), Mixed
+
+#### Changed
+- **Badge-Komponente erweitert** (`src/ui.tsx`)
+  - Neue Farben: `blue`, `purple`, `cyan`
+  - Type: `"green"|"amber"|"slate"|"blue"|"purple"|"cyan"`
+  - Alle Tailwind-Klassen: `bg-{color}-100 text-{color}-700`
+
+- **Dashboard ProjectsTable**
+  - 2 neue Spalten nach "Projekt":
+    - **Projektnummer** (intern + extern wenn vorhanden)
+    - **Klassifizierung** (Badge mit Farbe)
+  - Spalten-Anzahl: 7 → 9
+
+- **Admin-Portal ProjectsAdmin**
+  - 3 neue Spalten zwischen "ID" und "Titel":
+    - **Projektnr. intern** (Input, required)
+    - **Projektnr. extern** (Input, optional)
+    - **Klassifizierung** (Select mit 4 Optionen)
+  - emptyProject() Default: `projectNumberInternal: ''`, `classification: 'project'`
+
+- **Filter-System**
+  - FiltersPanel: Neuer Dropdown "Klassifizierung"
+  - App.tsx: `classificationFilter` State + Filter-Logik
+  - Dependency in filtered useMemo hinzugefügt
+
+- **CSV-Format** (`src/lib/csv.ts`)
+  - REQUIRED_FIELDS erweitert: 13 → 16 Felder
+  - Neue Felder: `projectNumberInternal`, `projectNumberExternal`, `classification`
+  - Parser: Defaults für fehlende Werte (intern='', classification='project')
+  - Export: Alle 16 Felder im korrekten Format
+
+#### Fixed
+- **localStorage-Reset für neue DEMO_PROJECTS**
+  - Problem: Alte 6 Demo-Projekte in localStorage gespeichert
+  - Lösung: `localStorage.removeItem('projects_json')` beim App-Start (einmalig)
+  - Nach erstem Laden: Nutzer sieht neue 21 Projekte
+  - Code-Kommentar: "TEMP: kann nach erstem Laden entfernt werden"
+
+#### Technical Details
+- **10 Dateien geändert**: 290 Zeilen hinzugefügt, 80 entfernt
+- **Dateien**:
+  - `src/types.ts`: 3 neue Felder
+  - `src/lib/csv.ts`: REQUIRED_FIELDS + Parser-Logik
+  - `src/App.tsx`: 21 DEMO_PROJECTS, classificationFilter, localStorage-Reset
+  - `src/pages/ProjectsAdmin.tsx`: 21 DEMO_PROJECTS, 3 neue Spalten
+  - `src/components/ProjectsTable.tsx`: 2 neue Spalten mit Badges
+  - `src/components/FiltersPanel.tsx`: Klassifizierung-Dropdown
+  - `src/ui.tsx`: Badge-Erweiterung
+  - `src/lib/csv.test.ts`: 12 Tests aktualisiert (neue Felder)
+  - `src/components/BudgetDonut.test.tsx`: 1 Test-Fix (duplicate assertion)
+- **Tests**: ✅ 49/49 passed
+- **Build**: ✅ Erfolgreich
+- **Commits**:
+  - `170e9c1`: WIP Datenmodell (40%)
+  - `750b638`: Feature komplett (100%)
+  - `aa35e2d`: 21 reale Projekte
+  - `a9e7ee4`: localStorage-Reset Fix
+
+---
+
 ## [1.1.0] - 2025-10-06
 
 ### Admin-Portal Phase 1 Komplett + UX-Verbesserungen

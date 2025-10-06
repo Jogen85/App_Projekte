@@ -12,8 +12,13 @@
     - Rote Warnung bei Budgetüberschreitung
   - Zeitstatus-Übersicht (laufende Projekte): Aggregierte Ampel-Verteilung
   - Soll–Ist-Fortschritt mit Top 3 Verzögerungen (klickbar)
-  - Projekttabelle mit Budget-Fortschrittsbalken, AT 8.2 Compliance-Spalten, Ampeln Zeit/Budget
+  - Projekttabelle mit **Projektnummern**, **Klassifizierung** (4 Typen), Budget-Fortschrittsbalken, AT 8.2 Compliance-Spalten, Ampeln Zeit/Budget
   - Zeitachse (Gantt-ähnlich) mit Heute-Marker
+- **Projektnummern & Klassifizierung**
+  - Intern (Pflicht): z.B. PINT-2025-001
+  - Extern (Optional): z.B. VDB-2025-042, ERECH-2025-01
+  - Klassifizierung: Interne Weiterentwicklung (Purple), Projekt (Blue), Projekt VDB-S (Cyan), Aufgabe (Slate)
+  - Filter nach Klassifizierung im Dashboard
 - **AT 8.2 Compliance-Tracking**
   - Zwei Felder: "erforderlich" und "durchgeführt" (boolean)
   - Filter-Dropdowns im Filterpanel
@@ -82,10 +87,13 @@ Node 18+ empfohlen (Vite 5).
 
 - **Erwartete Spalten** (Semikolon `;`):
   ```
-  id;title;owner;description;status;start;end;progress;budgetPlanned;costToDate;org;requiresAT82Check;at82Completed
+  id;projectNumberInternal;projectNumberExternal;classification;title;owner;description;status;start;end;progress;budgetPlanned;costToDate;org;requiresAT82Check;at82Completed
   ```
 - **Felder**
   - `id`: frei (z. B. `p-...`), string
+  - `projectNumberInternal`: Pflicht (z.B. PINT-2025-001), string
+  - `projectNumberExternal`: Optional (z.B. VDB-2025-042), string oder leer
+  - `classification`: `internal_dev` | `project` | `project_vdbs` | `task`
   - `title`, `owner`, `description`: string
   - `status`: `planned` | `active` | `done` (kleingeschrieben)
   - `start`, `end`: Datum `YYYY-MM-DD` oder `DD.MM.YYYY`
@@ -157,9 +165,9 @@ Node 18+ empfohlen (Vite 5).
 ## :triangular_ruler: Entwicklung & Qualität
 
 - **Lint/Format**: ESLint + Prettier
-- **Tests**: Vitest (58 Tests passing)
-  - `lib.test.ts`: 23 Tests (Date utils, RAG logic)
-  - `csv.test.ts`: 21 Tests (Delimiter detection, quote escaping, BOM, German numbers)
+- **Tests**: Vitest (49 Tests passing)
+  - `lib.test.ts`: 16 Tests (Date utils, RAG logic)
+  - `csv.test.ts`: 19 Tests (Delimiter detection, quote escaping, BOM, German numbers, new fields)
   - `BudgetDonut.test.tsx`: 14 Tests (Overspend detection, thresholds, edge cases)
   - **ResizeObserver Mock**: `src/test/setup.ts` (für Recharts)
 - **Code-Splitting**: Charts und Tabelle via `React.lazy`; Vite `manualChunks` für `react`/`recharts` Vendor-Bundles

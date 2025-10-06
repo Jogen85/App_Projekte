@@ -346,7 +346,7 @@ Behebung bekannter **UTF-8-Codierungsprobleme** (insb. Umlaute, Sonderzeichen) u
 
 ## Phase 5: Erweiterte Features
 
-### #1 Klassifizierung & Projektnummern ⏳
+### #1 Klassifizierung & Projektnummern ✅
 
 **Ziel**: Eindeutige Zuordnung von Vorhaben und konsistente Auswertung in Berichten
 
@@ -354,30 +354,41 @@ Behebung bekannter **UTF-8-Codierungsprobleme** (insb. Umlaute, Sonderzeichen) u
 Trennung zwischen internen Weiterentwicklungen, Projekten (inkl. VDB-S) und Aufgaben. Einführung/Prüfung von internen und externen Projektnummern.
 
 **Akzeptanzkriterien**:
-- [x] Pflichtfeld **Klassifizierung** mit Werten: `Interne Weiterentwicklung`, `Projekt`, `Projekt VDB-S`, `Aufgabe`
-- [x] Interne und externe Projektnummern können gepflegt werden (Formatprüfung, Eindeutigkeit)
-- [x] Filter und Sortierung nach Klassifizierung in allen relevanten Übersichten
-- [x] Export/Reporting enthalten Klassifizierung und Projektnummern
+- [x] Pflichtfeld **Klassifizierung** mit Werten: `Interne Weiterentwicklung`, `Projekt`, `Projekt VDB-S`, `Aufgabe` ✅
+- [x] Interne und externe Projektnummern können gepflegt werden (Formatprüfung, Eindeutigkeit) ✅
+- [x] Filter und Sortierung nach Klassifizierung in allen relevanten Übersichten ✅
+- [x] Export/Reporting enthalten Klassifizierung und Projektnummern ✅
 
 **Technische To-Dos**:
-- [ ] Datenmodell erweitern:
+- [x] Datenmodell erweitern: ✅
   ```typescript
-  classification: 'internal' | 'project' | 'project_vdbs' | 'task';
-  projectNumberInternal?: string;
-  projectNumberExternal?: string;
+  classification: 'internal_dev' | 'project' | 'project_vdbs' | 'task';
+  projectNumberInternal: string;  // Pflicht
+  projectNumberExternal?: string; // Optional
   ```
-- [ ] Migrationsskript zur Nachpflege bestehender Datensätze
-- [ ] Filter/Sortierung in Listenansichten implementieren
-- [ ] Dokumentation & Nutzerhinweis ergänzen
+- [x] Migrationsskript zur Nachpflege bestehender Datensätze ✅ (21 Projekte mit generierten Nummern)
+- [x] Filter/Sortierung in Listenansichten implementieren ✅
+- [x] Dokumentation & Nutzerhinweis ergänzen ✅
 
-**Risiken/Offene Fragen**:
-- Eindeutige Definition der Vergaberegeln für Projektnummern (wer, wann, wie?)
+**Umsetzungsdetails**:
+- **Badge-Farben**: Purple (internal_dev), Blue (project), Cyan (project_vdbs), Slate (task)
+- **Admin-Portal**: 3 neue Spalten (Projektnr. intern/extern, Klassifizierung-Select)
+- **Dashboard**: 2 neue Tabellenspalten (Projektnummer, Klassifizierung-Badge)
+- **CSV**: 3 neue REQUIRED_FIELDS, Parser-Defaults
+- **21 reale Projekte** als DEMO_PROJECTS mit deterministisch generierten Nummern
 
 **Dateien**:
-- `src/types.ts`
-- `src/pages/ProjectsAdmin.tsx`
-- `src/components/FiltersPanel.tsx`
-- `src/components/ProjectsTable.tsx`
+- `src/types.ts` ✅
+- `src/lib/csv.ts` ✅
+- `src/App.tsx` ✅
+- `src/pages/ProjectsAdmin.tsx` ✅
+- `src/components/FiltersPanel.tsx` ✅
+- `src/components/ProjectsTable.tsx` ✅
+- `src/ui.tsx` ✅
+- `src/lib/csv.test.ts` ✅
+- `src/components/BudgetDonut.test.tsx` ✅
+
+**Umgesetzt in**: Commits `170e9c1`, `750b638`, `aa35e2d`, `a9e7ee4` (2025-10-06)
 
 ---
 
