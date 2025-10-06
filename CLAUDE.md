@@ -21,6 +21,7 @@ IT Portfolio Dashboard – React/TypeScript/Vite SPA for executive project overs
 - `npm run format` – Prettier format all files
 - `npm run test` – Run Vitest tests (single run)
 - `npm run test:watch` – Run Vitest in watch mode
+- `npm run test -- --coverage` – Run tests with coverage report
 
 **Always run `npm run build` and `npm run typecheck` before commits.**
 
@@ -82,7 +83,7 @@ IT Portfolio Dashboard – React/TypeScript/Vite SPA for executive project overs
 - **`ProjectsAdmin.tsx`**: Admin CSV editor (no backend; localStorage)
 
 ### Lazy Loading
-- Charts (`BudgetDonut`, `ResourceTile`, `ProgressDelta`) and `ProjectsTable` are code-split via `React.lazy`
+- Charts (`BudgetDonut`, `TimeStatusOverview`, `ProgressDelta`) and `ProjectsTable` are code-split via `React.lazy`
 - Vite config (`vite.config.ts`) splits vendor bundles: `react-vendor`, `recharts-vendor`, `vendor`
 
 ## RAG (Traffic Light) Logic

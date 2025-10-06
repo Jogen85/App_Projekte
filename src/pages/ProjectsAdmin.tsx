@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import type { Project } from '../types';
 import { Card, COLORS } from '../ui';
 import { parseProjectsCSV, projectsToCSV } from '../lib/csv';
+import { toISODate } from '../lib';
+import PINProtection from '../components/PINProtection';
 
 // Import DEMO_PROJECTS als Fallback
 const randomBool = (seed: string) => {
@@ -110,74 +112,180 @@ const ProjectsAdmin: React.FC = () => {
   const removeRow = (i: number) => { setProjects((p) => p.filter((_, idx) => idx !== i)); setDirty(true); };
 
   return (
-    <div className={`min-h-screen ${COLORS.bg} ${COLORS.text} p-6`}>
-      <div className="max-w-7xl mx-auto space-y-4">
+    <PINProtection>
+      <div className={`min-h-screen ${COLORS.bg} ${COLORS.text} p-6`}>
+        <div className="max-w-presentation mx-auto space-y-4">
         <header className="flex items-center justify-between">
           <h1 className="text-2xl font-bold">Admin &ndash; Projekte bearbeiten</h1>
           <Link to="/" className="text-blue-600 hover:underline">Zum Dashboard</Link>
         </header>
 
         <Card>
-          <div className="flex flex-wrap gap-2 items-center">
-            <button onClick={addRow} className="rounded-lg border px-3 py-1 text-sm">Neu</button>
+          <div className="flex flex-wrap gap-3 items-center">
+            <button onClick={addRow} className="rounded-lg bg-blue-600 text-white hover:bg-blue-700 px-4 py-2 text-sm font-medium transition-colors">+ Neu</button>
             <input id="adminCsvInput" type="file" accept=".csv" className="hidden" onChange={(e) => onImportCSV(e.target.files?.[0])} />
-            <button onClick={() => document.getElementById('adminCsvInput')!.click()} className="rounded-lg border px-3 py-1 text-sm">CSV importieren</button>
-            <button onClick={onExportCSV} className="rounded-lg border px-3 py-1 text-sm">CSV exportieren</button>
-            <button onClick={onSave} disabled={!dirty} className="rounded-lg border px-3 py-1 text-sm disabled:opacity-50">Speichern (lokal)</button>
-            {msg && <span className="text-xs text-slate-500 ml-2">{msg}</span>}
+            <button onClick={() => document.getElementById('adminCsvInput')!.click()} className="rounded-lg border border-slate-300 px-4 py-2 text-sm hover:bg-slate-50 transition-colors">CSV importieren</button>
+            <button onClick={onExportCSV} className="rounded-lg border border-slate-300 px-4 py-2 text-sm hover:bg-slate-50 transition-colors">CSV exportieren</button>
+            <button onClick={onSave} disabled={!dirty} className="rounded-lg bg-green-600 text-white hover:bg-green-700 px-4 py-2 text-sm font-medium disabled:bg-slate-300 disabled:cursor-not-allowed transition-colors">Speichern (lokal)</button>
+            {msg && <span className="text-sm text-slate-600 ml-2 bg-slate-100 px-3 py-1 rounded-md">{msg}</span>}
           </div>
         </Card>
 
         <Card>
           <div className="overflow-x-auto">
-            <table className="min-w-full text-sm">
+            <table className="min-w-full text-sm border-collapse">
               <thead>
-                <tr className="text-left text-slate-600">
-                  <th className="py-2 pr-3">Aktion</th>
-                  <th className="py-2 pr-3">ID</th>
-                  <th className="py-2 pr-3">Titel</th>
-                  <th className="py-2 pr-3">Verantwortlicher MA</th>
-                  <th className="py-2 pr-3">Status</th>
-                  <th className="py-2 pr-3">Start</th>
-                  <th className="py-2 pr-3">Ende</th>
-                  <th className="py-2 pr-3">Fortschritt %</th>
-                  <th className="py-2 pr-3">Budget &euro;</th>
-                  <th className="py-2 pr-3">Kosten &euro;</th>
-                  <th className="py-2 pr-3">Gesellschaft</th>
-                  <th className="py-2 pr-3">AT 8.2 erf.</th>
-                  <th className="py-2 pr-3">AT 8.2 durchgef.</th>
+                <tr className="bg-slate-100">
+                  <th className="py-3 px-3 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider border-b-2 border-slate-300">Aktion</th>
+                  <th className="py-3 px-3 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider border-b-2 border-slate-300 bg-blue-50">ID</th>
+                  <th className="py-3 px-3 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider border-b-2 border-slate-300 bg-blue-50">Titel</th>
+                  <th className="py-3 px-3 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider border-b-2 border-slate-300 bg-blue-50">Beschreibung</th>
+                  <th className="py-3 px-3 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider border-b-2 border-slate-300 bg-blue-50">Verantw. MA</th>
+                  <th className="py-3 px-3 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider border-b-2 border-slate-300 bg-blue-50">Status</th>
+                  <th className="py-3 px-3 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider border-b-2 border-slate-300 bg-amber-50">Start</th>
+                  <th className="py-3 px-3 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider border-b-2 border-slate-300 bg-amber-50">Ende</th>
+                  <th className="py-3 px-3 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider border-b-2 border-slate-300 bg-amber-50">Fortschritt %</th>
+                  <th className="py-3 px-3 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider border-b-2 border-slate-300 bg-green-50">Budget €</th>
+                  <th className="py-3 px-3 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider border-b-2 border-slate-300 bg-green-50">Kosten €</th>
+                  <th className="py-3 px-3 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider border-b-2 border-slate-300 bg-green-50">Gesellschaft</th>
+                  <th className="py-3 px-3 text-center text-xs font-semibold text-slate-700 uppercase tracking-wider border-b-2 border-slate-300 bg-purple-50">AT 8.2 erf.</th>
+                  <th className="py-3 px-3 text-center text-xs font-semibold text-slate-700 uppercase tracking-wider border-b-2 border-slate-300 bg-purple-50">AT 8.2 durchgef.</th>
                 </tr>
               </thead>
               <tbody>
                 {projects.map((p, i) => (
-                  <tr key={p.id} className="border-t border-slate-200">
-                    <td className="py-2 pr-2"><button onClick={() => removeRow(i)} className="text-red-600 text-xs">L&ouml;schen</button></td>
-                    <td className="py-2 pr-2"><input className="w-36 border rounded px-1" value={p.id} onChange={(e)=>update(i,'id',e.target.value)} /></td>
-                    <td className="py-2 pr-2"><input className="w-64 border rounded px-1" value={p.title} onChange={(e)=>update(i,'title',e.target.value)} /></td>
-                    <td className="py-2 pr-2"><input className="w-40 border rounded px-1" value={p.owner} onChange={(e)=>update(i,'owner',e.target.value)} /></td>
-                    <td className="py-2 pr-2">
-                      <select className="border rounded px-1" value={p.status} onChange={(e)=>update(i,'status',e.target.value)}>
+                  <tr key={p.id} className="hover:bg-slate-50 transition-colors border-b border-slate-200">
+                    <td className="py-3 px-3">
+                      <button
+                        onClick={() => removeRow(i)}
+                        className="text-red-600 hover:text-red-800 hover:bg-red-50 px-2 py-1 rounded text-xs font-medium transition-colors"
+                      >
+                        🗑️ Löschen
+                      </button>
+                    </td>
+                    <td className="py-3 px-3">
+                      <input
+                        className="w-40 border border-slate-300 rounded-md px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        value={p.id}
+                        onChange={(e)=>update(i,'id',e.target.value)}
+                        placeholder="z.B. p-001"
+                      />
+                    </td>
+                    <td className="py-3 px-3">
+                      <input
+                        className="w-72 border border-slate-300 rounded-md px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        value={p.title}
+                        onChange={(e)=>update(i,'title',e.target.value)}
+                        placeholder="Projekttitel"
+                      />
+                    </td>
+                    <td className="py-3 px-3">
+                      <textarea
+                        className="w-72 border border-slate-300 rounded-md px-2 py-1.5 text-sm min-h-[70px] resize-y focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        value={p.description}
+                        onChange={(e)=>update(i,'description',e.target.value)}
+                        placeholder="Projektbeschreibung"
+                      />
+                    </td>
+                    <td className="py-3 px-3">
+                      <input
+                        className="w-44 border border-slate-300 rounded-md px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        value={p.owner}
+                        onChange={(e)=>update(i,'owner',e.target.value)}
+                        placeholder="Name"
+                      />
+                    </td>
+                    <td className="py-3 px-3">
+                      <select
+                        className="border border-slate-300 rounded-md px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+                        value={p.status}
+                        onChange={(e)=>update(i,'status',e.target.value)}
+                      >
                         <option value="planned">Geplant</option>
                         <option value="active">Laufend</option>
                         <option value="done">Abgeschlossen</option>
                       </select>
                     </td>
-                    <td className="py-2 pr-2"><input type="date" className="border rounded px-1" value={p.start} onChange={(e)=>update(i,'start',e.target.value)} /></td>
-                    <td className="py-2 pr-2"><input type="date" className="border rounded px-1" value={p.end} onChange={(e)=>update(i,'end',e.target.value)} /></td>
-                    <td className="py-2 pr-2"><input type="number" className="w-20 border rounded px-1" value={p.progress} min={0} max={100} onChange={(e)=>update(i,'progress',e.target.value)} /></td>
-                    <td className="py-2 pr-2"><input type="number" className="w-28 border rounded px-1" value={p.budgetPlanned} min={0} onChange={(e)=>update(i,'budgetPlanned',e.target.value)} /></td>
-                    <td className="py-2 pr-2"><input type="number" className="w-28 border rounded px-1" value={p.costToDate} min={0} onChange={(e)=>update(i,'costToDate',e.target.value)} /></td>
-                    <td className="py-2 pr-2"><input className="w-24 border rounded px-1" value={p.org||''} onChange={(e)=>update(i,'org',e.target.value)} /></td>
-                    <td className="py-2 pr-2 text-center"><input type="checkbox" checked={p.requiresAT82Check||false} onChange={(e)=>update(i,'requiresAT82Check',e.target.checked)} /></td>
-                    <td className="py-2 pr-2 text-center"><input type="checkbox" checked={p.at82Completed||false} onChange={(e)=>update(i,'at82Completed',e.target.checked)} /></td>
+                    <td className="py-3 px-3">
+                      <input
+                        type="date"
+                        className="border border-slate-300 rounded-md px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                        value={toISODate(p.start)}
+                        onChange={(e)=>update(i,'start',e.target.value)}
+                      />
+                    </td>
+                    <td className="py-3 px-3">
+                      <input
+                        type="date"
+                        className="border border-slate-300 rounded-md px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                        value={toISODate(p.end)}
+                        onChange={(e)=>update(i,'end',e.target.value)}
+                      />
+                    </td>
+                    <td className="py-3 px-3">
+                      <input
+                        type="number"
+                        className="w-24 border border-slate-300 rounded-md px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                        value={p.progress}
+                        min={0}
+                        max={100}
+                        onChange={(e)=>update(i,'progress',e.target.value)}
+                        placeholder="0-100"
+                      />
+                    </td>
+                    <td className="py-3 px-3">
+                      <input
+                        type="number"
+                        className="w-32 border border-slate-300 rounded-md px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        value={p.budgetPlanned}
+                        min={0}
+                        onChange={(e)=>update(i,'budgetPlanned',e.target.value)}
+                        placeholder="€"
+                      />
+                    </td>
+                    <td className="py-3 px-3">
+                      <input
+                        type="number"
+                        className="w-32 border border-slate-300 rounded-md px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        value={p.costToDate}
+                        min={0}
+                        onChange={(e)=>update(i,'costToDate',e.target.value)}
+                        placeholder="€"
+                      />
+                    </td>
+                    <td className="py-3 px-3">
+                      <input
+                        className="w-28 border border-slate-300 rounded-md px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        value={p.org||''}
+                        onChange={(e)=>update(i,'org',e.target.value)}
+                        placeholder="BB/MBG"
+                      />
+                    </td>
+                    <td className="py-3 px-3 text-center">
+                      <input
+                        type="checkbox"
+                        className="w-5 h-5 text-purple-600 focus:ring-2 focus:ring-purple-500 rounded"
+                        checked={p.requiresAT82Check||false}
+                        onChange={(e)=>update(i,'requiresAT82Check',e.target.checked)}
+                      />
+                    </td>
+                    <td className="py-3 px-3 text-center">
+                      <input
+                        type="checkbox"
+                        className="w-5 h-5 text-purple-600 focus:ring-2 focus:ring-purple-500 rounded"
+                        checked={p.at82Completed||false}
+                        onChange={(e)=>update(i,'at82Completed',e.target.checked)}
+                      />
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
         </Card>
+        </div>
       </div>
-    </div>
+    </PINProtection>
   );
 };
 
