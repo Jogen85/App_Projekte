@@ -14,7 +14,7 @@ export type ProgressDeltaProps = {
 
 function clamp(n: number, min = 0, max = 100) { return Math.max(min, Math.min(max, n)); }
 
-export default function ProgressDelta({ projects, height = 190, onSelectCategory, selectedCategory = null, tolerance = 10, onChangeTolerance, onSelectProject }: ProgressDeltaProps) {
+export default function ProgressDelta({ projects, onSelectCategory, selectedCategory = null, tolerance = 10, onChangeTolerance, onSelectProject }: ProgressDeltaProps) {
   const data = useMemo(() => {
     const list: Array<{
       id: string;

@@ -207,7 +207,7 @@ export default function App() {
       }
     }
     return { activeCount: active.length, plannedCount: planned.length, doneCount: done.length, budgetPlannedSum, costSum };
-  }, [normalized, yearOnly, year, today]);
+  }, [normalized, yearOnly, year]);
 
   // Progress filter (Soll-Ist)
   const [progressFilter, setProgressFilter] = useState<'all'|'behind'|'ontrack'|'ahead'>('all');

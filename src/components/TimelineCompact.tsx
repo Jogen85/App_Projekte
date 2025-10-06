@@ -13,7 +13,7 @@ type Props = {
 const statusColor = (status: string) =>
   status === 'done' ? '#334155' : status === 'planned' ? COLORS.amber : COLORS.blue;
 
-const TimelineCompact: React.FC<Props> = ({ projects, bounds, yearOnly, year }) => {
+const TimelineCompact: React.FC<Props> = ({ projects, bounds }) => {
   const now = getToday();
   const inRange = now >= bounds.minStart && now <= bounds.maxEnd;
   const todayPct = inRange

@@ -214,10 +214,6 @@ const ProjectsAdmin: React.FC = () => {
   };
 
   // Warnung bei Überplanung berechnen
-  const totalProjectBudget = useMemo(() => {
-    return projects.reduce((sum, p) => sum + (p.budgetPlanned || 0), 0);
-  }, [projects]);
-
   const overBudgetWarnings = useMemo(() => {
     const warnings: string[] = [];
     yearBudgets.forEach((yb) => {
@@ -309,9 +305,8 @@ const ProjectsAdmin: React.FC = () => {
                   {yearBudgets.length === 0 && (
                     <tr>
                       <td colSpan={3} className="py-4 px-3 text-center text-slate-500 text-sm">
-                        Noch keine Jahresbudgets definiert. Klicken Sie auf "+ Weiteres Jahr" um zu starten.
-                      </td>
-                    </tr>
+                        Noch keine Jahresbudgets definiert. Klicken Sie auf &quot;+ Weiteres Jahr&quot; um zu starten.
+                      </td>                    </tr>
                   )}
                   {yearBudgets
                     .sort((a, b) => a.year - b.year)

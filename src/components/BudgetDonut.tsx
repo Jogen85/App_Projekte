@@ -10,7 +10,7 @@ type Props = {
   projectBudgetSum?: number; // Summe der Projektbudgets
 };
 
-export const BudgetDonut: React.FC<Props> = ({ spent, remaining, height = 190, yearBudget, projectBudgetSum }) => {
+export const BudgetDonut: React.FC<Props> = ({ spent, remaining, yearBudget, projectBudgetSum }) => {
   const spentSafe = Math.max(0, spent);
   const budgetPlanned = spentSafe + remaining; // Original budget
   const isOverBudget = remaining < 0;
