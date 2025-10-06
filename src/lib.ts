@@ -18,6 +18,17 @@ export const toDate = (s: any): Date => {
 
 export const fmtDate = (d: Date) => d.toLocaleDateString('de-DE');
 
+// Konvertiert ein Datum in ISO-Format (YYYY-MM-DD) für date-Inputs
+export const toISODate = (s: any): string => {
+  if (!s) return '';
+  const d = toDate(s);
+  if (isNaN(d.getTime())) return '';
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 const MS_PER_DAY = 1000 * 60 * 60 * 24;
 export const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
 export const daysBetween = (a: any, b: any) => {

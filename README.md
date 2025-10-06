@@ -19,8 +19,13 @@
   - Filter-Dropdowns im Filterpanel
   - Checkboxen im Admin CSV Editor
 - **Admin-Editor** (ohne Server)
-  - `/admin` Route mit Inline-Tabelle: Projekte anlegen, bearbeiten, löschen
-  - CSV importieren/exportieren, lokal speichern (localStorage) → Dashboard liest lokale Daten automatisch
+  - `/admin` Route mit **PIN-Schutz** (4-stellig, Session-basiert)
+  - 16:9-Layout (1800px) mit **Sticky Header** (scrollbar immer sichtbar)
+  - Inline-Tabelle: Projekte anlegen, bearbeiten, löschen
+  - **Multi-Encoding CSV-Import** (UTF-8 + Windows-1252/ISO-8859-1)
+  - CSV exportieren mit UTF-8 BOM (Excel-kompatibel)
+  - Lokal speichern (localStorage) → Dashboard liest lokale Daten automatisch
+  - **Gruppierte Header** (Farbcodes: Stammdaten blau, Zeitplan gelb, Budget grün, AT 8.2 lila)
 - **Technisch**
   - React 18 + Vite 5 + TypeScript Strict
   - TailwindCSS 3 (Custom Utilities: max-w-presentation, h-chart, h-kpi, h-table)
@@ -47,6 +52,7 @@ src/
     Timeline.tsx           # Gantt-Zeitachse (Heute-Marker)
     FiltersPanel.tsx       # Filter (Status, Org, Year, AT 8.2)
     TrafficLight.tsx       # Status Badge (32px Dot mit Ping Animation)
+    PINProtection.tsx      # PIN-Schutz für Admin-Portal (4-stellig)
   pages/
     ProjectsAdmin.tsx      # Admin-Editor (CSV/Inline, localStorage)
   test/
@@ -55,6 +61,7 @@ index.html                 # HTML, UTF-8, min-width: 1440px
 vercel.json                # SPA-Rewrite für Vercel
 tailwind.config.js         # Custom Utilities (max-w-presentation, h-chart, etc.)
 CHANGELOG.md               # Ausführliche Änderungshistorie
+ROADMAP.md                 # Geplante Features (12 Items in 5 Phasen)
 ```
 
 ## :wrench: Setup & Skripte
@@ -190,9 +197,23 @@ Node 18+ empfohlen (Vite 5).
 
 ## :memo: Changelog
 
-**Siehe ausführliche Dokumentation in `CHANGELOG.md`**
+**Siehe ausführliche Dokumentation in `CHANGELOG.md` und `ROADMAP.md`**
 
-### Highlights (2025-01-03)
+### Version 1.1.0 (2025-10-06)
+- **Admin-Portal Phase 1** komplett umgesetzt
+  - PIN-Schutz (4-stellig: 0312)
+  - Description-Feld hinzugefügt (Textarea)
+  - 16:9-Layout (1800px Container)
+  - Sticky Header (Navigation verbessert)
+  - UX-Redesign (gruppierte Header, größere Felder, Focus-States)
+- **Multi-Encoding CSV-Import** (UTF-8 + Windows-1252/ISO-8859-1)
+  - Auto-Detection mit Byte-Level Kontrolle
+  - Löst Umlaut-Problem bei Excel-Exports
+  - UTF-8 BOM beim Export (Excel-kompatibel)
+- **Dashboard Header vereinfacht** (nur Datum)
+- **Phase 1 & 4 der Roadmap abgeschlossen** ✅
+
+### Version 1.0.0 (2025-01-03)
 - **16:9 Desktop-Layout** (1800px Container, kein Mobile)
 - **AT 8.2 Compliance** (Filter + Admin Editor)
 - **Budget-Donut UX-Redesign** (Grün für Verbleibend, Blau für Ausgegeben)
