@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import type { Project, YearBudget } from '../types';
 import { Card, COLORS } from '../ui';
 import { parseProjectsCSV, projectsToCSV, readFileAsText } from '../lib/csv';
-import { toISODate, getCurrentYear } from '../lib';
+import { toISODate, getCurrentYear, overlapDays, daysBetween, yearStart, yearEnd } from '../lib';
 import PINProtection from '../components/PINProtection';
 
 // Import DEMO_PROJECTS als Fallback
@@ -227,7 +227,15 @@ const ProjectsAdmin: React.FC = () => {
         const endYear = new Date(p.end).getFullYear();
         return startYear <= yb.year && endYear >= yb.year;
       });
-      const yearProjectBudget = yearProjects.reduce((sum, p) => sum + (p.budgetPlanned || 0), 0);
+      // Anteilige Berechnung wie Dashboard (plannedBudgetForYearD)
+      const yearProjectBudget = yearProjects.reduce((sum, p) => {
+        const startD = new Date(p.start);
+        const endD = new Date(p.end);
+        const overlap = overlapDays(startD, endD, yearStart(yb.year), yearEnd(yb.year));
+        const projectDays = Math.max(1, daysBetween(startD, endD));
+        const anteilig = (p.budgetPlanned || 0) * (overlap / projectDays);
+        return sum + anteilig;
+      }, 0);
       if (yearProjectBudget > yb.budget && yb.budget > 0) {
         const fmt = (n: number) => new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR', minimumFractionDigits: 0 }).format(n);
         warnings.push(`Jahr ${yb.year}: Projektbudgets (${fmt(yearProjectBudget)}) übersteigen Jahresbudget (${fmt(yb.budget)})`);
