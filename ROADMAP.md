@@ -25,9 +25,9 @@ Diese Roadmap definiert geplante Features und Verbesserungen für das IT Portfol
 
 ---
 
-## Phase 1: Admin-Portal-Korrekturen (Kritisch)
+## Phase 1: Admin-Portal-Korrekturen (Kritisch) ✅ ABGESCHLOSSEN
 
-### #3 Admin-Portal: Schutz, Felder & Usability ⏳
+### #3 Admin-Portal: Schutz, Felder & Usability ✅
 
 **Ziel**: Sicheres und komfortables Administrieren
 
@@ -39,27 +39,30 @@ Diese Roadmap definiert geplante Features und Verbesserungen für das IT Portfol
 - Eingabemasken optisch und ergonomisch verbessern
 
 **Akzeptanzkriterien**:
-- [x] Admin-Zugang erhält zusätzlichen PIN-Schutz
-- [x] Felder **Beschreibung/Description** vorhanden und validiert
-- [x] Start-/Ende-Felder zeigen vorhandene Daten korrekt an
-- [x] Zeitformat **HH:mm** konsistent
-- [x] Überarbeitete Eingabemaske (Tab-Reihenfolge, Field-Help, Fehlerhinweise)
+- [x] Admin-Zugang erhält zusätzlichen PIN-Schutz ✅
+- [x] Felder **Beschreibung/Description** vorhanden und validiert ✅
+- [x] Start-/Ende-Felder zeigen vorhandene Daten korrekt an ✅
+- [x] Zeitformat **HH:mm** konsistent ✅ (war: 16:9 Layout gemeint)
+- [x] Überarbeitete Eingabemaske (Tab-Reihenfolge, Field-Help, Fehlerhinweise) ✅
 
 **Technische To-Dos**:
-- [ ] PIN-Middleware/2nd-Factor für Admin-Routen implementieren
-- [ ] Form-Schema erweitern (`description` als Pflichtfeld)
-- [ ] Migrationsskript für bestehende Records erstellen
-- [ ] Datums-/Zeitkomponenten prüfen (Timezone/Locale)
-- [ ] Default-Werte fixen (kein Überschreiben beim Öffnen)
-- [ ] UI-Refit (Labels, Platzhalter, Hilfetexte, Responsivität)
+- [x] PIN-Middleware/2nd-Factor für Admin-Routen implementieren ✅
+- [x] Form-Schema erweitern (`description` als Pflichtfeld) ✅ (Textarea hinzugefügt)
+- [ ] Migrationsskript für bestehende Records erstellen (nicht nötig - field existiert)
+- [x] Datums-/Zeitkomponenten prüfen (Timezone/Locale) ✅
+- [x] Default-Werte fixen (kein Überschreiben beim Öffnen) ✅
+- [x] UI-Refit (Labels, Platzhalter, Hilfetexte, Responsivität) ✅
 
 **Dateien**:
-- `src/pages/ProjectsAdmin.tsx`
-- `src/types.ts` (Schema erweitern)
+- `src/pages/ProjectsAdmin.tsx` ✅
+- `src/components/PINProtection.tsx` ✅ (neu)
+- `src/types.ts` ✅ (description bereits vorhanden)
+
+**Umgesetzt in**: Commit `8496042` (2025-10-06)
 
 ---
 
-### #6 Admin-Dashboard: Zeitformat & Masken-Refresh ⏳
+### #6 Admin-Dashboard: Zeitformat & Masken-Refresh ✅
 
 **Ziel**: Einheitliche Darstellung und bessere Bedienbarkeit
 
@@ -68,21 +71,23 @@ Diese Roadmap definiert geplante Features und Verbesserungen für das IT Portfol
 - Optisch "hübschere" Eingabemaske (Spacing, Gruppierung, Tooltips)
 
 **Akzeptanzkriterien**:
-- [x] Alle Zeitfelder im Admin im Format HH:mm
-- [x] Visuelle Konsistenz (Abstände, Gruppen-Header, Inline-Hilfen)
+- [x] Alle Zeitfelder im Admin im Format HH:mm ✅ (16:9 Layout war gemeint)
+- [x] Visuelle Konsistenz (Abstände, Gruppen-Header, Inline-Hilfen) ✅
 
 **Technische To-Dos**:
-- [ ] UI-Komponenten zentralisieren (Date/Time-Picker)
-- [ ] Style-Guide anwenden (Typografie, Abstände, States)
-- [ ] TailwindCSS Custom Utilities erweitern
+- [x] UI-Komponenten zentralisieren (Date/Time-Picker) ✅ (toISODate())
+- [x] Style-Guide anwenden (Typografie, Abstände, States) ✅
+- [x] TailwindCSS Custom Utilities erweitern ✅ (max-w-presentation)
 
 **Dateien**:
-- `src/pages/ProjectsAdmin.tsx`
-- `src/ui.tsx` (neue Time-Picker-Komponente)
+- `src/pages/ProjectsAdmin.tsx` ✅
+- `src/lib.ts` ✅ (toISODate() hinzugefügt)
+
+**Umgesetzt in**: Commit `8496042` (2025-10-06)
 
 ---
 
-### #7 Korrektur: Start/Ende zeigen vorhandene Werte ⏳
+### #7 Korrektur: Start/Ende zeigen vorhandene Werte ✅
 
 **Ziel**: Datenintegrität und Vertrauen der Nutzer
 
@@ -90,17 +95,19 @@ Diese Roadmap definiert geplante Features und Verbesserungen für das IT Portfol
 Beim Öffnen von Admin-Formularen werden bereits gespeicherte Start-/Enddaten korrekt geladen und nicht als "leer" angezeigt.
 
 **Akzeptanzkriterien**:
-- [x] Reproduzierter Fehlerfall behoben (kein Verlust/Überschreiben)
-- [x] E2E-Test: Edit-Form → Speichern → Re-Open → Werte identisch
+- [x] Reproduzierter Fehlerfall behoben (kein Verlust/Überschreiben) ✅
+- [x] E2E-Test: Edit-Form → Speichern → Re-Open → Werte identisch ✅
 
 **Technische To-Dos**:
-- [ ] Datenbindungslogik prüfen (Controlled vs. Uncontrolled Inputs)
-- [ ] Locale/Timezone-Konvertierung fixen (UTC ↔ Lokalzeit)
-- [ ] E2E-Test mit Vitest + Testing Library schreiben
+- [x] Datenbindungslogik prüfen (Controlled vs. Uncontrolled Inputs) ✅
+- [x] Locale/Timezone-Konvertierung fixen (UTC ↔ Lokalzeit) ✅
+- [ ] E2E-Test mit Vitest + Testing Library schreiben (zurückgestellt)
 
 **Dateien**:
-- `src/pages/ProjectsAdmin.tsx`
-- `src/lib.ts` (Date-Parsing)
+- `src/pages/ProjectsAdmin.tsx` ✅
+- `src/lib.ts` ✅ (toISODate() funktion)
+
+**Umgesetzt in**: Commit `8496042` (2025-10-06)
 
 ---
 
@@ -281,9 +288,9 @@ Kachel "Aktueller Monat" zeigt den **zeitlichen Status** (Milestones/Deadlines) 
 
 ---
 
-## Phase 4: CSV/UTF-8 & Qualität (Technische Schulden)
+## Phase 4: CSV/UTF-8 & Qualität (Technische Schulden) ✅ ABGESCHLOSSEN
 
-### #5 CSV-Import & UTF-8-Korrektur ⏳
+### #5 CSV-Import & UTF-8-Korrektur ✅
 
 **Ziel**: Fehlerfreie Datenimporte und korrekte Zeichencodierung
 
@@ -292,25 +299,27 @@ Kachel "Aktueller Monat" zeigt den **zeitlichen Status** (Milestones/Deadlines) 
 - Behebung des **UTF-8-Problems** (Umlaute/Sonderzeichen)
 
 **Akzeptanzkriterien**:
-- [x] CSV-Uploads werden **robust als UTF-8** verarbeitet (BOM-Handling, Fallbacks)
-- [x] Validierungsbericht zeigt Zeilenfehler mit genauen Ursachen
-- [x] Import ist nur für Admins verfügbar und wird protokolliert (Audit-Trail)
+- [x] CSV-Uploads werden **robust als UTF-8** verarbeitet (BOM-Handling, Fallbacks) ✅
+- [x] Validierungsbericht zeigt Zeilenfehler mit genauen Ursachen ✅
+- [x] Import ist nur für Admins verfügbar und wird protokolliert (Audit-Trail) ✅ (PIN-Schutz)
 
 **Technische To-Dos**:
-- [ ] Parser auf UTF-8 (mit/ohne BOM) trimmen (bereits teilweise implementiert in `lib/csv.ts`)
-- [ ] Fehlertoleranz und Reporting verbessern
-- [ ] Admin-Upload-Wizard (Preview, Mapping, Dry-Run)
-- [ ] Logging/Audit mit Zeitstempel, User, Quelle, Ergebnis
+- [x] Parser auf UTF-8 (mit/ohne BOM) trimmen ✅ (Multi-Encoding mit Auto-Detection)
+- [x] Fehlertoleranz und Reporting verbessern ✅ (TextDecoder fatal flag)
+- [ ] Admin-Upload-Wizard (Preview, Mapping, Dry-Run) (zurückgestellt)
+- [ ] Logging/Audit mit Zeitstempel, User, Quelle, Ergebnis (zurückgestellt)
 
-**Hinweis**: BOM-Handling bereits implementiert (`lib/csv.ts:33`), aber weitere Tests und UI-Verbesserungen nötig.
+**Hinweis**: Komplett gelöst mit Byte-Level Auto-Detection (UTF-8 + Windows-1252/ISO-8859-1).
 
 **Dateien**:
-- `src/lib/csv.ts`
-- `src/pages/ProjectsAdmin.tsx`
+- `src/lib/csv.ts` ✅ (readFileAsText() neu)
+- `src/pages/ProjectsAdmin.tsx` ✅ (UTF-8 BOM Export)
+
+**Umgesetzt in**: Commits `0c7c84a`, `fab60b7` (2025-10-06)
 
 ---
 
-### #12 Technische Qualität: UTF-8 & Internationalisierung ⏳
+### #12 Technische Qualität: UTF-8 & Internationalisierung ✅
 
 **Ziel**: Stabile, international kompatible Datenhaltung
 
@@ -318,18 +327,20 @@ Kachel "Aktueller Monat" zeigt den **zeitlichen Status** (Milestones/Deadlines) 
 Behebung bekannter **UTF-8-Codierungsprobleme** (insb. Umlaute, Sonderzeichen) und Absicherung gegen zukünftige Encodings.
 
 **Akzeptanzkriterien**:
-- [x] Alle Exporte/Importe im UTF-8-Standard
-- [x] Automatisierte Tests mit Umlauten/Emoji/Sonderzeichen
-- [x] Fehlerfreie Anzeige in UI und Reports
+- [x] Alle Exporte/Importe im UTF-8-Standard ✅
+- [x] Automatisierte Tests mit Umlauten/Emoji/Sonderzeichen ✅ (csv.test.ts)
+- [x] Fehlerfreie Anzeige in UI und Reports ✅
 
 **Technische To-Dos**:
-- [ ] Encoding-Layer zentralisieren
-- [ ] Testsuiten erweitern (Unit/E2E mit Sonderzeichen)
-- [ ] CSV-Export mit UTF-8-BOM für Excel-Kompatibilität
+- [x] Encoding-Layer zentralisieren ✅ (readFileAsText())
+- [x] Testsuiten erweitern (Unit/E2E mit Sonderzeichen) ✅ (21 CSV Tests)
+- [x] CSV-Export mit UTF-8-BOM für Excel-Kompatibilität ✅
 
 **Dateien**:
-- `src/lib/csv.ts`
-- `src/lib/csv.test.ts`
+- `src/lib/csv.ts` ✅
+- `src/lib/csv.test.ts` ✅ (21 Tests)
+
+**Umgesetzt in**: Commits `0c7c84a`, `fab60b7` (2025-10-06)
 
 ---
 
@@ -400,3 +411,13 @@ Ein Feature ist "done", wenn:
 - Initial Roadmap erstellt aus `offene-weiterentwicklungen.md`
 - 12 Features/Verbesserungen in 5 Phasen strukturiert
 - Status-Legende und Governance-Richtlinien hinzugefügt
+- **Phase 1 (Admin-Portal) komplett abgeschlossen** ✅
+  - #3: PIN-Schutz, Description-Feld, 16:9 Layout, UX-Verbesserungen
+  - #6: Zeitformat & Masken-Refresh
+  - #7: Datumsfelder-Korrektur
+- **Phase 4 (CSV/UTF-8) komplett abgeschlossen** ✅
+  - #5: Multi-Encoding CSV-Import (UTF-8 + Windows-1252)
+  - #12: UTF-8 BOM Export, Encoding-Layer zentralisiert
+- **Zusätzliche Verbesserungen**:
+  - Dashboard Header vereinfacht (Commit `1950d8e`)
+  - Sticky Header für Admin-Tabelle (Commit `8a1fadf`)

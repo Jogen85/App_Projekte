@@ -6,7 +6,101 @@ Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
 ## [Unreleased]
 
-### 16:9 Desktop-Optimierung & UX-Verbesserungen (2025-01-03)
+## [1.1.0] - 2025-10-06
+
+### Admin-Portal Phase 1 Komplett + UX-Verbesserungen
+
+#### Added
+- **PIN-Schutz für Admin-Portal** (4-stellig: 0312)
+  - Session-basiert (sessionStorage)
+  - Einfache numerische Eingabe
+  - Komponente: `src/components/PINProtection.tsx`
+  - Schützt `/admin` Route vor unberechtigtem Zugriff
+
+- **Description-Feld im Admin-Portal**
+  - Textarea-Spalte in Admin-Tabelle (zwischen Titel und Verantwortlicher MA)
+  - Mehrzeilige Eingabe möglich (min-h-70px)
+  - War im Datenmodell vorhanden, fehlte aber in UI
+
+- **Multi-Encoding CSV-Import** (UTF-8 + Windows-1252/ISO-8859-1)
+  - Auto-Detection mit Byte-Level Kontrolle
+  - Versucht UTF-8 mit fatal flag → Fallback zu Windows-1252
+  - Löst Umlaut-Problem bei Excel-Exports (ü, ö, ä, ß)
+  - Neue Funktion: `readFileAsText()` in `csv.ts`
+
+- **UTF-8 BOM beim CSV-Export**
+  - Fügt Byte Order Mark (U+FEFF) hinzu
+  - Excel erkennt UTF-8 automatisch
+  - Keine Umlaut-Probleme mehr beim Öffnen in Excel
+
+- **Sticky Header für Admin-Tabelle**
+  - Header bleibt beim vertikalen Scrollen oben sichtbar
+  - Max-Height Container: `calc(100vh-250px)`
+  - Horizontal-Scroll sofort verfügbar (nicht erst nach unten scrollen)
+  - Bessere Navigation bei 20+ Projekten
+
+- **ROADMAP.md erstellt**
+  - 12 Features in 5 Phasen strukturiert
+  - Status-Legende (⏳ Geplant, 🔄 In Arbeit, ✅ Erledigt)
+  - Definition of Ready & Definition of Done
+  - Basiert auf `offene-weiterentwicklungen.md`
+
+#### Changed
+- **Dashboard Header vereinfacht**
+  - Vorher: "Portfolio-Überblick für Geschäftsführung & Aufsichtsrat — Stand: 06.10.2025"
+  - Nachher: "Stand: 06.10.2025"
+  - Reduziert visuellen Lärm
+
+- **Admin-Portal 16:9-Layout**
+  - Container: `max-w-7xl` (1280px) → `max-w-presentation` (1800px)
+  - Konsistent mit Dashboard-Layout
+  - Bessere Ausnutzung von Breitbildschirmen
+
+- **Admin-Portal UX komplett überarbeitet**
+  - **Gruppierte Header** mit Farbcodes:
+    - Blau: Stammdaten (ID, Titel, Beschreibung, MA, Status)
+    - Gelb: Zeitplan (Start, Ende, Fortschritt)
+    - Grün: Budget (Budget, Kosten, Gesellschaft)
+    - Lila: AT 8.2 Compliance
+  - **Größere Eingabefelder**: `px-2 py-1.5` (war: `px-1`)
+  - **Focus-States**: Farbige Ringe (Ring-2) pro Gruppe
+  - **Hover-Effekte**: Zeilen heben sich hervor
+  - **Bessere Buttons**:
+    - "Neu" → Blau mit Icon (+ Neu)
+    - "Speichern" → Grün
+    - "Löschen" → Rot mit Icon (🗑️)
+  - **Placeholders** für alle Eingabefelder
+  - **Größere Checkboxen**: 5×5 (war: Standard)
+
+- **Datumsfelder korrekt laden**
+  - Neue Funktion: `toISODate()` in `lib.ts`
+  - Konvertiert deutsche Daten (`DD.MM.YYYY`) zu ISO (`YYYY-MM-DD`)
+  - Verhindert Überschreiben beim Öffnen von Admin-Formularen
+
+- **CLAUDE.md aktualisiert**
+  - `npm run test -- --coverage` Command hinzugefügt
+  - Lazy-Loading Referenz korrigiert (ResourceTile → TimeStatusOverview)
+
+#### Fixed
+- **UTF-8 Umlaute-Problem beim CSV-Import** (komplett gelöst)
+  - Root Cause: CSV in ISO-8859-1/Windows-1252 statt UTF-8
+  - Browser's `file.text()` wählte falsch → Umlaute als `�`
+  - Lösung: Byte-Level Detection mit TextDecoder fatal flag
+  - Funktioniert mit UTF-8, Windows-1252, ISO-8859-1
+
+#### Technical Details
+- **7 Dateien geändert**, 699 Zeilen hinzugefügt, 46 entfernt
+- **Neue Dateien**:
+  - `src/components/PINProtection.tsx` (104 Zeilen)
+  - `ROADMAP.md` (402 Zeilen)
+- **TypeScript-Check**: ✅ Alle erfolgreich
+- **5 Commits** in dev-Branch
+
+---
+
+## [1.0.0] - 2025-01-03
+
+### 16:9 Desktop-Optimierung & UX-Verbesserungen
 
 #### Added
 - **16:9 Desktop-Layout** für Business-Präsentationen (1920×1080 / Beamer)
