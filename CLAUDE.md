@@ -50,9 +50,10 @@ IT Portfolio Dashboard – React/TypeScript/Vite SPA for executive project overs
    - German number format: `10.000,50` → 10000.5
 
 ### Core Modules
-- **`src/types.ts`**: `Project` (raw CSV), `NormalizedProject` (with parsed dates)
+- **`src/types.ts`**: `Project` (raw CSV), `NormalizedProject` (with parsed dates), `YearBudget` (year budget config)
   - Fields: `projectNumberInternal` (string), `projectNumberExternal` (optional string), `classification` ('internal_dev' | 'project' | 'project_vdbs' | 'task')
   - Fields: `requiresAT82Check`, `at82Completed` (boolean)
+  - Fields: `YearBudget` (year: number, budget: number)
   - Removed field: `hoursPerMonth`
 - **`src/lib.ts`**: Date/time utilities, RAG (Red-Amber-Green) logic, budget calculations
 - **`src/lib/csv.ts`**: CSV parser/serializer (BOM handling, quote escaping, delimiter detection, German numbers, boolean parsing)
@@ -66,6 +67,9 @@ IT Portfolio Dashboard – React/TypeScript/Vite SPA for executive project overs
   - **New UX Logic**: Green/Yellow/Red for "Remaining" (important), Blue for "Spent" (neutral)
   - Shows red warning banner when `remaining < 0`
   - Fixed dimensions: chartHeight=150px, outer=60, inner=40
+  - **Jahresbudget-Integration**: Zeigt Jahresbudget vs. Ausgaben (falls konfiguriert)
+  - Info-Zeile: "Projektbudgets geplant: €XXX" (nur wenn Jahresbudget gesetzt)
+  - Props: `yearBudget`, `projectBudgetSum` für Zwei-Vergleichsebenen-Logik
 - **`TimeStatusOverview.tsx`**: Aggregate traffic light distribution for running projects
   - 3 large status circles (48px): Green (On Track), Yellow (Delayed), Red (Critical)
   - Replaces old ResourceTile component
@@ -88,6 +92,11 @@ IT Portfolio Dashboard – React/TypeScript/Vite SPA for executive project overs
 
 ### Pages (`src/pages/`)
 - **`ProjectsAdmin.tsx`**: Admin CSV editor (no backend; localStorage)
+  - **Jahresbudget-Verwaltung**: Separate Tabelle oberhalb Projekttabelle
+  - Editierbarkeit: Nur aktuelles (2025) + nächstes Jahr (2026)
+  - Vergangene Jahre: readonly, ausgegraut mit "Gesperrt (Vergangenheit)"
+  - Warnung bei Überplanung: Projektbudgets (anteilig) > Jahresbudget
+  - Speicherung: `localStorage.yearBudgets` (separiert von projects_json)
 
 ### Lazy Loading
 - Charts (`BudgetDonut`, `TimeStatusOverview`, `ProgressDelta`) and `ProjectsTable` are code-split via `React.lazy`
@@ -173,10 +182,49 @@ IT Portfolio Dashboard – React/TypeScript/Vite SPA for executive project overs
 
 - **No backend**: All state lives in browser
 - Admin saves to `localStorage.projects_json` (JSON array of projects)
+- Admin saves to `localStorage.yearBudgets` (JSON array of YearBudget: `{year: number, budget: number}[]`)
 - Dashboard reads localStorage on mount, falls back to `DEMO_PROJECTS`
 - CSV import/export via Admin page (no server roundtrip)
+- Jahresbudgets: Separate localStorage-Key für Multi-Jahr-Planung
 
 ## Recent Changes & Evolution
+
+### Jahresbudget-Verwaltung (2025-10-06) - v1.3.0
+
+**Major Changes**:
+1. **Jahresbudget-Verwaltung im Admin-Portal**:
+   - Separate Tabelle oberhalb Projekttabelle
+   - CRUD für Jahresbudgets: Jahr | Budget (€) | Aktion
+   - Editierbarkeit: Nur aktuelles Jahr (2025) + nächstes Jahr (2026)
+   - Vergangene Jahre: readonly, ausgegraut, "Gesperrt (Vergangenheit)"
+   - localStorage: `yearBudgets` (separiert von projects_json)
+
+2. **Dashboard: Zwei Vergleichsebenen**:
+   - BudgetDonut zeigt Jahresbudget vs. Ausgaben (falls konfiguriert)
+   - Card-Titel: "Budget 2025: €500.000" statt nur Projektsumme
+   - Info-Zeile: "Projektbudgets geplant: €308.000" (anteilig)
+   - Fallback: Ohne Jahresbudget → wie bisher (nur Projektsummen)
+
+3. **Warnung bei Überplanung**:
+   - Admin: Banner "⚠️ Projektbudgets (€308k) übersteigen Jahresbudget (€350k)"
+   - Dashboard: Banner oberhalb KPIs bei Überplanung
+   - Anteilige Berechnung: Mehrjährige Projekte fair auf Jahre verteilt
+
+4. **Anteilige Budgetberechnung** (Bugfix):
+   - Admin nutzt gleiche anteilige Logik wie Dashboard (`plannedBudgetForYearD`)
+   - Beispiel: Projekt 2024-2026, €150k → €75k für 2025 (365 / 730 Tage)
+   - Konsistenz: Admin und Dashboard zeigen gleiche Werte
+
+**Technisch**:
+- Neuer Type: `YearBudget = {year: number, budget: number}`
+- BudgetDonut erweitert: Props `yearBudget`, `projectBudgetSum`
+- Admin: +120 Zeilen (Jahresbudget-Tabelle + CRUD + Warnungen)
+- App.tsx: +30 Zeilen (Jahresbudget laden, Warnung, BudgetDonut-Integration)
+- Import in Admin: `overlapDays`, `daysBetween`, `yearStart`, `yearEnd`
+
+**Files Modified**: 4 files (+233 lines, -11 lines)
+
+---
 
 ### Projektnummern & Klassifizierung (2025-10-06) - v1.2.0
 

@@ -6,10 +6,16 @@
 
 - **16:9 Desktop-optimiertes Dashboard** (1920×1080, kein Mobile)
   - KPI-Kacheln (laufend/geplant/abgeschlossen) – 120px Höhe
+  - **Jahresbudget-Verwaltung** (neu in v1.3.0)
+    - Admin: Separate Tabelle für Jahresbudgets (Jahr | Budget € | Aktion)
+    - Editierbar: Nur aktuelles Jahr (2025) + nächstes Jahr (2026)
+    - Dashboard: Zwei Vergleichsebenen (Jahresbudget vs. Ausgaben + Projektbudgets)
+    - Warnung bei Überplanung (Projektbudgets > Jahresbudget)
   - Budget (Jahr) als Donut mit UX-optimierter Farblogik
     - **Verbleibend** = Grün (>20%), Gelb (10-20%), Rot (<10%)
     - **Ausgegeben** = Blau (neutral)
     - Rote Warnung bei Budgetüberschreitung
+    - Info-Zeile: "Projektbudgets geplant: €XXX" (anteilig)
   - Zeitstatus-Übersicht (laufende Projekte): Aggregierte Ampel-Verteilung
   - Soll–Ist-Fortschritt mit Top 3 Verzögerungen (klickbar)
   - Projekttabelle mit **Projektnummern**, **Klassifizierung** (4 Typen), Budget-Fortschrittsbalken, AT 8.2 Compliance-Spalten, Ampeln Zeit/Budget
@@ -26,6 +32,10 @@
 - **Admin-Editor** (ohne Server)
   - `/admin` Route mit **PIN-Schutz** (4-stellig, Session-basiert)
   - 16:9-Layout (1800px) mit **Sticky Header** (scrollbar immer sichtbar)
+  - **Jahresbudget-Verwaltung** (neue Tabelle oberhalb Projekttabelle)
+    - CRUD: Jahr | Budget (€) | Aktion
+    - Nur aktuelles + nächstes Jahr editierbar
+    - Warnung bei Überplanung (anteilige Berechnung)
   - Inline-Tabelle: Projekte anlegen, bearbeiten, löschen
   - **Multi-Encoding CSV-Import** (UTF-8 + Windows-1252/ISO-8859-1)
   - CSV exportieren mit UTF-8 BOM (Excel-kompatibel)
@@ -48,9 +58,9 @@ src/
   ui.tsx                   # UI-Primitives (Card, Badge, ProgressBar mit Target-Linie)
   lib.ts                   # Zeit/Datums-Hilfen, RAG-Logik, Budgetfunktionen
   lib/csv.ts               # CSV Parser (BOM, German numbers, boolean parsing)
-  types.ts                 # Typen (Project, NormalizedProject)
+  types.ts                 # Typen (Project, NormalizedProject, YearBudget)
   components/
-    BudgetDonut.tsx        # Budget-Kachel Donut (Neue Farblogik, Overspend Detection)
+    BudgetDonut.tsx        # Budget-Kachel Donut (Jahresbudget-Integration, Overspend Detection)
     TimeStatusOverview.tsx # Zeitstatus-Übersicht (Ampel-Verteilung)
     ProgressDelta.tsx      # Soll–Ist-Fortschritt (Top 3 Verzögerungen)
     ProjectsTable.tsx      # Projekttabelle (AT 8.2, Budget-Bars, Target-Progress)
@@ -59,7 +69,7 @@ src/
     TrafficLight.tsx       # Status Badge (32px Dot mit Ping Animation)
     PINProtection.tsx      # PIN-Schutz für Admin-Portal (4-stellig)
   pages/
-    ProjectsAdmin.tsx      # Admin-Editor (CSV/Inline, localStorage)
+    ProjectsAdmin.tsx      # Admin-Editor (CSV/Inline, Jahresbudgets, localStorage)
   test/
     setup.ts               # Vitest Setup (ResizeObserver Mock)
 index.html                 # HTML, UTF-8, min-width: 1440px

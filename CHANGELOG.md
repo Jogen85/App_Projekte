@@ -6,6 +6,86 @@ Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
 ## [Unreleased]
 
+## [1.3.0] - 2025-10-06
+
+### Jahresbudget-Verwaltung & Anteilige Budgetberechnung
+
+#### Added
+- **Jahresbudget-Verwaltung im Admin-Portal**
+  - Neue Tabelle oberhalb der Projekttabelle
+  - CRUD-Funktionen: Jahr | Budget (€) | Aktion
+  - Button "+ Weiteres Jahr" zum Hinzufügen neuer Jahresbudgets
+  - localStorage: `yearBudgets` (Array von `{year: number, budget: number}`)
+  - Separiert von `projects_json` für unabhängige Verwaltung
+
+- **Editierbarkeit nach Zeitraum**
+  - **Aktuelles Jahr (2025)**: Voll editierbar
+  - **Nächstes Jahr (2026)**: Voll editierbar (für Vorausplanung)
+  - **Vergangene Jahre**: Readonly, ausgegraut, Label "Gesperrt (Vergangenheit)"
+  - Button "Löschen" nur für editierbare Jahre sichtbar
+
+- **Dashboard: Zwei Vergleichsebenen**
+  - BudgetDonut zeigt Jahresbudget vs. Ausgaben (falls konfiguriert)
+  - Card-Titel dynamisch: "Budget 2025: €500.000" (mit Jahresbudget)
+  - Fallback: "Budget (Jahr): €XXX" (ohne Jahresbudget, wie bisher)
+  - Neue Info-Zeile: "Projektbudgets geplant: €308.000" (anteilig)
+  - Nur sichtbar wenn Jahresbudget konfiguriert
+
+- **Warnung bei Überplanung**
+  - Admin-Portal: Roter Banner "⚠️ Projektbudgets (€308k) übersteigen Jahresbudget (€350k)"
+  - Dashboard: Banner oberhalb KPIs bei Überplanung
+  - Prüfung pro Jahr: Nur wenn Jahresbudget konfiguriert
+  - Anteilige Berechnung: Mehrjährige Projekte fair auf Jahre verteilt
+
+- **Type Definition**
+  - `YearBudget = {year: number, budget: number}`
+  - Export in `src/types.ts`
+  - Import in Admin & Dashboard
+
+#### Changed
+- **BudgetDonut erweitert**
+  - Neue Props: `yearBudget?: number | null`, `projectBudgetSum?: number`
+  - Info-Zeile zeigt geplante Projektbudgets (nur wenn Jahresbudget gesetzt)
+  - Fallback-Logik: Ohne Jahresbudget → wie bisher (nur Projektsummen)
+  - Keine Breaking Changes für bestehende Implementierungen
+
+- **Dashboard-Logik**
+  - Lädt Jahresbudgets aus localStorage beim Mount
+  - `currentYearBudget` useMemo: Findet Budget für aktuelles Jahr
+  - `effectiveBudget`: Jahresbudget (falls vorhanden) oder Projektsumme
+  - `showOverBudgetWarning`: Prüft Projektbudgets > Jahresbudget
+
+#### Fixed
+- **Anteilige Budgetberechnung vereinheitlicht** (Bugfix)
+  - **Problem**: Admin zählte volle Projektbudgets (€425k), Dashboard anteilige (€308k)
+  - **Root Cause**: Admin nutzte `p.budgetPlanned` direkt, Dashboard `plannedBudgetForYearD`
+  - **Lösung**: Admin nutzt jetzt gleiche anteilige Logik wie Dashboard
+  - **Berechnung**: Projekt 2024-2026, €150k → €75k für 2025 (365 / 730 Tage)
+  - **Resultat**: Konsistenz zwischen Admin und Dashboard
+  - Import in Admin: `overlapDays`, `daysBetween`, `yearStart`, `yearEnd`
+  - Code: `src/pages/ProjectsAdmin.tsx` Zeile 230-238
+
+#### Technical Details
+- **4 Dateien geändert**: 233 Zeilen hinzugefügt, 11 entfernt
+- **Dateien**:
+  - `src/types.ts`: YearBudget Type (+5 Zeilen)
+  - `src/pages/ProjectsAdmin.tsx`: Jahresbudget-Tabelle + CRUD + Warnungen (+120 Zeilen)
+  - `src/App.tsx`: Jahresbudget laden, Warnung, BudgetDonut-Integration (+30 Zeilen)
+  - `src/components/BudgetDonut.tsx`: yearBudget/projectBudgetSum Props (+10 Zeilen)
+- **Tests**: ✅ 49/49 passed (keine neuen Tests, da UI-Feature)
+- **Build**: ✅ Erfolgreich
+- **Commits**:
+  - `93a792b`: feat: Jahresbudget-Verwaltung mit Überplanungs-Warnung
+  - `c1ddc90`: fix: Budgetberechnung vereinheitlichen (anteilige Jahresberechnung)
+
+#### Migration Notes
+- **Keine Breaking Changes**
+- Bestehende Installationen: Funktionieren ohne Jahresbudget-Konfiguration wie bisher
+- Opt-in: Jahresbudget im Admin-Portal konfigurieren → Dashboard zeigt automatisch neue Features
+- localStorage: `yearBudgets` wird automatisch initialisiert (leeres Array)
+
+---
+
 ## [1.2.0] - 2025-10-06
 
 ### Projektnummern & Klassifizierung (Phase 5 #1 komplett)
