@@ -5,22 +5,29 @@ const NULL_CHAR = String.fromCharCode(0);
 
 export type CsvDelimiter = ';' | ',';
 
-// Liest File mit explizitem UTF-8 Encoding (verhindert Umlaut-Probleme)
+// Liest File mit Auto-Encoding-Detection (UTF-8 oder Windows-1252/ISO-8859-1)
 export async function readFileAsText(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      let text = reader.result as string;
-      // Entferne UTF-8 BOM falls vorhanden
-      if (text.charCodeAt(0) === 0xFEFF) {
-        text = text.slice(1);
-      }
-      resolve(text);
-    };
-    reader.onerror = () => reject(reader.error);
-    // Explizit UTF-8 lesen (nicht Browser-Automatik)
-    reader.readAsText(file, 'UTF-8');
-  });
+  // Lese als ArrayBuffer für Byte-Level Kontrolle
+  const buffer = await file.arrayBuffer();
+  const bytes = new Uint8Array(buffer);
+
+  // Prüfe auf UTF-8 BOM (EF BB BF)
+  let offset = 0;
+  if (bytes.length >= 3 && bytes[0] === 0xEF && bytes[1] === 0xBB && bytes[2] === 0xBF) {
+    offset = 3; // Skip BOM
+  }
+
+  // Versuche UTF-8 Dekodierung mit fatal flag (wirft Fehler bei ungültigen Bytes)
+  try {
+    const decoder = new TextDecoder('utf-8', { fatal: true });
+    const text = decoder.decode(bytes.slice(offset));
+    return text;
+  } catch (e) {
+    // UTF-8 Dekodierung fehlgeschlagen → Fallback zu Windows-1252
+    // Windows-1252 ist Superset von ISO-8859-1 und deckt Excel-Exports ab
+    const decoder = new TextDecoder('windows-1252');
+    return decoder.decode(bytes.slice(offset));
+  }
 }
 
 export function detectDelimiter(headerLine: string): CsvDelimiter {
