@@ -116,7 +116,19 @@ export default function App() {
   const [at82CompletedFilter, setAt82CompletedFilter] = useState<string>('all');
 
   useEffect(() => {
-    try { const ls = localStorage.getItem('projects_json'); if (ls) setProjects(JSON.parse(ls)); } catch (e) { /* ignore */ }
+    // TEMP: localStorage löschen um neue DEMO_PROJECTS zu erzwingen
+    // Nach ersten Laden kann diese Zeile entfernt werden
+    localStorage.removeItem('projects_json');
+
+    try {
+      const ls = localStorage.getItem('projects_json');
+      if (ls) {
+        const parsed = JSON.parse(ls);
+        if (parsed && parsed.length > 0) {
+          setProjects(parsed);
+        }
+      }
+    } catch (e) { /* ignore */ }
   }, []);
 
   const normalized: NormalizedProject[] = useMemo(() =>
