@@ -1,5 +1,8 @@
 export type Project = {
   id: string;
+  projectNumberInternal: string; // Pflichtfeld: z.B. PINT-2025-001
+  projectNumberExternal?: string; // Optional: z.B. VDB-2025-042
+  classification: 'internal_dev' | 'project' | 'project_vdbs' | 'task'; // Klassifizierung
   title: string;
   owner: string;
   description: string;

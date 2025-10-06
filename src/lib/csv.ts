@@ -1,6 +1,6 @@
 ﻿import type { Project } from '../types';
 
-const REQUIRED_FIELDS = ['id','title','owner','description','status','start','end','progress','budgetPlanned','costToDate','org','requiresAT82Check','at82Completed'] as const;
+const REQUIRED_FIELDS = ['id','projectNumberInternal','projectNumberExternal','classification','title','owner','description','status','start','end','progress','budgetPlanned','costToDate','org','requiresAT82Check','at82Completed'] as const;
 const NULL_CHAR = String.fromCharCode(0);
 
 export type CsvDelimiter = ';' | ',';
@@ -146,6 +146,9 @@ export function parseProjectsCSV(text: string): Project[] {
 
     projects.push({
       id: pick('id') || `row-${i}`,
+      projectNumberInternal: pick('projectNumberInternal') || '',
+      projectNumberExternal: pick('projectNumberExternal') || undefined,
+      classification: (pick('classification') as any) || 'project',
       title: pick('title'),
       owner: pick('owner'),
       description: pick('description'),
