@@ -1,7 +1,7 @@
 import React, { Suspense, lazy, useEffect, useMemo, useState } from 'react';
 import { Card, COLORS } from './ui';
 import { parseProjectsCSV, projectsToCSV } from './lib/csv';
-import type { Project, NormalizedProject } from './types';
+import type { Project, NormalizedProject, YearBudget } from './types';
 import {
   toDate, fmtDate, getToday, getCurrentYear, daysBetween,
   yearStart, yearEnd, overlapDays,
@@ -114,6 +114,7 @@ export default function App() {
   const [csvError, setCsvError] = useState<string | null>(null);
   const [at82RequiredFilter, setAt82RequiredFilter] = useState<string>('all');
   const [at82CompletedFilter, setAt82CompletedFilter] = useState<string>('all');
+  const [yearBudgets, setYearBudgets] = useState<YearBudget[]>([]);
 
   useEffect(() => {
     // TEMP: localStorage löschen um neue DEMO_PROJECTS zu erzwingen
@@ -126,6 +127,18 @@ export default function App() {
         const parsed = JSON.parse(ls);
         if (parsed && parsed.length > 0) {
           setProjects(parsed);
+        }
+      }
+    } catch (e) { /* ignore */ }
+  }, []);
+
+  useEffect(() => {
+    try {
+      const ls = localStorage.getItem('yearBudgets');
+      if (ls) {
+        const parsed = JSON.parse(ls);
+        if (Array.isArray(parsed)) {
+          setYearBudgets(parsed);
         }
       }
     } catch (e) { /* ignore */ }
@@ -241,9 +254,19 @@ export default function App() {
     URL.revokeObjectURL(url);
   };
 
-  // Budget-Anzeige: Überschreitungen müssen transparent sein
+  // Jahresbudget für das aktuelle Jahr finden
+  const currentYearBudget = useMemo(() => {
+    const found = yearBudgets.find((yb) => yb.year === year);
+    return found ? found.budget : null;
+  }, [yearBudgets, year]);
+
+  // Budget-Anzeige: Jahresbudget (falls vorhanden) oder Projektsumme
   const budgetSpent = kpis.costSum;
-  const budgetRemaining = kpis.budgetPlannedSum - kpis.costSum;
+  const effectiveBudget = currentYearBudget !== null ? currentYearBudget : kpis.budgetPlannedSum;
+  const budgetRemaining = effectiveBudget - kpis.costSum;
+
+  // Warnung bei Überplanung (Projektbudgets > Jahresbudget)
+  const showOverBudgetWarning = currentYearBudget !== null && kpis.budgetPlannedSum > currentYearBudget;
   // Burndown entfernt; Soll-Ist-Kachel ersetzt die Darstellung
 
 
@@ -275,6 +298,19 @@ export default function App() {
           </Card>
         )}
 
+        {showOverBudgetWarning && (
+          <Card>
+            <div className="bg-red-50 border border-red-200 rounded-md p-3 flex items-center gap-2">
+              <svg className="w-5 h-5 shrink-0 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
+              <span className="text-sm text-red-800 font-medium">
+                ⚠️ Projektbudgets ({new Intl.NumberFormat('de-DE', {style: 'currency', currency: 'EUR', minimumFractionDigits: 0}).format(kpis.budgetPlannedSum)}) übersteigen Jahresbudget ({new Intl.NumberFormat('de-DE', {style: 'currency', currency: 'EUR', minimumFractionDigits: 0}).format(currentYearBudget!)})
+              </span>
+            </div>
+          </Card>
+        )}
+
         {/* KPI-Zeile */}
         <div className="grid grid-cols-3 gap-3">
           <Card title={"Laufend"} className="h-kpi">
@@ -296,9 +332,9 @@ export default function App() {
 
         {/* Chart-Zeile */}
         <div className="grid grid-cols-3 gap-3">
-          <Card title={`Budget (Jahr): ${new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR'}).format(kpis.budgetPlannedSum)}`} className="h-chart">
+          <Card title={currentYearBudget !== null ? `Budget ${year}: ${new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR', minimumFractionDigits: 0}).format(currentYearBudget)}` : `Budget (Jahr): ${new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR'}).format(kpis.budgetPlannedSum)}`} className="h-chart">
             <Suspense fallback={<div className="h-48 bg-slate-100 rounded animate-pulse" />}>
-              <BudgetDonut spent={budgetSpent} remaining={budgetRemaining} height={220} />
+              <BudgetDonut spent={budgetSpent} remaining={budgetRemaining} height={220} yearBudget={currentYearBudget} projectBudgetSum={kpis.budgetPlannedSum} />
             </Suspense>
           </Card>
           <Card title={"Zeitlicher Status (laufende Projekte)"} className="h-chart">

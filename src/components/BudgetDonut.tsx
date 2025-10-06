@@ -6,9 +6,11 @@ type Props = {
   spent: number;
   remaining: number;
   height?: number; // px height for the tile chart area
+  yearBudget?: number | null; // Jahresbudget falls konfiguriert
+  projectBudgetSum?: number; // Summe der Projektbudgets
 };
 
-export const BudgetDonut: React.FC<Props> = ({ spent, remaining, height = 190 }) => {
+export const BudgetDonut: React.FC<Props> = ({ spent, remaining, height = 190, yearBudget, projectBudgetSum }) => {
   const spentSafe = Math.max(0, spent);
   const budgetPlanned = spentSafe + remaining; // Original budget
   const isOverBudget = remaining < 0;
@@ -126,6 +128,13 @@ export const BudgetDonut: React.FC<Props> = ({ spent, remaining, height = 190 })
             </>
           )}
         </div>
+
+        {yearBudget !== null && yearBudget !== undefined && projectBudgetSum !== undefined && (
+          <div className="flex items-center justify-center text-xs text-slate-600 mt-2 flex-shrink-0">
+            <span className="font-medium">Projektbudgets geplant:</span>
+            <span className="ml-1">{fmt(projectBudgetSum)}</span>
+          </div>
+        )}
       </div>
     </div>
   );

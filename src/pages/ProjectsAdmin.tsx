@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import type { Project } from '../types';
+import type { Project, YearBudget } from '../types';
 import { Card, COLORS } from '../ui';
 import { parseProjectsCSV, projectsToCSV, readFileAsText } from '../lib/csv';
-import { toISODate } from '../lib';
+import { toISODate, getCurrentYear } from '../lib';
 import PINProtection from '../components/PINProtection';
 
 // Import DEMO_PROJECTS als Fallback
@@ -107,6 +107,9 @@ const ProjectsAdmin: React.FC = () => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [dirty, setDirty] = useState(false);
   const [msg, setMsg] = useState<string>('');
+  const [yearBudgets, setYearBudgets] = useState<YearBudget[]>([]);
+  const [yearBudgetsDirty, setYearBudgetsDirty] = useState(false);
+  const currentYear = getCurrentYear();
 
   useEffect(() => {
     const ls = localStorage.getItem('projects_json');
@@ -125,6 +128,18 @@ const ProjectsAdmin: React.FC = () => {
       setProjects(DEMO_PROJECTS);
       setMsg('Demo-Daten geladen (mit AT 8.2 Beispielwerten)');
     })();
+  }, []);
+
+  useEffect(() => {
+    const ls = localStorage.getItem('yearBudgets');
+    if (ls) {
+      try {
+        const parsed = JSON.parse(ls);
+        if (Array.isArray(parsed)) {
+          setYearBudgets(parsed);
+        }
+      } catch (e) { /* ignore */ }
+    }
   }, []);
 
   const onImportCSV = async (file?: File) => {
@@ -172,6 +187,55 @@ const ProjectsAdmin: React.FC = () => {
   const addRow = () => { setProjects((p) => [emptyProject(), ...p]); setDirty(true); };
   const removeRow = (i: number) => { setProjects((p) => p.filter((_, idx) => idx !== i)); setDirty(true); };
 
+  // YearBudgets CRUD
+  const addYearBudget = () => {
+    const nextYear = yearBudgets.length > 0
+      ? Math.max(...yearBudgets.map(yb => yb.year)) + 1
+      : currentYear;
+    setYearBudgets((prev) => [...prev, { year: nextYear, budget: 0 }]);
+    setYearBudgetsDirty(true);
+  };
+  const updateYearBudget = (i: number, key: keyof YearBudget, value: number) => {
+    setYearBudgets((prev) => {
+      const next = [...prev];
+      next[i] = { ...next[i], [key]: value };
+      return next;
+    });
+    setYearBudgetsDirty(true);
+  };
+  const removeYearBudget = (i: number) => {
+    setYearBudgets((prev) => prev.filter((_, idx) => idx !== i));
+    setYearBudgetsDirty(true);
+  };
+  const saveYearBudgets = () => {
+    localStorage.setItem('yearBudgets', JSON.stringify(yearBudgets));
+    setYearBudgetsDirty(false);
+    setMsg('Jahresbudgets gespeichert.');
+  };
+
+  // Warnung bei Überplanung berechnen
+  const totalProjectBudget = useMemo(() => {
+    return projects.reduce((sum, p) => sum + (p.budgetPlanned || 0), 0);
+  }, [projects]);
+
+  const overBudgetWarnings = useMemo(() => {
+    const warnings: string[] = [];
+    yearBudgets.forEach((yb) => {
+      // Filter projects for this year
+      const yearProjects = projects.filter((p) => {
+        const startYear = new Date(p.start).getFullYear();
+        const endYear = new Date(p.end).getFullYear();
+        return startYear <= yb.year && endYear >= yb.year;
+      });
+      const yearProjectBudget = yearProjects.reduce((sum, p) => sum + (p.budgetPlanned || 0), 0);
+      if (yearProjectBudget > yb.budget && yb.budget > 0) {
+        const fmt = (n: number) => new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR', minimumFractionDigits: 0 }).format(n);
+        warnings.push(`Jahr ${yb.year}: Projektbudgets (${fmt(yearProjectBudget)}) übersteigen Jahresbudget (${fmt(yb.budget)})`);
+      }
+    });
+    return warnings;
+  }, [yearBudgets, projects]);
+
   return (
     <PINProtection>
       <div className={`min-h-screen ${COLORS.bg} ${COLORS.text} p-6`}>
@@ -189,6 +253,106 @@ const ProjectsAdmin: React.FC = () => {
             <button onClick={onExportCSV} className="rounded-lg border border-slate-300 px-4 py-2 text-sm hover:bg-slate-50 transition-colors">CSV exportieren</button>
             <button onClick={onSave} disabled={!dirty} className="rounded-lg bg-green-600 text-white hover:bg-green-700 px-4 py-2 text-sm font-medium disabled:bg-slate-300 disabled:cursor-not-allowed transition-colors">Speichern (lokal)</button>
             {msg && <span className="text-sm text-slate-600 ml-2 bg-slate-100 px-3 py-1 rounded-md">{msg}</span>}
+          </div>
+        </Card>
+
+        {/* Jahresbudgets */}
+        <Card title="Jahresbudgets">
+          <div className="space-y-3">
+            <div className="flex flex-wrap gap-3 items-center">
+              <button
+                onClick={addYearBudget}
+                className="rounded-lg bg-blue-600 text-white hover:bg-blue-700 px-4 py-2 text-sm font-medium transition-colors"
+              >
+                + Weiteres Jahr
+              </button>
+              <button
+                onClick={saveYearBudgets}
+                disabled={!yearBudgetsDirty}
+                className="rounded-lg bg-green-600 text-white hover:bg-green-700 px-4 py-2 text-sm font-medium disabled:bg-slate-300 disabled:cursor-not-allowed transition-colors"
+              >
+                Jahresbudgets speichern
+              </button>
+            </div>
+
+            {overBudgetWarnings.length > 0 && (
+              <div className="bg-red-50 border border-red-200 rounded-md p-3">
+                {overBudgetWarnings.map((warning, idx) => (
+                  <div key={idx} className="flex items-center gap-2 text-sm text-red-800">
+                    <svg className="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                    </svg>
+                    <span className="font-medium">⚠️ {warning}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-sm border-collapse">
+                <thead className="bg-slate-100">
+                  <tr>
+                    <th className="py-3 px-3 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider border-b-2 border-slate-300">Jahr</th>
+                    <th className="py-3 px-3 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider border-b-2 border-slate-300">Budget (€)</th>
+                    <th className="py-3 px-3 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider border-b-2 border-slate-300">Aktion</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {yearBudgets.length === 0 && (
+                    <tr>
+                      <td colSpan={3} className="py-4 px-3 text-center text-slate-500 text-sm">
+                        Noch keine Jahresbudgets definiert. Klicken Sie auf "+ Weiteres Jahr" um zu starten.
+                      </td>
+                    </tr>
+                  )}
+                  {yearBudgets
+                    .sort((a, b) => a.year - b.year)
+                    .map((yb, i) => {
+                      const isPast = yb.year < currentYear;
+                      const isEditable = yb.year >= currentYear && yb.year <= currentYear + 1;
+                      return (
+                        <tr key={i} className={`hover:bg-slate-50 transition-colors border-b border-slate-200 ${isPast ? 'opacity-50' : ''}`}>
+                          <td className="py-3 px-3">
+                            <input
+                              type="number"
+                              className="w-32 border border-slate-300 rounded-md px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-slate-100 disabled:cursor-not-allowed"
+                              value={yb.year}
+                              onChange={(e) => updateYearBudget(i, 'year', Number(e.target.value))}
+                              disabled={!isEditable}
+                              min={currentYear}
+                            />
+                          </td>
+                          <td className="py-3 px-3">
+                            <input
+                              type="number"
+                              className="w-48 border border-slate-300 rounded-md px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-slate-100 disabled:cursor-not-allowed"
+                              value={yb.budget}
+                              onChange={(e) => updateYearBudget(i, 'budget', Number(e.target.value))}
+                              disabled={!isEditable}
+                              min={0}
+                              placeholder="z.B. 500000"
+                            />
+                          </td>
+                          <td className="py-3 px-3">
+                            {isEditable ? (
+                              <button
+                                onClick={() => removeYearBudget(i)}
+                                className="text-red-600 hover:text-red-800 hover:bg-red-50 px-2 py-1 rounded text-xs font-medium transition-colors"
+                              >
+                                🗑️ Löschen
+                              </button>
+                            ) : isPast ? (
+                              <span className="text-xs text-slate-500">Gesperrt (Vergangenheit)</span>
+                            ) : (
+                              <span className="text-xs text-slate-500">Nur {currentYear}-{currentYear + 1} editierbar</span>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                </tbody>
+              </table>
+            </div>
           </div>
         </Card>
 

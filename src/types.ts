@@ -24,3 +24,8 @@ export type NormalizedProject = Project & {
   statusNorm: string;
 };
 
+export type YearBudget = {
+  year: number;
+  budget: number;
+};
+
