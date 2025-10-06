@@ -148,6 +148,9 @@ const ProjectsAdmin: React.FC = () => {
                 <tr className="bg-slate-100">
                   <th className="py-3 px-3 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider border-b-2 border-slate-300">Aktion</th>
                   <th className="py-3 px-3 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider border-b-2 border-slate-300 bg-blue-50">ID</th>
+                  <th className="py-3 px-3 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider border-b-2 border-slate-300 bg-blue-50">Projektnr. intern</th>
+                  <th className="py-3 px-3 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider border-b-2 border-slate-300 bg-blue-50">Projektnr. extern</th>
+                  <th className="py-3 px-3 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider border-b-2 border-slate-300 bg-blue-50">Klassifizierung</th>
                   <th className="py-3 px-3 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider border-b-2 border-slate-300 bg-blue-50">Titel</th>
                   <th className="py-3 px-3 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider border-b-2 border-slate-300 bg-blue-50">Beschreibung</th>
                   <th className="py-3 px-3 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider border-b-2 border-slate-300 bg-blue-50">Verantw. MA</th>
@@ -180,6 +183,34 @@ const ProjectsAdmin: React.FC = () => {
                         onChange={(e)=>update(i,'id',e.target.value)}
                         placeholder="z.B. p-001"
                       />
+                    </td>
+                    <td className="py-3 px-3">
+                      <input
+                        className="w-32 border border-slate-300 rounded-md px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        value={p.projectNumberInternal}
+                        onChange={(e)=>update(i,'projectNumberInternal',e.target.value)}
+                        placeholder="PINT-YYYY-NNN"
+                      />
+                    </td>
+                    <td className="py-3 px-3">
+                      <input
+                        className="w-32 border border-slate-300 rounded-md px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        value={p.projectNumberExternal || ''}
+                        onChange={(e)=>update(i,'projectNumberExternal',e.target.value || undefined)}
+                        placeholder="VDB-YYYY-NNN"
+                      />
+                    </td>
+                    <td className="py-3 px-3">
+                      <select
+                        className="w-40 border border-slate-300 rounded-md px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        value={p.classification}
+                        onChange={(e)=>update(i,'classification',e.target.value)}
+                      >
+                        <option value="internal_dev">Interne Weiterentwicklung</option>
+                        <option value="project">Projekt</option>
+                        <option value="project_vdbs">Projekt VDB-S</option>
+                        <option value="task">Aufgabe</option>
+                      </select>
                     </td>
                     <td className="py-3 px-3">
                       <input

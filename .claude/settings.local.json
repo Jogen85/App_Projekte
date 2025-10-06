@@ -14,7 +14,9 @@
       "Bash(npm run typecheck:*)",
       "Bash(npm run test:*)",
       "Bash(npm run build:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(node:*)",
+      "Read(//c/Users/cjuer/Downloads/**)"
     ],
     "deny": [],
     "ask": []

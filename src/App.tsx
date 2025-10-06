@@ -58,6 +58,7 @@ export default function App() {
   const [projects, setProjects] = useState<Project[]>(DEMO_PROJECTS);
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [orgFilter, setOrgFilter] = useState<string>('all');
+  const [classificationFilter, setClassificationFilter] = useState<string>('all');
   const [yearOnly, setYearOnly] = useState<boolean>(true);
   const [year, setYear] = useState<number>(() => getCurrentYear());
   const [csvError, setCsvError] = useState<string | null>(null);
@@ -83,17 +84,19 @@ export default function App() {
   const filtered = useMemo(() => {
     const sFilter = statusFilter.toLowerCase();
     const oFilter = orgFilter.toLowerCase();
+    const cFilter = classificationFilter.toLowerCase();
     return normalized.filter((p) => {
       if (yearOnly && !overlapsYearD(p, year)) return false;
       if (sFilter !== 'all' && p.statusNorm !== sFilter) return false;
       if (oFilter !== 'all' && p.orgNorm !== oFilter) return false;
+      if (cFilter !== 'all' && p.classification !== cFilter) return false;
       if (at82RequiredFilter === 'yes' && !p.requiresAT82Check) return false;
       if (at82RequiredFilter === 'no' && p.requiresAT82Check) return false;
       if (at82CompletedFilter === 'yes' && !p.at82Completed) return false;
       if (at82CompletedFilter === 'no' && p.at82Completed) return false;
       return true;
     });
-  }, [normalized, statusFilter, orgFilter, yearOnly, year, at82RequiredFilter, at82CompletedFilter]);
+  }, [normalized, statusFilter, orgFilter, classificationFilter, yearOnly, year, at82RequiredFilter, at82CompletedFilter]);
 
   const bounds = useMemo(() => {
     if (yearOnly) {
@@ -194,6 +197,7 @@ export default function App() {
           <FiltersPanel
             statusFilter={statusFilter} setStatusFilter={setStatusFilter}
             orgFilter={orgFilter} setOrgFilter={setOrgFilter}
+            classificationFilter={classificationFilter} setClassificationFilter={setClassificationFilter}
             yearOnly={yearOnly} setYearOnly={setYearOnly}
             year={year} setYear={setYear}
             at82RequiredFilter={at82RequiredFilter} setAt82RequiredFilter={setAt82RequiredFilter}

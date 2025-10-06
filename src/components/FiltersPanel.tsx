@@ -5,6 +5,8 @@ type Props = {
   setStatusFilter: (s: string) => void;
   orgFilter: string;
   setOrgFilter: (s: string) => void;
+  classificationFilter: string;
+  setClassificationFilter: (s: string) => void;
   yearOnly: boolean;
   setYearOnly: (b: boolean) => void;
   year: number;
@@ -20,6 +22,7 @@ type Props = {
 const FiltersPanel: React.FC<Props> = ({
   statusFilter, setStatusFilter,
   orgFilter, setOrgFilter,
+  classificationFilter, setClassificationFilter,
   yearOnly, setYearOnly,
   year, setYear,
   at82RequiredFilter, setAt82RequiredFilter,
@@ -44,6 +47,16 @@ const FiltersPanel: React.FC<Props> = ({
           <option value="BB">BB</option>
           <option value="MBG">MBG</option>
           <option value="BB/MBG">BB/MBG</option>
+        </select>
+      </div>
+      <div className="flex items-center gap-2">
+        <label className="text-sm text-slate-600">Klassifizierung:</label>
+        <select value={classificationFilter} onChange={(e) => setClassificationFilter(e.target.value)} className="rounded-lg border border-slate-300 px-2 py-1 text-sm">
+          <option value="all">Alle</option>
+          <option value="internal_dev">Interne Weiterentwicklung</option>
+          <option value="project">Projekt</option>
+          <option value="project_vdbs">Projekt VDB-S</option>
+          <option value="task">Aufgabe</option>
         </select>
       </div>
       <div className="flex items-center gap-2">

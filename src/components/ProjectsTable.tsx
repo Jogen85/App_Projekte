@@ -28,6 +28,8 @@ const ProjectsTable: React.FC<Props> = ({ projects, year, yearOnly, plannedBudge
           <thead>
             <tr className="text-left text-slate-600">
               <th className="py-2 pr-4">{"Projekt"}</th>
+              <th className="py-2 pr-4">{"Projektnummer"}</th>
+              <th className="py-2 pr-4">{"Klassifizierung"}</th>
               <th className="py-2 pr-4">{"Gesellschaft"}</th>
               <th className="py-2 pr-3 text-center">AT 8.2<br/>erforderlich</th>
               <th className="py-2 pr-3 text-center">AT 8.2<br/>durchgeführt</th>
@@ -60,6 +62,16 @@ const ProjectsTable: React.FC<Props> = ({ projects, year, yearOnly, plannedBudge
                     <div className="font-medium">{p.title}</div>
                     <div className="text-slate-500 text-xs">{"Verantwortlicher MA: "}{p.owner}</div>
                     <div className="text-slate-500 text-xs mt-1 max-w-md">{p.description}</div>
+                  </td>
+                  <td className="py-3 pr-4 whitespace-nowrap">
+                    <div className="text-sm font-mono">{p.projectNumberInternal}</div>
+                    {p.projectNumberExternal && <div className="text-xs text-slate-500 font-mono">{p.projectNumberExternal}</div>}
+                  </td>
+                  <td className="py-3 pr-4">
+                    {p.classification === 'internal_dev' && <Badge tone="purple">{"Interne Weiterentwicklung"}</Badge>}
+                    {p.classification === 'project' && <Badge tone="blue">{"Projekt"}</Badge>}
+                    {p.classification === 'project_vdbs' && <Badge tone="cyan">{"Projekt VDB-S"}</Badge>}
+                    {p.classification === 'task' && <Badge tone="slate">{"Aufgabe"}</Badge>}
                   </td>
                   <td className="py-3 pr-4 whitespace-nowrap">{p.org || '-'}</td>
                   <td className="py-3 pr-3 text-center">

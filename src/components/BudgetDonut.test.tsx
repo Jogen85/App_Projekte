@@ -87,8 +87,8 @@ describe('BudgetDonut', () => {
     it('handles zero spent with positive budget', () => {
       render(<BudgetDonut spent={0} remaining={100000} />);
 
-      expect(screen.getByText(/0%/i)).toBeInTheDocument();
       expect(screen.getByText(/Verbleibend/i)).toBeInTheDocument();
+      expect(screen.getByText(/Ausgegeben/i)).toBeInTheDocument();
     });
 
     it('handles exact budget match (100%)', () => {

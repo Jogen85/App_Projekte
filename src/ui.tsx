@@ -28,8 +28,11 @@ const badgeStyles: Record<string,string> = {
   green: "bg-green-100 text-green-700",
   amber: "bg-amber-100 text-amber-700",
   slate: "bg-slate-100 text-slate-700",
+  blue: "bg-blue-100 text-blue-700",
+  purple: "bg-purple-100 text-purple-700",
+  cyan: "bg-cyan-100 text-cyan-700",
 };
-export const Badge: React.FC<{ tone?: "green"|"amber"|"slate"; children?: React.ReactNode }> = ({ children, tone = "slate" }) => (
+export const Badge: React.FC<{ tone?: "green"|"amber"|"slate"|"blue"|"purple"|"cyan"; children?: React.ReactNode }> = ({ children, tone = "slate" }) => (
   <span className={`inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full ${badgeStyles[tone]}`}>{children}</span>
 );
 
