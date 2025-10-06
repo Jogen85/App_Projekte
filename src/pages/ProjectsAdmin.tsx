@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import type { Project } from '../types';
 import { Card, COLORS } from '../ui';
-import { parseProjectsCSV, projectsToCSV } from '../lib/csv';
+import { parseProjectsCSV, projectsToCSV, readFileAsText } from '../lib/csv';
 import { toISODate } from '../lib';
 import PINProtection from '../components/PINProtection';
 
@@ -71,7 +71,7 @@ const ProjectsAdmin: React.FC = () => {
   const onImportCSV = async (file?: File) => {
     if (!file) return;
     try {
-      const text = await file.text();
+      const text = await readFileAsText(file);
       const rows = parseProjectsCSV(text);
       setProjects(rows);
       setDirty(true);
@@ -82,7 +82,9 @@ const ProjectsAdmin: React.FC = () => {
   };
   const onExportCSV = () => {
     const csv = projectsToCSV(projects);
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    // UTF-8 BOM für Excel-Kompatibilität (erkennt Umlaute korrekt)
+    const bom = '\uFEFF';
+    const blob = new Blob([bom + csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url; a.download = `projekte_${new Date().toISOString().slice(0,10)}.csv`; a.click();

@@ -5,6 +5,24 @@ const NULL_CHAR = String.fromCharCode(0);
 
 export type CsvDelimiter = ';' | ',';
 
+// Liest File mit explizitem UTF-8 Encoding (verhindert Umlaut-Probleme)
+export async function readFileAsText(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      let text = reader.result as string;
+      // Entferne UTF-8 BOM falls vorhanden
+      if (text.charCodeAt(0) === 0xFEFF) {
+        text = text.slice(1);
+      }
+      resolve(text);
+    };
+    reader.onerror = () => reject(reader.error);
+    // Explizit UTF-8 lesen (nicht Browser-Automatik)
+    reader.readAsText(file, 'UTF-8');
+  });
+}
+
 export function detectDelimiter(headerLine: string): CsvDelimiter {
   let semicolons = 0;
   let commas = 0;
