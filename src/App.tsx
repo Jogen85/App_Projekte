@@ -182,7 +182,7 @@ export default function App() {
         <header className="flex items-end justify-between">
           <div>
             <h1 className="text-2xl font-bold">IT-Projekt&uuml;bersicht (Demo)</h1>
-            <p className={"text-sm " + COLORS.subtext}>Portfolio-&Uuml;berblick f&uuml;r Gesch&auml;ftsf&uuml;hrung &amp; Aufsichtsrat &mdash; Stand: {fmtDate(today)}</p>
+            <p className={"text-sm " + COLORS.subtext}>Stand: {fmtDate(today)}</p>
             <a href="/admin" className="text-sm text-blue-600 hover:underline">Admin</a>
           </div>
           <FiltersPanel
