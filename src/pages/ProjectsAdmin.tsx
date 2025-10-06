@@ -134,9 +134,9 @@ const ProjectsAdmin: React.FC = () => {
         </Card>
 
         <Card>
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto max-h-[calc(100vh-250px)] overflow-y-auto">
             <table className="min-w-full text-sm border-collapse">
-              <thead>
+              <thead className="sticky top-0 z-10 bg-slate-100">
                 <tr className="bg-slate-100">
                   <th className="py-3 px-3 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider border-b-2 border-slate-300">Aktion</th>
                   <th className="py-3 px-3 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider border-b-2 border-slate-300 bg-blue-50">ID</th>
