@@ -70,7 +70,7 @@ export default function ITCostsByCategoryChart({ data }: Props) {
               verticalAlign="bottom"
               height={36}
               iconType="circle"
-              formatter={(value, entry: any) => (
+              formatter={(value: string) => (
                 <span className="text-xs text-slate-700">{value}</span>
               )}
             />

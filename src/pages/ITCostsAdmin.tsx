@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import { parseITCostsCSV, serializeITCostsCSV } from '../lib/csv';
 import { ITCost, ITCostCategory, ITCostFrequency, YearBudget } from '../types';
-import { calculateYearlyCostD, getITCostsByCategoryD, plannedBudgetForYearD, yearStart, yearEnd, toDate, overlapDays, daysBetween } from '../lib';
+import { calculateYearlyCostD, getITCostsByCategoryD, plannedBudgetForYearD, toDate } from '../lib';
 
 const DEMO_IT_COSTS: ITCost[] = [
   {
@@ -404,7 +404,7 @@ export default function ITCostsAdmin() {
               {filteredCosts.length === 0 ? (
                 <tr>
                   <td colSpan={11} className="p-8 text-center text-gray-500">
-                    Keine IT-Kosten für {selectedYear}. Klicke auf "+ Neue Position" zum Hinzufügen.
+                    Keine IT-Kosten für {selectedYear}. Klicke auf &quot;+ Neue Position&quot; zum Hinzufügen.
                   </td>
                 </tr>
               ) : (
@@ -572,7 +572,7 @@ export default function ITCostsAdmin() {
         {/* Legende */}
         <div className="mt-4 text-xs text-gray-600">
           <p>
-            <strong>Hinweis:</strong> "Jahreskosten" werden automatisch aus Frequenz und
+            <strong>Hinweis:</strong> &quot;Jahreskosten&quot; werden automatisch aus Frequenz und
             Vertragslaufzeit berechnet (anteilig bei unterjährigen Verträgen).
           </p>
         </div>

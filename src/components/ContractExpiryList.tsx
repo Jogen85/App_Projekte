@@ -3,10 +3,9 @@ import { toDate } from '../lib';
 
 interface Props {
   costs: ITCost[];
-  year: number;
 }
 
-export default function ContractExpiryList({ costs, year }: Props) {
+export default function ContractExpiryList({ costs }: Props) {
   const today = new Date();
   const ninetyDaysFromNow = new Date(today.getTime() + 90 * 24 * 60 * 60 * 1000);
 

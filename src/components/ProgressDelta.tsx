@@ -64,7 +64,7 @@ export default function ProgressDelta({ projects, height = 190, onSelectCategory
   }, [projects, tolerance]);
 
   return (
-    <div className="w-full h-full flex flex-col overflow-hidden justify-center">
+    <div className="w-full h-full flex flex-col overflow-hidden justify-center" style={{ minHeight: height }}>
       <div className="grid grid-cols-3 gap-3 text-center mb-3 flex-shrink-0">
         <button type="button" onClick={() => onSelectCategory?.('behind')} className={`rounded-md py-4 transition-colors ${selectedCategory==='behind' ? 'ring-2 ring-red-400 bg-red-100 text-red-800' : 'bg-red-50 text-red-700 hover:bg-red-100'}`}>
           <div className="text-xs font-medium">Hinter Plan</div>

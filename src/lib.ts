@@ -110,7 +110,7 @@ function isLeapYear(year: number): boolean {
 export function calculateYearlyCostD(
   cost: ITCost,
   year: number,
-  today: Date = new Date()
+  _today: Date = new Date()
 ): number {
   const yearStartD = new Date(year, 0, 1);
   const yearEndD = new Date(year, 11, 31);

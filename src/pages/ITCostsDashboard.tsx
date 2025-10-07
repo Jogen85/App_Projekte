@@ -1,7 +1,7 @@
 import { Suspense, lazy, useEffect, useMemo, useState } from 'react';
 import { Card, COLORS } from '../ui';
 import type { ITCost, ITCostCategory } from '../types';
-import { fmtDate, getToday, getCurrentYear, getITCostsByCategoryD, getITCostsByProviderD, calculateYearlyCostD } from '../lib';
+import { fmtDate, getToday, getCurrentYear, getITCostsByCategoryD, getITCostsByProviderD } from '../lib';
 import DashboardTabs from '../components/DashboardTabs';
 
 const ITCostsByCategoryChart = lazy(() => import('../components/ITCostsByCategoryChart'));
@@ -157,7 +157,7 @@ export default function ITCostsDashboard() {
         <div className="grid grid-cols-2 gap-3">
           <Card title="Auslaufende Verträge (nächste 90 Tage)" className="h-chart">
             <Suspense fallback={<div className="h-48 bg-slate-100 rounded animate-pulse" />}>
-              <ContractExpiryList costs={yearCosts} year={year} />
+              <ContractExpiryList costs={yearCosts} />
             </Suspense>
           </Card>
 
