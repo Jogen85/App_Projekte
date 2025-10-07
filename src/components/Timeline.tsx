@@ -10,13 +10,16 @@ type Props = {
   year: number;
 };
 
+const MS_PER_DAY = 1000 * 60 * 60 * 24;
+
 function monthTicks(minStart: Date, maxEnd: Date) {
   const ticks: { d: Date; pct: number; label: string }[] = [];
   const start = new Date(minStart.getFullYear(), minStart.getMonth(), 1);
   let d = start;
+  const totalMs = Math.max(1, maxEnd.getTime() - minStart.getTime());
   for (let i = 0; i < 48; i++) { // guard
     if (d > maxEnd) break;
-    const pct = (daysBetween(minStart, d) / Math.max(1, daysBetween(minStart, maxEnd))) * 100;
+    const pct = clamp(((d.getTime() - minStart.getTime()) / totalMs) * 100, 0, 100);
     const label = d.toLocaleString('de-DE', { month: 'short' });
     ticks.push({ d: new Date(d), pct, label });
     d = new Date(d.getFullYear(), d.getMonth() + 1, 1);
@@ -32,8 +35,9 @@ const statusLabelDe = (s: string) => (s === 'planned' ? 'geplant' : s === 'done'
 const Timeline: React.FC<Props> = ({ projects, bounds, yearOnly, year }) => {
   const now = getToday();
   const inRange = now >= bounds.minStart && now <= bounds.maxEnd;
+  const totalMs = Math.max(1, bounds.maxEnd.getTime() - bounds.minStart.getTime());
   const todayPct = inRange
-    ? clamp(Math.round((daysBetween(bounds.minStart, now) / Math.max(1, bounds.totalDays)) * 100), 0, 100)
+    ? clamp(((now.getTime() - bounds.minStart.getTime()) / totalMs) * 100, 0, 100)
     : null;
   const ticks = useMemo(() => monthTicks(bounds.minStart, bounds.maxEnd), [bounds.minStart, bounds.maxEnd]);
 
@@ -68,20 +72,25 @@ const Timeline: React.FC<Props> = ({ projects, bounds, yearOnly, year }) => {
 
       <div className="space-y-3">
         {projects.map((p) => {
-          const s = yearOnly ? new Date(Math.max(yearStart(year).getTime(), p.startD.getTime())) : p.startD;
-          const e = yearOnly ? new Date(Math.min(yearEnd(year).getTime(), p.endD.getTime())) : p.endD;
-          const startOffset = Math.round((daysBetween(bounds.minStart, s) / bounds.totalDays) * 100);
-          const widthPct = Math.max(1, Math.round((daysBetween(s, e) / bounds.totalDays) * 100));
+          const clippedStart = yearOnly ? new Date(Math.max(yearStart(year).getTime(), p.startD.getTime())) : p.startD;
+          const clippedEnd = yearOnly ? new Date(Math.min(yearEnd(year).getTime(), p.endD.getTime())) : p.endD;
+          const startMs = Math.max(bounds.minStart.getTime(), clippedStart.getTime());
+          const endMs = Math.min(bounds.maxEnd.getTime(), clippedEnd.getTime());
+          const durationMs = Math.max(MS_PER_DAY, (endMs - startMs) + MS_PER_DAY);
+          const startOffset = clamp(((startMs - bounds.minStart.getTime()) / totalMs) * 100, 0, 100);
+          const rawWidth = (durationMs / totalMs) * 100;
+          const maxWidth = 100 - startOffset;
+          const widthPct = Math.min(maxWidth, rawWidth < 0.75 ? Math.min(maxWidth, 0.75) : rawWidth);
           const color = statusColor(p.statusNorm);
           const isPlanned = p.statusNorm === 'planned';
           const isDone = p.statusNorm === 'done';
-          const barTitle = `${p.title} • ${fmtDate(s)} – ${fmtDate(e)} • Status: ${statusLabelDe(p.statusNorm)} • Fortschritt: ${clamp(p.progress, 0, 100)}%`;
+          const barTitle = `${p.title} • ${fmtDate(clippedStart)} – ${fmtDate(clippedEnd)} • Status: ${statusLabelDe(p.statusNorm)} • Fortschritt: ${clamp(p.progress, 0, 100)}%`;
 
           return (
             <div key={p.id} className="text-sm">
               <div className="flex justify-between items-center mb-1">
                 <div className="font-medium">{p.title}</div>
-                <div className="text-slate-500">{fmtDate(s)} – {fmtDate(e)}</div>
+                <div className="text-slate-500">{fmtDate(clippedStart)} – {fmtDate(clippedEnd)}</div>
               </div>
               <div className="w-full h-6 bg-slate-100 rounded relative overflow-hidden ring-1 ring-slate-200">
                 {/* Projekt-Balken */}
