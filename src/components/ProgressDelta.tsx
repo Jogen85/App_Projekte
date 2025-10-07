@@ -28,7 +28,9 @@ export default function ProgressDelta({ projects, height = 190, onSelectCategory
     }> = [];
 
     const t = getToday();
-    for (const p of projects) {
+    // Filter nur laufende Projekte (konsistent mit TimeStatusOverview)
+    const activeProjects = projects.filter(p => p.statusNorm === 'active');
+    for (const p of activeProjects) {
       if (!p.startD || !p.endD) continue;
       const total = Math.max(1, daysBetween(p.startD, p.endD));
       let elapsed = daysBetween(p.startD, t);
