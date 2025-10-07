@@ -6,12 +6,10 @@ type Props = {
   spent: number;
   remaining: number;
   height?: number; // px height for the tile chart area
-  yearBudget?: number | null; // Jahresbudget falls konfiguriert
-  projectBudgetSum?: number; // Summe der Projektbudgets
   itCostsTotal?: number; // IT-Kosten Summe (laufende Kosten)
 };
 
-export const BudgetDonut: React.FC<Props> = ({ spent, remaining, yearBudget, projectBudgetSum, itCostsTotal }) => {
+export const BudgetDonut: React.FC<Props> = ({ spent, remaining, itCostsTotal }) => {
   const itCosts = itCostsTotal || 0;
   const spentSafe = Math.max(0, spent);
   const budgetPlanned = spentSafe + remaining; // Original budget

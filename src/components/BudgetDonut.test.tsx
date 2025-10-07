@@ -53,8 +53,8 @@ describe('BudgetDonut', () => {
     it('uses red color for overspend segment', () => {
       render(<BudgetDonut spent={120000} remaining={-20000} />);
 
-      // Should show "Überschreitung" label
-      expect(screen.getByText(/Überschreitung/i)).toBeInTheDocument();
+      // Should show "Überschr." label (abbreviated)
+      expect(screen.getByText(/Überschr\./i)).toBeInTheDocument();
       // Warning banner should be present
       expect(screen.getByText(/Budget überschritten/i)).toBeInTheDocument();
     });
