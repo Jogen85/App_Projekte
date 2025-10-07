@@ -82,7 +82,12 @@ export default function VDBSBudgetDashboard() {
   const showWarning = yearBudget && kpis.totalBudget > yearBudget.budget;
 
   const fmtCurrency = (n: number) =>
-    new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR', minimumFractionDigits: 0 }).format(n);
+    new Intl.NumberFormat('de-DE', {
+      style: 'currency',
+      currency: 'EUR',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(n);
 
   const fmtCompact = (n: number) => {
     if (Math.abs(n) >= 10000) {
@@ -373,14 +378,14 @@ export default function VDBSBudgetDashboard() {
                         </Badge>
                       </td>
                       <td className="px-3 py-3 text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <div className="h-2 w-24 rounded-full bg-gray-200">
+                        <div className="flex items-center gap-3 justify-end">
+                          <div className="h-2 w-24 rounded-full bg-gray-200 overflow-hidden">
                             <div
-                              className="h-2 rounded-full bg-blue-600"
+                              className="h-2 rounded-full bg-blue-600 transition-all"
                               style={{ width: `${Math.min(100, (item.budget2026 / (kpis.largestItem?.budget2026 || 1)) * 100)}%` }}
                             />
                           </div>
-                          <span className="font-medium text-gray-900">{fmtCurrency(item.budget2026)}</span>
+                          <span className="min-w-[7rem] text-right font-medium text-gray-900 tabular-nums">{fmtCurrency(item.budget2026)}</span>
                         </div>
                       </td>
                     </tr>
