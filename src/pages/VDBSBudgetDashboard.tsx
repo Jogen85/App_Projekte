@@ -244,9 +244,9 @@ export default function VDBSBudgetDashboard() {
         {/* KPI-Zeile (3 Tiles) */}
         <div className="grid grid-cols-3 gap-3">
           <Card title={`Gesamtbudget ${selectedYear}`} className="h-[120px]">
-            <div className="flex h-full flex-col justify-center">
+            <div className="flex h-full flex-col items-start justify-center">
               <div className="text-4xl font-bold text-blue-600">{fmtCurrency(kpis.totalBudget)}</div>
-              <div className="mt-1 text-sm text-gray-600">{kpis.count} Positionen</div>
+              <div className="mt-2 text-sm text-gray-600">{kpis.count} Positionen</div>
             </div>
           </Card>
           <Card title="Größte Position" className="h-[120px]">
@@ -279,17 +279,15 @@ export default function VDBSBudgetDashboard() {
         <div className="grid grid-cols-3 gap-3">
           {/* Chart 1: Budget nach Kategorie */}
           <Card title="Budget nach Kategorie" className="h-[280px]">
-            <ResponsiveContainer width="100%" height={220}>
+            <ResponsiveContainer width="100%" height={200}>
               <PieChart>
                 <Pie
                   data={categoryData}
                   dataKey="value"
                   nameKey="name"
                   cx="50%"
-                  cy="50%"
-                  outerRadius={70}
-                  label={(entry) => `${entry.name}: ${fmtCompact(entry.value)}`}
-                  labelLine={{ stroke: '#999', strokeWidth: 1 }}
+                  cy="45%"
+                  outerRadius={80}
                 >
                   {categoryData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.name.includes('RUN') ? COLORS.RUN : COLORS.CHANGE} />
@@ -298,16 +296,32 @@ export default function VDBSBudgetDashboard() {
                 <Tooltip formatter={(value) => fmtCurrency(value as number)} />
               </PieChart>
             </ResponsiveContainer>
+            <div className="mt-2 flex justify-center gap-4 text-xs">
+              <div className="flex items-center gap-1">
+                <div className="h-3 w-3 rounded-sm" style={{ backgroundColor: COLORS.RUN }} />
+                <span className="text-gray-700">Laufende Kosten: {fmtCompact(kpis.byCategory.RUN || 0)}</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <div className="h-3 w-3 rounded-sm" style={{ backgroundColor: COLORS.CHANGE }} />
+                <span className="text-gray-700">Projekte: {fmtCompact(kpis.byCategory.CHANGE || 0)}</span>
+              </div>
+            </div>
           </Card>
 
           {/* Chart 2: Top 5 Positionen */}
           <Card title="Top 5 Budgetpositionen" className="h-[280px]">
             <ResponsiveContainer width="100%" height={220}>
-              <BarChart data={kpis.top5} layout="horizontal" margin={{ left: 20, right: 20, top: 10, bottom: 10 }}>
+              <BarChart data={kpis.top5} layout="vertical" margin={{ left: 10, right: 30, top: 10, bottom: 10 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                 <XAxis type="number" tick={{ fontSize: 11 }} tickFormatter={(v) => fmtCompact(v)} />
-                <YAxis type="category" dataKey="projectNumber" tick={{ fontSize: 11 }} width={40} />
-                <Tooltip formatter={(v) => fmtCurrency(v as number)} />
+                <YAxis type="category" dataKey="projectNumber" tick={{ fontSize: 11 }} width={50} />
+                <Tooltip
+                  formatter={(v) => fmtCurrency(v as number)}
+                  labelFormatter={(label) => {
+                    const item = kpis.top5.find((i) => i.projectNumber === label);
+                    return item ? `${item.projectNumber}: ${item.projectName.substring(0, 30)}...` : label;
+                  }}
+                />
                 <Bar dataKey="budget2026" fill="#3b82f6" radius={[0, 4, 4, 0]} />
               </BarChart>
             </ResponsiveContainer>
@@ -318,10 +332,10 @@ export default function VDBSBudgetDashboard() {
             <div className="flex flex-col gap-3">
               <div>
                 <label className="mb-2 block text-xs font-medium text-gray-700">Kategorie filtern:</label>
-                <div className="flex gap-2">
+                <div className="flex flex-col gap-2">
                   <button
                     onClick={() => setCategoryFilter('all')}
-                    className={`flex-1 rounded border px-3 py-2 text-sm transition-colors ${
+                    className={`rounded border px-3 py-2 text-sm transition-colors ${
                       categoryFilter === 'all'
                         ? 'border-blue-600 bg-blue-50 text-blue-700'
                         : 'border-gray-300 bg-white hover:bg-gray-50'
@@ -331,23 +345,23 @@ export default function VDBSBudgetDashboard() {
                   </button>
                   <button
                     onClick={() => setCategoryFilter('RUN')}
-                    className={`flex-1 rounded border px-3 py-2 text-sm transition-colors ${
+                    className={`rounded border px-3 py-2 text-sm transition-colors ${
                       categoryFilter === 'RUN'
                         ? 'border-blue-600 bg-blue-50 text-blue-700'
                         : 'border-gray-300 bg-white hover:bg-gray-50'
                     }`}
                   >
-                    RUN
+                    Laufende Kosten
                   </button>
                   <button
                     onClick={() => setCategoryFilter('CHANGE')}
-                    className={`flex-1 rounded border px-3 py-2 text-sm transition-colors ${
+                    className={`rounded border px-3 py-2 text-sm transition-colors ${
                       categoryFilter === 'CHANGE'
                         ? 'border-blue-600 bg-blue-50 text-blue-700'
                         : 'border-gray-300 bg-white hover:bg-gray-50'
                     }`}
                   >
-                    CHANGE
+                    Projekte
                   </button>
                 </div>
               </div>
