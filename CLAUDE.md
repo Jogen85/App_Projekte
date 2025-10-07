@@ -70,17 +70,21 @@ IT Portfolio Dashboard – React/TypeScript/Vite SPA for executive project overs
   - **Jahresbudget-Integration**: Zeigt Jahresbudget vs. Ausgaben (falls konfiguriert)
   - Info-Zeile: "Projektbudgets geplant: €XXX" (nur wenn Jahresbudget gesetzt)
   - Props: `yearBudget`, `projectBudgetSum` für Zwei-Vergleichsebenen-Logik
-- **`TimeStatusOverview.tsx`**: Aggregate traffic light distribution for running projects
-  - 3 large status circles (48px): Green (On Track), Yellow (Delayed), Red (Critical)
-  - Replaces old ResourceTile component
-- **`ProgressDelta.tsx`**: Soll–Ist (Plan vs. Actual) KPI card with top-3 delays
-  - Clickable categories (Behind Plan, On Track, Ahead)
+- **`ProjectDelays.tsx`**: Verzögerungen-Kachel (ALLE verzögerten Projekte)
+  - Zeigt alle Projekte mit delta < -tolerance (nur laufende)
+  - Sortiert nach Delta (schlechteste zuerst)
+  - Klickbar zum Highlighten in Tabelle
+  - Empty State: "Alle laufenden Projekte im Plan! 🎉"
+- **`ProgressDelta.tsx`**: Soll–Ist (Plan vs. Actual) KPI card
+  - Clickable categories (Behind Plan, On Track, Ahead) - filtert nur laufende Projekte
   - Adjustable tolerance (±pp)
-  - Top 3 delays clickable (scrolls to project in table)
-  - Shows `%` instead of `pp` for delta values
+  - Zeigt Durchschnitts-Delta pro Kategorie ("Ø -12.5%")
+  - Gesamt-Statistik ("20 laufende Projekte") + Verteilungsbalken (Rot/Gelb/Grün)
+  - Größere Buttons (py-4, text-2xl) + vertikale Zentrierung
 - **`ProjectsTable.tsx`**: Filterable project table with project numbers, classification, budget progress bars, RAG indicators
   - **Projektnummer** column: Internal (font-mono) + external (small, gray, optional)
   - **Klassifizierung** column: Badge with color-coding (Purple/Blue/Cyan/Slate)
+  - **Genehmigungspflicht**: 🔐 Icon bei Budget ≥ €75.000 mit Tooltip
   - AT 8.2 columns with two-line headers ("erforderlich" / "durchgeführt")
   - Budget progress bars (horizontal) instead of mini-donuts
   - Target progress visualization (black line showing expected progress)
@@ -188,6 +192,53 @@ IT Portfolio Dashboard – React/TypeScript/Vite SPA for executive project overs
 - Jahresbudgets: Separate localStorage-Key für Multi-Jahr-Planung
 
 ## Recent Changes & Evolution
+
+### UX-Verbesserungen & Redundanz-Beseitigung (2025-10-07) - v1.4.0
+
+**Major Changes**:
+1. **Genehmigungspflicht-Indikator** (Budget ≥ €75.000):
+   - 🔐 Icon mit Tooltip "Genehmigungspflichtig (Budget ≥ €75.000)" in Projekttabelle
+   - Position: Neben "Budget"-Label in Budget-Spalte
+   - Prüfung: `p.budgetPlanned >= 75000`
+
+2. **Redundanz beseitigt**: TimeStatusOverview entfernt:
+   - Problem: TimeStatusOverview und ProgressDelta maßen beide Soll-Ist-Delta (nur andere Visualisierung)
+   - Lösung: TimeStatusOverview komplett entfernt
+   - Neue Komponente: **ProjectDelays.tsx** (zeigt ALLE verzögerten Projekte, nicht nur Top 3)
+   - Layout: `[Budget] [Verzögerungen] [Soll-Ist]`
+
+3. **ProgressDelta vereinfacht & erweitert**:
+   - **Entfernt**: Top 3 Verzögerungen-Liste, onSelectProject Prop
+   - **Erweitert**:
+     - Größere Buttons (py-4, text-2xl)
+     - Durchschnitts-Delta pro Kategorie ("Ø -12.5%")
+     - Gesamt-Statistik ("20 laufende Projekte")
+     - Verteilungsbalken (Rot/Gelb/Grün mit Prozent-Labels)
+     - Vertikale Zentrierung (justify-center)
+   - Nur laufende Projekte (konsistent mit Verzögerungen-Kachel)
+   - Titel erweitert: "Soll-Ist-Fortschritt (laufende Projekte)"
+
+4. **ProjectDelays.tsx** (neue Komponente):
+   - Zeigt ALLE verzögerten Projekte (delta < -tolerance)
+   - Sortiert nach Delta (schlechteste zuerst)
+   - Klickbar zum Highlighten in Tabelle
+   - Scrollbar bei vielen Einträgen
+   - Empty State: "Alle laufenden Projekte im Plan! 🎉"
+
+5. **Kategorie-Filter konsistent**:
+   - Klick auf "Hinter Plan"/"Im Plan"/"Vor Plan" filtert jetzt nur **laufende** Projekte
+   - Vorher: Alle Projekte (inkl. geplante 0/0 und abgeschlossene 100/100)
+   - Jetzt: Nur steuerbare, aktive Projekte
+
+**Technisch**:
+- Neue Komponente: `src/components/ProjectDelays.tsx` (84 Zeilen)
+- ProgressDelta: +53 Zeilen (Durchschnitt, Balken, Statistik), -29 Zeilen (Top 3 raus)
+- App.tsx: TimeStatusOverview → ProjectDelays, filteredByProgress nur active
+- ProjectsTable: +3 Zeilen (Genehmigungspflicht-Icon)
+
+**Files Modified**: 4 files (+140 lines, -32 lines)
+
+---
 
 ### Jahresbudget-Verwaltung (2025-10-06) - v1.3.0
 

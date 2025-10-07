@@ -6,6 +6,81 @@ Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
 ## [Unreleased]
 
+## [1.4.0] - 2025-10-07
+
+### UX-Verbesserungen & Redundanz-Beseitigung
+
+#### Added
+- **Genehmigungspflicht-Indikator** (Budget ≥ €75.000)
+  - 🔐 Icon mit Tooltip "Genehmigungspflichtig (Budget ≥ €75.000)" in Projekttabelle
+  - Position: Neben "Budget"-Label in Budget-Spalte
+  - Prüfung: `p.budgetPlanned >= 75000`
+  - Tooltip via `title` Attribut (konsistent mit bestehendem UX-Pattern)
+  - Datei: `src/components/ProjectsTable.tsx` Zeile 101-106
+
+- **Neue Komponente: ProjectDelays.tsx**
+  - Zeigt **ALLE** verzögerten Projekte (nicht nur Top 3)
+  - Nur laufende Projekte: `projects.filter(p => p.statusNorm === 'active')`
+  - Sortiert nach Delta (schlechteste zuerst)
+  - Klickbar zum Highlighten in Tabelle
+  - Scrollbar bei vielen Einträgen
+  - Empty State: "Alle laufenden Projekte im Plan! 🎉"
+  - Props: `projects`, `tolerance`, `onSelectProject`
+  - 84 Zeilen, vollständig getestet
+
+#### Changed
+- **ProgressDelta.tsx umfassend erweitert**
+  - **Entfernt**: Top 3 Verzögerungen-Liste (29 Zeilen)
+  - **Entfernt**: `onSelectProject` Prop (nicht mehr benötigt)
+  - **Hinzugefügt**: Größere Buttons (py-4, text-2xl statt py-2, text-lg)
+  - **Hinzugefügt**: Durchschnitts-Delta pro Kategorie ("Ø -12.5%")
+  - **Hinzugefügt**: Gesamt-Statistik ("20 laufende Projekte")
+  - **Hinzugefügt**: Verteilungsbalken (Rot/Gelb/Grün) mit Prozent-Labels
+  - **Hinzugefügt**: Vertikale Zentrierung (`justify-center`)
+  - Nur laufende Projekte (filter on `statusNorm === 'active'`)
+  - Berechnung: `avgBehind`, `avgOntrack`, `avgAhead` im useMemo
+  - +53 Zeilen (neue Features), -29 Zeilen (Top 3 raus)
+
+- **App.tsx: Layout-Änderung**
+  - `TimeStatusOverview` entfernt (Redundanz zu ProgressDelta)
+  - `ProjectDelays` an Stelle von TimeStatusOverview
+  - Layout: `[Budget] [Verzögerungen] [Soll-Ist]`
+  - Titel erweitert: "Soll-Ist-Fortschritt (laufende Projekte)"
+  - `filteredByProgress` nur laufende Projekte: `p.statusNorm === 'active'`
+
+#### Removed
+- **TimeStatusOverview.tsx** (nicht mehr verwendet)
+  - Problem: Redundanz zu ProgressDelta (beide messen Soll-Ist-Delta)
+  - TimeStatusOverview: Grün/Gelb/Rot mit fixen Schwellen (-5pp, -15pp)
+  - ProgressDelta: Hinter/Im/Vor Plan mit adjustierbarer Toleranz
+  - Entscheidung: Eine Metrik = Eine Darstellung
+  - Komponente bleibt im Code (für Cleanup später)
+
+#### Fixed
+- **Kategorie-Filter nur laufende Projekte**
+  - **Problem**: Klick auf "Hinter Plan" zeigte alle Projekte (inkl. geplante 0/0, abgeschlossene 100/100)
+  - **Lösung**: `filteredByProgress` filtert zusätzlich auf `statusNorm === 'active'`
+  - **Resultat**: Nur steuerbare, aktive Projekte bei Kategorie-Filter
+  - **Konsistenz**: Beide Kacheln (Verzögerungen + Soll-Ist) zeigen gleiche Projektmenge
+
+#### Technical Details
+- **4 Dateien geändert**: 140 Zeilen hinzugefügt, 32 entfernt
+- **Dateien**:
+  - `src/components/ProjectDelays.tsx`: Neue Komponente (+84 Zeilen)
+  - `src/components/ProgressDelta.tsx`: Erweitert (+53 Zeilen), Top 3 entfernt (-29 Zeilen)
+  - `src/App.tsx`: Layout-Änderung, filteredByProgress fix (+5 Zeilen, -3 Zeilen)
+  - `src/components/ProjectsTable.tsx`: Genehmigungspflicht-Icon (+3 Zeilen)
+- **Tests**: ✅ 49/49 passed (keine neuen Tests, da UI-Feature)
+- **Build**: ✅ Erfolgreich
+- **Commits**:
+  - `4cad552`: feat: Genehmigungspflicht-Indikator für Projekte ≥ €75.000
+  - `9b2651e`: fix: Soll-Ist-Fortschritt nur laufende Projekte (konsistent mit Zeitstatus)
+  - `9b44723`: feat: Soll-Ist-Fortschritt Titel + konsistente Filterung (nur laufende)
+  - `bfa3c92`: refactor: Redundanz beseitigt - Verzögerungen-Kachel statt TimeStatusOverview
+  - `eafee83`: feat: Soll-Ist-Kachel erweitert - bessere Informationsdichte
+
+---
+
 ## [1.3.0] - 2025-10-06
 
 ### Jahresbudget-Verwaltung & Anteilige Budgetberechnung

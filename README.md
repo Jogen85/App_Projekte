@@ -16,9 +16,9 @@
     - **Ausgegeben** = Blau (neutral)
     - Rote Warnung bei Budgetüberschreitung
     - Info-Zeile: "Projektbudgets geplant: €XXX" (anteilig)
-  - Zeitstatus-Übersicht (laufende Projekte): Aggregierte Ampel-Verteilung
-  - Soll–Ist-Fortschritt mit Top 3 Verzögerungen (klickbar)
-  - Projekttabelle mit **Projektnummern**, **Klassifizierung** (4 Typen), Budget-Fortschrittsbalken, AT 8.2 Compliance-Spalten, Ampeln Zeit/Budget
+  - Verzögerungen-Kachel: **ALLE** verzögerten Projekte (sortiert nach Delta, klickbar)
+  - Soll–Ist-Fortschritt (laufende Projekte) mit Durchschnitts-Delta, Gesamt-Statistik & Verteilungsbalken
+  - Projekttabelle mit **Projektnummern**, **Klassifizierung** (4 Typen), **Genehmigungspflicht-Indikator** (Budget ≥ €75.000), Budget-Fortschrittsbalken, AT 8.2 Compliance-Spalten, Ampeln Zeit/Budget
   - Zeitachse (Gantt-ähnlich) mit Heute-Marker
 - **Projektnummern & Klassifizierung**
   - Intern (Pflicht): z.B. PINT-2025-001
