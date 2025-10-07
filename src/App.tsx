@@ -120,10 +120,6 @@ export default function App() {
   const [itCosts, setITCosts] = useState<ITCost[]>([]);
 
   useEffect(() => {
-    // TEMP: localStorage löschen um neue DEMO_PROJECTS zu erzwingen
-    // Nach ersten Laden kann diese Zeile entfernt werden
-    localStorage.removeItem('projects_json');
-
     try {
       const ls = localStorage.getItem('projects_json');
       if (ls) {
