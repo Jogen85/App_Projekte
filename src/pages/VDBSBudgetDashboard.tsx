@@ -56,6 +56,10 @@ export default function VDBSBudgetDashboard() {
 
   // Load VDB-S Budget from localStorage
   useEffect(() => {
+    // TEMP: localStorage löschen um neue DEMO_VDBS_BUDGET zu erzwingen
+    // Nach ersten Laden kann diese Zeile entfernt werden
+    localStorage.removeItem('vdbsBudget');
+
     try {
       const stored = localStorage.getItem('vdbsBudget');
       if (stored) {
