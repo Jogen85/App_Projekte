@@ -66,11 +66,6 @@ export default function ITCostsDashboard() {
           <div>
             <h1 className="text-2xl font-bold">IT-Kostenübersicht</h1>
             <p className={"text-sm " + COLORS.subtext}>Stand: {fmtDate(today)}</p>
-            <div className="flex gap-3 mt-1">
-              <a href="/admin/it-costs" className="text-sm text-purple-600 hover:underline">
-                IT-Kosten verwalten
-              </a>
-            </div>
           </div>
           <div className="flex items-center gap-4">
             <div>
@@ -87,6 +82,9 @@ export default function ITCostsDashboard() {
                 ))}
               </select>
             </div>
+            <a href="/admin/it-costs" className="text-sm text-blue-600 hover:underline">
+              IT-Kosten verwalten
+            </a>
           </div>
         </header>
 

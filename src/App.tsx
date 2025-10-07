@@ -301,10 +301,6 @@ export default function App() {
           <div>
             <h1 className="text-2xl font-bold">IT-Projekt&uuml;bersicht (Demo)</h1>
             <p className={"text-sm " + COLORS.subtext}>Stand: {fmtDate(today)}</p>
-            <div className="flex gap-3 mt-1">
-              <a href="/admin" className="text-sm text-blue-600 hover:underline">Projekte verwalten</a>
-              <a href="/admin/it-costs" className="text-sm text-purple-600 hover:underline">IT-Kosten verwalten</a>
-            </div>
           </div>
           <FiltersPanel
             statusFilter={statusFilter} setStatusFilter={setStatusFilter}
@@ -316,6 +312,7 @@ export default function App() {
             at82CompletedFilter={at82CompletedFilter} setAt82CompletedFilter={setAt82CompletedFilter}
             onCSVUpload={onCSVUpload}
             onDownloadTemplate={downloadCSVTemplate}
+            adminLink={{ href: '/admin', label: 'Projekte verwalten' }}
           />
         </header>
 

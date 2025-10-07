@@ -17,6 +17,7 @@ type Props = {
   setAt82CompletedFilter: (s: string) => void;
   onCSVUpload: (file?: File) => Promise<void> | void;
   onDownloadTemplate: () => void;
+  adminLink?: { href: string; label: string }; // Optional admin link
 };
 
 const FiltersPanel: React.FC<Props> = ({
@@ -28,6 +29,7 @@ const FiltersPanel: React.FC<Props> = ({
   at82RequiredFilter, setAt82RequiredFilter,
   at82CompletedFilter, setAt82CompletedFilter,
   onCSVUpload, onDownloadTemplate,
+  adminLink,
 }) => {
   return (
     <div className="flex flex-wrap gap-3 items-center">
@@ -85,6 +87,13 @@ const FiltersPanel: React.FC<Props> = ({
         <button onClick={() => document.getElementById('csvInput')!.click()} className="rounded-lg border px-3 py-1 text-sm">CSV laden</button>
         <button onClick={onDownloadTemplate} className="rounded-lg border px-3 py-1 text-sm">CSV-Export</button>
       </div>
+      {adminLink && (
+        <div className="flex items-center">
+          <a href={adminLink.href} className="text-sm text-blue-600 hover:underline">
+            {adminLink.label}
+          </a>
+        </div>
+      )}
     </div>
   );
 };
