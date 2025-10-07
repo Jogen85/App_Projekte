@@ -392,8 +392,6 @@ export default function ITCostsAdmin() {
                 <th className="border-b p-3 text-left font-medium">Dienstleister</th>
                 <th className="border-b p-3 text-left font-medium">Betrag (€)</th>
                 <th className="border-b p-3 text-left font-medium">Frequenz</th>
-                <th className="border-b p-3 text-left font-medium">Start</th>
-                <th className="border-b p-3 text-left font-medium">Ende</th>
                 <th className="border-b p-3 text-left font-medium">Kostenstelle</th>
                 <th className="border-b p-3 text-left font-medium">Notizen</th>
                 <th className="border-b p-3 text-left font-medium">Jahreskosten</th>
@@ -403,7 +401,7 @@ export default function ITCostsAdmin() {
             <tbody>
               {filteredCosts.length === 0 ? (
                 <tr>
-                  <td colSpan={11} className="p-8 text-center text-gray-500">
+                  <td colSpan={9} className="p-8 text-center text-gray-500">
                     Keine IT-Kosten für {selectedYear}. Klicke auf &quot;+ Neue Position&quot; zum Hinzufügen.
                   </td>
                 </tr>
@@ -483,30 +481,6 @@ export default function ITCostsAdmin() {
                           </select>
                         ) : (
                           frequencyLabels[cost.frequency]
-                        )}
-                      </td>
-                      <td className="border-b p-2">
-                        {isEditing ? (
-                          <input
-                            type="date"
-                            value={cost.startDate}
-                            onChange={(e) => handleUpdate(cost.id, 'startDate', e.target.value)}
-                            className="w-32 rounded border px-2 py-1"
-                          />
-                        ) : (
-                          cost.startDate
-                        )}
-                      </td>
-                      <td className="border-b p-2">
-                        {isEditing ? (
-                          <input
-                            type="date"
-                            value={cost.endDate}
-                            onChange={(e) => handleUpdate(cost.id, 'endDate', e.target.value)}
-                            className="w-32 rounded border px-2 py-1"
-                          />
-                        ) : (
-                          cost.endDate || '-'
                         )}
                       </td>
                       <td className="border-b p-2">

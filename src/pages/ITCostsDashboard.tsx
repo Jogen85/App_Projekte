@@ -7,7 +7,7 @@ import DashboardTabs from '../components/DashboardTabs';
 const ITCostsByCategoryChart = lazy(() => import('../components/ITCostsByCategoryChart'));
 const ITCostsByProviderChart = lazy(() => import('../components/ITCostsByProviderChart'));
 const ITCostsByFrequencyChart = lazy(() => import('../components/ITCostsByFrequencyChart'));
-const ContractExpiryList = lazy(() => import('../components/ContractExpiryList'));
+const ITCostsTrendChart = lazy(() => import('../components/ITCostsTrendChart'));
 const ITCostsTable = lazy(() => import('../components/ITCostsTable'));
 
 export default function ITCostsDashboard() {
@@ -48,17 +48,9 @@ export default function ITCostsDashboard() {
     ];
     const topCategory = categoryEntries.sort((a, b) => b.value - a.value)[0];
 
-    // Anzahl aktiver Verträge (laufend + unbefristet)
-    const activeContracts = yearCosts.filter((c) => {
-      if (!c.endDate) return true; // Unbefristet
-      const endD = new Date(c.endDate);
-      return endD >= today; // Noch nicht abgelaufen
-    }).length;
-
     return {
       total: byCategory.total,
       topCategory,
-      activeContracts,
       byCategory,
       byProvider,
     };
@@ -122,11 +114,11 @@ export default function ITCostsDashboard() {
             </div>
           </Card>
 
-          <Card title="Aktive Verträge" className="min-h-[180px]">
+          <Card title="Laufende Kostenpositionen" className="min-h-[180px]">
             <div className="flex h-full flex-col justify-center">
-              <div className="text-4xl font-bold text-green-600">{kpis.activeContracts}</div>
+              <div className="text-4xl font-bold text-green-600">{yearCosts.length}</div>
               <div className="mt-2 text-sm text-gray-600">
-                Laufende & unbefristete Verträge
+                Erfasste Kostenpositionen
               </div>
             </div>
           </Card>
@@ -155,9 +147,9 @@ export default function ITCostsDashboard() {
 
         {/* Analyse-Zeile */}
         <div className="grid grid-cols-2 gap-3">
-          <Card title="Auslaufende Verträge (nächste 90 Tage)" className="h-chart">
+          <Card title={`Kostentrend ${year - 1} vs. ${year}`} className="h-chart">
             <Suspense fallback={<div className="h-48 bg-slate-100 rounded animate-pulse" />}>
-              <ContractExpiryList costs={yearCosts} />
+              <ITCostsTrendChart costs={itCosts} currentYear={year} />
             </Suspense>
           </Card>
 
