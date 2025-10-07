@@ -362,7 +362,11 @@ export default function App() {
 
         {/* Chart-Zeile */}
         <div className="grid grid-cols-3 gap-3">
-          <Card title={currentYearBudget !== null ? `Budget ${year}: ${new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR', minimumFractionDigits: 0}).format(currentYearBudget)}` : `Budget (Jahr): ${new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR'}).format(kpis.budgetPlannedSum)}`} className="h-chart">
+          <Card
+            title={currentYearBudget !== null
+              ? `Budget ${year}: ${new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR', minimumFractionDigits: 0}).format(currentYearBudget)} (Projektbudgets: ${new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR', minimumFractionDigits: 0}).format(kpis.budgetPlannedSum)})`
+              : `Budget (Jahr): ${new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR'}).format(kpis.budgetPlannedSum)}`}
+            className="h-chart">
             <Suspense fallback={<div className="h-48 bg-slate-100 rounded animate-pulse" />}>
               <BudgetDonut spent={budgetSpent} remaining={budgetRemaining} height={220} yearBudget={currentYearBudget} projectBudgetSum={kpis.budgetPlannedSum} itCostsTotal={itCostsTotal} />
             </Suspense>

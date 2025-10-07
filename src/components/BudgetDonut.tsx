@@ -113,7 +113,7 @@ export const BudgetDonut: React.FC<Props> = ({ spent, remaining, yearBudget, pro
         </ResponsiveContainer>
       </div>
 
-      <div className="flex-1 min-h-0 overflow-y-auto flex flex-col gap-2 mt-2">
+      <div className="flex-1 min-h-0 flex flex-col gap-2 mt-2">
         {isOverBudget && (
           <div className="px-3 py-2 bg-red-50 border border-red-200 rounded-md flex-shrink-0">
             <div className="flex items-center gap-2 text-xs text-red-800">
@@ -125,56 +125,40 @@ export const BudgetDonut: React.FC<Props> = ({ spent, remaining, yearBudget, pro
           </div>
         )}
 
-        <div className="flex items-center justify-center gap-3 text-xs flex-shrink-0 flex-wrap">
+        <div className="flex items-center justify-center text-xs flex-shrink-0">
           {isOverBudget ? (
-            <>
+            <div className="flex items-center gap-2 flex-wrap justify-center">
               {itCosts > 0 && (
-                <div className="flex items-center gap-2">
+                <>
                   <span className="inline-block w-2.5 h-2.5 rounded-full" style={{ backgroundColor: itCostsColor }} aria-hidden />
-                  <span className="text-slate-700">{"IT-Kosten (fix)"}</span>
-                  <span className="text-slate-500">{fmt(itCosts)} ({itCostsPct}%)</span>
-                </div>
+                  <span className="text-slate-700">IT-Kosten (fix): {fmt(itCosts)} ({itCostsPct}%)</span>
+                  <span className="text-slate-400">|</span>
+                </>
               )}
-              <div className="flex items-center gap-2">
-                <span className="inline-block w-2.5 h-2.5 rounded-full" style={{ backgroundColor: spentColor }} aria-hidden />
-                <span className="text-slate-700">{itCosts > 0 ? "Projekte ausgegeben" : "Ausgegeben"}</span>
-                <span className="text-slate-500">{fmt(spentSafe)} ({spentPct}%)</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="inline-block w-2.5 h-2.5 rounded-full" style={{ backgroundColor: overspendColor }} aria-hidden />
-                <span className="text-slate-700">{"Überschreitung"}</span>
-                <span className="text-red-600 font-medium">{fmt(overspend)}</span>
-              </div>
-            </>
+              <span className="inline-block w-2.5 h-2.5 rounded-full" style={{ backgroundColor: spentColor }} aria-hidden />
+              <span className="text-slate-700">{itCosts > 0 ? "Projekte" : "Ausgegeben"}: {fmt(spentSafe)} ({spentPct}%)</span>
+              <span className="text-slate-400">|</span>
+              <span className="inline-block w-2.5 h-2.5 rounded-full" style={{ backgroundColor: overspendColor }} aria-hidden />
+              <span className="text-red-600 font-medium">Überschr.: {fmt(overspend)}</span>
+            </div>
           ) : (
-            <>
+            <div className="flex items-center gap-2 flex-wrap justify-center">
               {itCosts > 0 && (
-                <div className="flex items-center gap-2">
+                <>
                   <span className="inline-block w-2.5 h-2.5 rounded-full" style={{ backgroundColor: itCostsColor }} aria-hidden />
-                  <span className="text-slate-700">{"IT-Kosten (fix)"}</span>
-                  <span className="text-slate-500">{fmt(itCosts)} ({itCostsPct}%)</span>
-                </div>
+                  <span className="text-slate-700">IT-Kosten (fix): {fmt(itCosts)} ({itCostsPct}%)</span>
+                  <span className="text-slate-400">|</span>
+                </>
               )}
-              <div className="flex items-center gap-2">
-                <span className="inline-block w-2.5 h-2.5 rounded-full" style={{ backgroundColor: spentColor }} aria-hidden />
-                <span className="text-slate-700">{itCosts > 0 ? "Projekte ausgegeben" : "Ausgegeben"}</span>
-                <span className="text-slate-500">{fmt(spentSafe)} ({spentPct}%)</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="inline-block w-2.5 h-2.5 rounded-full" style={{ backgroundColor: remainingColor }} aria-hidden />
-                <span className="text-slate-700 font-medium">{"Verbleibend"}</span>
-                <span className="text-slate-800 font-medium">{fmt(remainingSafe)} ({Math.round(remainingPct)}%)</span>
-              </div>
-            </>
+              <span className="inline-block w-2.5 h-2.5 rounded-full" style={{ backgroundColor: spentColor }} aria-hidden />
+              <span className="text-slate-700">{itCosts > 0 ? "Projekte" : "Ausgegeben"}: {fmt(spentSafe)} ({spentPct}%)</span>
+              <span className="text-slate-400">|</span>
+              <span className="inline-block w-2.5 h-2.5 rounded-full" style={{ backgroundColor: remainingColor }} aria-hidden />
+              <span className="text-slate-800 font-medium">Verbleibend: {fmt(remainingSafe)} ({Math.round(remainingPct)}%)</span>
+            </div>
           )}
         </div>
 
-        {yearBudget !== null && yearBudget !== undefined && projectBudgetSum !== undefined && (
-          <div className="flex items-center justify-center text-xs text-slate-600 mt-2 flex-shrink-0">
-            <span className="font-medium">Projektbudgets geplant:</span>
-            <span className="ml-1">{fmt(projectBudgetSum)}</span>
-          </div>
-        )}
       </div>
     </div>
   );
