@@ -174,11 +174,20 @@ export default function VDBSBudgetDashboard() {
     }
   };
 
-  // Chart data
-  const categoryData = Object.entries(kpis.byCategory).map(([name, value]) => ({
-    name: name === 'RUN' ? 'Laufende Kosten (RUN)' : 'Projekte (CHANGE)',
-    value,
-  }));
+  // Chart data - UNFILTERED by category (always show RUN vs CHANGE total)
+  const categoryChartData = useMemo(() => {
+    const yearItems = vdbsBudget.filter((item) => item.year === selectedYear);
+    const byCategory = yearItems.reduce((acc, item) => {
+      acc[item.category] = (acc[item.category] || 0) + item.budget2026;
+      return acc;
+    }, {} as Record<string, number>);
+
+    return Object.entries(byCategory).map(([name, value]) => ({
+      name: name === 'RUN' ? 'Laufende Kosten' : 'Projekte',
+      category: name,
+      value,
+    }));
+  }, [vdbsBudget, selectedYear]);
 
   const COLORS = {
     RUN: '#3b82f6',   // blue-500
@@ -255,9 +264,9 @@ export default function VDBSBudgetDashboard() {
 
         {/* KPI-Zeile (3 Tiles) */}
         <div className="grid grid-cols-3 gap-3">
-          <Card title={`Gesamtbudget ${selectedYear}`} className="h-[120px]">
-            <div className="flex h-full flex-col justify-center gap-2">
-              <div className="text-4xl font-bold text-blue-600">{fmtCurrency(kpis.totalBudget)}</div>
+          <Card title={`Gesamtbudget ${selectedYear}`} className="h-[120px] p-3">
+            <div className="flex h-full flex-col justify-center gap-1">
+              <div className="text-3xl font-bold text-blue-600">{fmtCurrency(kpis.totalBudget)}</div>
               <div className="text-sm text-gray-600">{kpis.count} Positionen</div>
             </div>
           </Card>
@@ -294,17 +303,20 @@ export default function VDBSBudgetDashboard() {
             <ResponsiveContainer width="100%" height={240}>
               <PieChart>
                 <Pie
-                  data={categoryData}
+                  data={categoryChartData}
                   dataKey="value"
                   nameKey="name"
                   cx="50%"
                   cy="50%"
-                  outerRadius={85}
-                  label={({ name, value, percent }) => `${(percent * 100).toFixed(0)}%`}
+                  outerRadius={75}
+                  label={({ name, percent }) => {
+                    const shortName = name.includes('Laufende') ? 'Laufend' : 'Projekte';
+                    return `${shortName}: ${(percent * 100).toFixed(0)}%`;
+                  }}
                   labelLine={{ stroke: '#666', strokeWidth: 1 }}
                 >
-                  {categoryData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.name.includes('RUN') ? COLORS.RUN : COLORS.CHANGE} />
+                  {categoryChartData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.category === 'RUN' ? COLORS.RUN : COLORS.CHANGE} />
                   ))}
                 </Pie>
                 <Tooltip
