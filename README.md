@@ -69,7 +69,11 @@ src/
     TrafficLight.tsx       # Status Badge (32px Dot mit Ping Animation)
     PINProtection.tsx      # PIN-Schutz für Admin-Portal (4-stellig)
   pages/
-    ProjectsAdmin.tsx      # Admin-Editor (CSV/Inline, Jahresbudgets, Dexie)
+    ITCockpit.tsx          # IT-Cockpit (Start, KPIs, Alerts, Deep-Links)
+    ProjectsDashboard.tsx  # Projektdashboard (Filter, Budget, Timeline)
+    OverallBudgetDashboard.tsx # Gesamtbudgetplanung (Aggregationen Projekte/IT/VDB-S)
+    YearBudgetsAdmin.tsx   # Jahresbudgets verwalten (Dexie)
+    ProjectsAdmin.tsx      # Admin-Editor (CSV/Inline, Projektstammdaten)
   test/
     setup.ts               # Vitest Setup (ResizeObserver Mock)
 index.html                 # HTML, UTF-8, min-width: 1440px

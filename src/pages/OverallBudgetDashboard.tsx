@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
+import { Link } from 'react-router-dom';
 import DashboardTabs from '../components/DashboardTabs';
 import { Card } from '../ui';
 import { getCurrentYear, getToday, plannedBudgetForYearD, costsYTDForYearD, toDate } from '../lib';
@@ -86,7 +87,7 @@ export default function OverallBudgetDashboard() {
               Konsolidierte Übersicht über Projektbudgets, IT-Kosten und VDB-S Budget.
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             <label className="text-sm font-medium text-gray-700">Jahr:</label>
             <select
               value={year}
@@ -99,6 +100,12 @@ export default function OverallBudgetDashboard() {
                 </option>
               ))}
             </select>
+            <Link
+              to="/overall-budget-admin"
+              className="rounded bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700"
+            >
+              Jahresbudget verwalten
+            </Link>
           </div>
         </header>
 

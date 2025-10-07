@@ -212,9 +212,13 @@ export const BudgetDonut: React.FC<Props> = ({ spent, remaining, itCostsTotal, y
           {hasYearBudget && (
             <div className="flex items-center justify-center gap-2 flex-wrap">
               <span className="text-slate-600 font-medium">Plan:</span>
-              <span className="inline-block w-2.5 h-2.5 rounded-full" style={{ backgroundColor: itCostsColor }} aria-hidden />
-              <span className="text-slate-700">IT-Kosten: {fmtCompact(itCosts)}</span>
-              <span className="text-slate-400">|</span>
+              {itCosts > 0 && (
+                <>
+                  <span className="inline-block w-2.5 h-2.5 rounded-full" style={{ backgroundColor: itCostsColor }} aria-hidden />
+                  <span className="text-slate-700">IT-Kosten: {fmtCompact(itCosts)}</span>
+                  <span className="text-slate-400">|</span>
+                </>
+              )}
               <span className="inline-block w-2.5 h-2.5 rounded-full" style={{ backgroundColor: projectBudgetColor }} aria-hidden />
               <span className="text-slate-700">Projektbudgets: {fmtCompact(projectBudgetPlanned)}</span>
               <span className="text-slate-400">|</span>

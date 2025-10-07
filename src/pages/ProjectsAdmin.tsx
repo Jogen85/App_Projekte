@@ -4,14 +4,13 @@ import { Link } from 'react-router-dom';
 import type { Project, YearBudget } from '../types';
 import { Card, COLORS } from '../ui';
 import { parseProjectsCSV, projectsToCSV, readFileAsText } from '../lib/csv';
-import { toISODate, getCurrentYear, overlapDays, daysBetween, yearStart, yearEnd } from '../lib';
+import { toISODate, overlapDays, daysBetween, yearStart, yearEnd } from '../lib';
 import PINProtection from '../components/PINProtection';
 import { DEMO_PROJECTS } from '../data/demoData';
 import {
   loadProjects,
   saveProjects as persistProjects,
   loadYearBudgets,
-  saveYearBudgets as persistYearBudgets,
 } from '../db/projectsDb';
 
 
@@ -27,19 +26,13 @@ const emptyProject = (): Project => ({
 const ProjectsAdmin: React.FC = () => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [msg, setMsg] = useState<string>('');
-  const [yearBudgets, setYearBudgets] = useState<YearBudget[]>([]);
-  const currentYear = getCurrentYear();
 
   const projectsFromDb = useLiveQuery(loadProjects, [], DEMO_PROJECTS);
-  const yearBudgetsFromDb = useLiveQuery(loadYearBudgets, [], [] as YearBudget[]);
+  const yearBudgets = useLiveQuery(loadYearBudgets, [], [] as YearBudget[]);
 
   useEffect(() => {
     setProjects(projectsFromDb);
   }, [projectsFromDb]);
-
-  useEffect(() => {
-    setYearBudgets(yearBudgetsFromDb);
-  }, [yearBudgetsFromDb]);
 
   const persistProjectList = async (updated: Project[], showToast = true) => {
     setProjects(updated);
@@ -91,32 +84,6 @@ const ProjectsAdmin: React.FC = () => {
   const addRow = () => { void persistProjectList([emptyProject(), ...projects]); };
   const removeRow = (i: number) => { void persistProjectList(projects.filter((_, idx) => idx !== i)); };
 
-  // YearBudgets CRUD (auto-save)
-  const persistYearBudgetList = async (updated: YearBudget[]) => {
-    setYearBudgets(updated);
-    try {
-      await persistYearBudgets(updated);
-    } catch (error) {
-      console.error('Failed to persist year budgets', error);
-      setMsg('Jahresbudgets konnten nicht gespeichert werden.');
-    }
-  };
-
-  const addYearBudget = () => {
-    const nextYear = yearBudgets.length > 0
-      ? Math.max(...yearBudgets.map(yb => yb.year)) + 1
-      : currentYear;
-    void persistYearBudgetList([...yearBudgets, { year: nextYear, budget: 0 }]);
-  };
-  const updateYearBudget = (i: number, key: keyof YearBudget, value: number) => {
-    const next = [...yearBudgets];
-    next[i] = { ...next[i], [key]: value };
-    void persistYearBudgetList(next);
-  };
-  const removeYearBudget = (i: number) => {
-    void persistYearBudgetList(yearBudgets.filter((_, idx) => idx !== i));
-  };
-
   // Warnung bei Überplanung berechnen
   const overBudgetWarnings = useMemo(() => {
     const warnings: string[] = [];
@@ -165,15 +132,17 @@ const ProjectsAdmin: React.FC = () => {
 
         {/* Jahresbudgets */}
         <Card title="Jahresbudgets">
-          <div className="space-y-3">
-            <div className="flex flex-wrap gap-3 items-center">
-              <button
-                onClick={addYearBudget}
-                className="rounded-lg bg-blue-600 text-white hover:bg-blue-700 px-4 py-2 text-sm font-medium transition-colors"
+          <div className="flex flex-col gap-3">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <span className="text-sm text-slate-600">
+                Jahresbudgets werden über die Gesamtbudgetplanung gepflegt.
+              </span>
+              <Link
+                to="/overall-budget-admin"
+                className="rounded bg-blue-600 px-3 py-1 text-sm font-medium text-white hover:bg-blue-700"
               >
-                + Weiteres Jahr
-              </button>
-              <span className="text-xs text-slate-500">Änderungen werden automatisch gespeichert</span>
+                Jahresbudget verwalten
+              </Link>
             </div>
 
             {overBudgetWarnings.length > 0 && (
@@ -195,61 +164,32 @@ const ProjectsAdmin: React.FC = () => {
                   <tr>
                     <th className="py-3 px-3 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider border-b-2 border-slate-300">Jahr</th>
                     <th className="py-3 px-3 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider border-b-2 border-slate-300">Budget (€)</th>
-                    <th className="py-3 px-3 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider border-b-2 border-slate-300">Aktion</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {yearBudgets.length === 0 && (
+                  {yearBudgets.length === 0 ? (
                     <tr>
-                      <td colSpan={3} className="py-4 px-3 text-center text-slate-500 text-sm">
-                        Noch keine Jahresbudgets definiert. Klicken Sie auf &quot;+ Weiteres Jahr&quot; um zu starten.
-                      </td>                    </tr>
-                  )}
-                  {yearBudgets
-                    .sort((a, b) => a.year - b.year)
-                    .map((yb, i) => {
-                      const isPast = yb.year < currentYear;
-                      const isEditable = yb.year >= currentYear && yb.year <= currentYear + 1;
-                      return (
-                        <tr key={i} className={`hover:bg-slate-50 transition-colors border-b border-slate-200 ${isPast ? 'opacity-50' : ''}`}>
+                      <td colSpan={2} className="py-6 text-center text-slate-500">
+                        Keine Jahresbudgets hinterlegt.
+                      </td>
+                    </tr>
+                  ) : (
+                    yearBudgets
+                      .slice()
+                      .sort((a, b) => a.year - b.year)
+                      .map((yb) => (
+                        <tr key={yb.year} className="border-b border-slate-200">
+                          <td className="py-3 px-3">{yb.year}</td>
                           <td className="py-3 px-3">
-                            <input
-                              type="number"
-                              className="w-32 border border-slate-300 rounded-md px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-slate-100 disabled:cursor-not-allowed"
-                              value={yb.year}
-                              onChange={(e) => updateYearBudget(i, 'year', Number(e.target.value))}
-                              disabled={!isEditable}
-                              min={currentYear}
-                            />
-                          </td>
-                          <td className="py-3 px-3">
-                            <input
-                              type="number"
-                              className="w-48 border border-slate-300 rounded-md px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-slate-100 disabled:cursor-not-allowed"
-                              value={yb.budget}
-                              onChange={(e) => updateYearBudget(i, 'budget', Number(e.target.value))}
-                              disabled={!isEditable}
-                              min={0}
-                              placeholder="z.B. 500000"
-                            />
-                          </td>
-                          <td className="py-3 px-3">
-                            {isEditable ? (
-                              <button
-                                onClick={() => removeYearBudget(i)}
-                                className="text-red-600 hover:text-red-800 hover:bg-red-50 px-2 py-1 rounded text-xs font-medium transition-colors"
-                              >
-                                🗑️ Löschen
-                              </button>
-                            ) : isPast ? (
-                              <span className="text-xs text-slate-500">Gesperrt (Vergangenheit)</span>
-                            ) : (
-                              <span className="text-xs text-slate-500">Nur {currentYear}-{currentYear + 1} editierbar</span>
-                            )}
+                            {new Intl.NumberFormat('de-DE', {
+                              style: 'currency',
+                              currency: 'EUR',
+                              minimumFractionDigits: 2,
+                            }).format(yb.budget)}
                           </td>
                         </tr>
-                      );
-                    })}
+                      ))
+                  )}
                 </tbody>
               </table>
             </div>
@@ -446,4 +386,3 @@ const ProjectsAdmin: React.FC = () => {
 };
 
 export default ProjectsAdmin;
-

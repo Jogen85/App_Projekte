@@ -9,6 +9,7 @@ import VDBSBudgetDashboard from "./pages/VDBSBudgetDashboard";
 import VDBSBudgetAdmin from "./pages/VDBSBudgetAdmin";
 import ProjectsDashboard from "./pages/ProjectsDashboard";
 import OverallBudgetDashboard from "./pages/OverallBudgetDashboard";
+import YearBudgetsAdmin from "./pages/YearBudgetsAdmin";
 import "./index.css";
 import { ensureSeedData } from "./db/projectsDb";
 
@@ -28,6 +29,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
         <Route path="/admin" element={<ProjectsAdmin />} />
         <Route path="/admin/it-costs" element={<ITCostsAdmin />} />
         <Route path="/vdbs-budget-admin" element={<VDBSBudgetAdmin />} />
+        <Route path="/overall-budget-admin" element={<YearBudgetsAdmin />} />
       </Routes>
     </BrowserRouter>
   </React.StrictMode>
