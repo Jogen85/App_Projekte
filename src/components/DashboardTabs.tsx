@@ -7,6 +7,7 @@ export default function DashboardTabs() {
   const tabs = [
     { path: '/', label: 'Projekte' },
     { path: '/it-costs', label: 'IT-Kosten' },
+    { path: '/vdbs-budget', label: 'VDB-S Budget' },
   ];
 
   return (

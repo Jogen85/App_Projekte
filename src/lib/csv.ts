@@ -1,4 +1,4 @@
-﻿import type { Project, ITCost, ITCostCategory, ITCostFrequency } from '../types';
+﻿import type { Project, ITCost, ITCostCategory, ITCostFrequency, VDBSBudgetItem } from '../types';
 
 const REQUIRED_FIELDS = ['id','projectNumberInternal','projectNumberExternal','classification','title','owner','description','status','start','end','progress','budgetPlanned','costToDate','org','requiresAT82Check','at82Completed'] as const;
 const NULL_CHAR = String.fromCharCode(0);
@@ -328,6 +328,71 @@ export function serializeITCostsCSV(costs: ITCost[], delimiter: CsvDelimiter = '
     escapeField(c.costCenter || '', delimiter),
     escapeField(c.notes || '', delimiter),
     escapeField(c.year.toString(), delimiter),
+  ].join(delimiter));
+
+  return [header, ...lines].join('\n');
+}
+
+/**
+ * Parst VDB-S Budget CSV
+ * Format: Projekt Nr.;Projekte;Budget 2026
+ */
+export function parseVDBSBudgetCSV(text: string): VDBSBudgetItem[] {
+  const cleanText = text.replace(new RegExp(NULL_CHAR, 'g'), '');
+  const lines = cleanText.trim().split(/\r?\n/);
+  if (lines.length === 0) return [];
+
+  const delimiter = detectDelimiter(lines[0]);
+  const records = parseRecords(cleanText, delimiter);
+  if (records.length === 0) return [];
+
+  const headers = records[0].map((h) => h.trim());
+  const rows = records.slice(1);
+
+  return rows
+    .map((row, idx) => {
+      // Leere Zeilen überspringen
+      if (row.every((cell) => !cell.trim())) {
+        return null;
+      }
+
+      const pick = (key: string, fallback = '') => {
+        const colIdx = headers.findIndex((h) => h.toLowerCase().includes(key.toLowerCase()));
+        if (colIdx === -1 || colIdx >= row.length) return fallback;
+        return row[colIdx];
+      };
+
+      const projectNumber = pick('projekt nr');
+      const projectName = pick('projekte');
+      const budget2026Str = pick('budget 2026');
+
+      // Pflichtfelder prüfen
+      if (!projectNumber || !projectName || !budget2026Str) {
+        return null;
+      }
+
+      return {
+        id: `vdbs-${idx + 1}`,
+        projectNumber: projectNumber.trim(),
+        projectName: projectName.trim(),
+        budget2026: parseGermanNumber(budget2026Str),
+        year: 2026,
+      } as VDBSBudgetItem;
+    })
+    .filter((p): p is VDBSBudgetItem => p !== null);
+}
+
+/**
+ * Serialisiert VDBSBudgetItem-Array zu CSV
+ */
+export function serializeVDBSBudgetCSV(items: VDBSBudgetItem[], delimiter: CsvDelimiter = ';'): string {
+  const headers = ['Projekt Nr.', 'Projekte', 'Budget 2026'];
+  const header = headers.join(delimiter);
+
+  const lines = items.map((item) => [
+    escapeField(item.projectNumber, delimiter),
+    escapeField(item.projectName, delimiter),
+    escapeField(item.budget2026.toFixed(2), delimiter),
   ].join(delimiter));
 
   return [header, ...lines].join('\n');

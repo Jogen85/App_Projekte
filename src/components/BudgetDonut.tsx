@@ -9,21 +9,23 @@ type Props = {
   itCostsTotal?: number; // IT-Kosten Summe (laufende Kosten)
   yearBudget?: number | null; // Jahresbudget falls konfiguriert
   projectBudgetSum?: number; // Summe der Projektbudgets (PLAN)
+  vdbsBudgetTotal?: number; // VDB-S Budget Summe
 };
 
-export const BudgetDonut: React.FC<Props> = ({ spent, remaining, itCostsTotal, yearBudget, projectBudgetSum }) => {
+export const BudgetDonut: React.FC<Props> = ({ spent, remaining, itCostsTotal, yearBudget, projectBudgetSum, vdbsBudgetTotal }) => {
   const itCosts = itCostsTotal || 0;
+  const vdbsBudget = vdbsBudgetTotal || 0;
   const spentSafe = Math.max(0, spent);
   const budgetPlanned = spentSafe + remaining; // Original budget
   const projectBudgetPlanned = projectBudgetSum || 0;
 
-  // Wenn IT-Kosten vorhanden: Jahresbudget - IT-Kosten - Projektausgaben = Verbleibend
-  const adjustedRemaining = itCosts > 0 ? remaining - itCosts : remaining;
+  // Wenn IT-Kosten/VDB-S vorhanden: Jahresbudget - IT-Kosten - VDB-S - Projektausgaben = Verbleibend
+  const adjustedRemaining = itCosts > 0 || vdbsBudget > 0 ? remaining - itCosts - vdbsBudget : remaining;
   const isOverBudget = adjustedRemaining < 0;
 
-  // PLAN-Ebene: Verplanung prüfen (IT-Kosten + Projektbudgets vs. Jahresbudget)
+  // PLAN-Ebene: Verplanung prüfen (IT-Kosten + VDB-S + Projektbudgets vs. Jahresbudget)
   const hasYearBudget = yearBudget !== null && yearBudget !== undefined;
-  const totalCommitted = itCosts + projectBudgetPlanned; // Was ist schon verplant?
+  const totalCommitted = itCosts + vdbsBudget + projectBudgetPlanned; // Was ist schon verplant?
   const availableForNewProjects = hasYearBudget ? yearBudget - totalCommitted : 0; // Kann negativ sein (Überplanung)
   const isOverCommitted = hasYearBudget && totalCommitted > yearBudget;
 
@@ -32,14 +34,16 @@ export const BudgetDonut: React.FC<Props> = ({ spent, remaining, itCostsTotal, y
   const remainingSafe = Math.max(0, adjustedRemaining);
 
   // IST-Ebene (innerer Ring): Ausgaben
-  const totalBudget = Math.max(1, budgetPlanned + itCosts);
+  const totalBudget = Math.max(1, budgetPlanned + itCosts + vdbsBudget);
   const remainingPct = (remainingSafe / totalBudget) * 100;
   const spentPct = Math.round((spentSafe / totalBudget) * 100);
   const itCostsPct = Math.round((itCosts / totalBudget) * 100);
+  const vdbsPct = Math.round((vdbsBudget / totalBudget) * 100);
 
   // PLAN-Ebene (äußerer Ring): Verplanung
   const planBudget = hasYearBudget ? yearBudget : totalBudget;
   const itCostsPctPlan = hasYearBudget ? Math.round((itCosts / planBudget) * 100) : itCostsPct;
+  const vdbsPctPlan = hasYearBudget ? Math.round((vdbsBudget / planBudget) * 100) : vdbsPct;
   const projectBudgetPctPlan = hasYearBudget ? Math.round((projectBudgetPlanned / planBudget) * 100) : 0;
   const availablePctPlan = hasYearBudget ? Math.round((availableForNewProjects / planBudget) * 100) : 0;
 
@@ -48,15 +52,17 @@ export const BudgetDonut: React.FC<Props> = ({ spent, remaining, itCostsTotal, y
                        : COLORS.red;                         // <10% frei = kritisch
   const spentColor = COLORS.blue;  // immer blau (neutral)
   const itCostsColor = '#6b7280'; // gray-500 (fixe Kosten)
+  const vdbsColor = '#f59e0b'; // amber-500 (VDB-S Budget)
   const overspendColor = '#991b1b'; // red-800 for overspend
   const projectBudgetColor = '#7c3aed'; // violet-600 (geplante Projektbudgets)
   const availableColor = isOverCommitted ? '#dc2626' : '#10b981'; // red-600 oder green-500
 
   // Daten für IST-Ring (innerer Ring)
   const dataInner = isOverBudget
-    ? itCosts > 0
+    ? (itCosts > 0 || vdbsBudget > 0)
       ? [
-          { name: 'IT-Kosten (fix)', value: itCosts },
+          ...(itCosts > 0 ? [{ name: 'IT-Kosten (fix)', value: itCosts }] : []),
+          ...(vdbsBudget > 0 ? [{ name: 'VDB-S Budget', value: vdbsBudget }] : []),
           { name: 'Projekte ausgegeben', value: spentSafe },
           { name: 'Überschreitung', value: overspend },
         ]
@@ -64,9 +70,10 @@ export const BudgetDonut: React.FC<Props> = ({ spent, remaining, itCostsTotal, y
           { name: 'Ausgegeben', value: spentSafe },
           { name: 'Überschreitung', value: overspend },
         ]
-    : itCosts > 0
+    : (itCosts > 0 || vdbsBudget > 0)
       ? [
-          { name: 'IT-Kosten (fix)', value: itCosts },
+          ...(itCosts > 0 ? [{ name: 'IT-Kosten (fix)', value: itCosts }] : []),
+          ...(vdbsBudget > 0 ? [{ name: 'VDB-S Budget', value: vdbsBudget }] : []),
           { name: 'Projekte ausgegeben', value: spentSafe },
           { name: 'Verbleibend', value: remainingSafe },
         ]
@@ -79,12 +86,14 @@ export const BudgetDonut: React.FC<Props> = ({ spent, remaining, itCostsTotal, y
   const dataOuter = hasYearBudget
     ? isOverCommitted
       ? [
-          { name: 'IT-Kosten (fix) - Plan', value: itCosts },
+          ...(itCosts > 0 ? [{ name: 'IT-Kosten (fix) - Plan', value: itCosts }] : []),
+          ...(vdbsBudget > 0 ? [{ name: 'VDB-S Budget - Plan', value: vdbsBudget }] : []),
           { name: 'Projektbudgets geplant', value: projectBudgetPlanned },
           { name: 'Überplanung', value: Math.abs(availableForNewProjects) },
         ]
       : [
-          { name: 'IT-Kosten (fix) - Plan', value: itCosts },
+          ...(itCosts > 0 ? [{ name: 'IT-Kosten (fix) - Plan', value: itCosts }] : []),
+          ...(vdbsBudget > 0 ? [{ name: 'VDB-S Budget - Plan', value: vdbsBudget }] : []),
           { name: 'Projektbudgets geplant', value: projectBudgetPlanned },
           { name: 'Verfügbar für neue Projekte', value: availableForNewProjects },
         ]
@@ -120,6 +129,8 @@ export const BudgetDonut: React.FC<Props> = ({ spent, remaining, itCostsTotal, y
         pct = availablePctPlan;
       } else if (name.includes('projektbudgets geplant')) {
         pct = projectBudgetPctPlan;
+      } else if (name.includes('vdb-s budget - plan')) {
+        pct = vdbsPctPlan;
       } else if (name.includes('plan')) {
         pct = itCostsPctPlan;
       }
@@ -128,6 +139,8 @@ export const BudgetDonut: React.FC<Props> = ({ spent, remaining, itCostsTotal, y
         pct = Math.round((overspend / Math.max(1, total)) * 100);
       } else if (name.includes('verbleibend')) {
         pct = Math.round((remainingSafe / Math.max(1, total)) * 100);
+      } else if (name.includes('vdb-s budget')) {
+        pct = vdbsPct;
       } else if (name.includes('it-kosten')) {
         pct = itCostsPct;
       } else {
@@ -158,6 +171,7 @@ export const BudgetDonut: React.FC<Props> = ({ spent, remaining, itCostsTotal, y
                   if (name.includes('überplanung')) fill = overspendColor;
                   else if (name.includes('verfügbar')) fill = availableColor;
                   else if (name.includes('projektbudgets')) fill = projectBudgetColor;
+                  else if (name.includes('vdb-s')) fill = vdbsColor;
                   return <Cell key={`outer-${index}`} fill={fill} />;
                 })}
               </Pie>
@@ -170,6 +184,7 @@ export const BudgetDonut: React.FC<Props> = ({ spent, remaining, itCostsTotal, y
                 if (name.includes('überschreitung')) fill = overspendColor;
                 else if (name.includes('verbleibend')) fill = remainingColor;
                 else if (name.includes('it-kosten')) fill = itCostsColor;
+                else if (name.includes('vdb-s')) fill = vdbsColor;
                 else if (name.includes('projekte') || name.includes('ausgegeben')) fill = spentColor;
                 return <Cell key={`inner-${index}`} fill={fill} />;
               })}

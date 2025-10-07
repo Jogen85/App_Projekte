@@ -1,7 +1,7 @@
 import React, { Suspense, lazy, useEffect, useMemo, useState } from 'react';
 import { Card, COLORS } from './ui';
 import { parseProjectsCSV, projectsToCSV } from './lib/csv';
-import type { Project, NormalizedProject, YearBudget, ITCost } from './types';
+import type { Project, NormalizedProject, YearBudget, ITCost, VDBSBudgetItem } from './types';
 import {
   toDate, fmtDate, getToday, getCurrentYear, daysBetween,
   yearStart, yearEnd, overlapDays,
@@ -118,6 +118,7 @@ export default function App() {
   const [at82CompletedFilter, setAt82CompletedFilter] = useState<string>('all');
   const [yearBudgets, setYearBudgets] = useState<YearBudget[]>([]);
   const [itCosts, setITCosts] = useState<ITCost[]>([]);
+  const [vdbsBudget, setVDBSBudget] = useState<VDBSBudgetItem[]>([]);
 
   useEffect(() => {
     try {
@@ -150,6 +151,18 @@ export default function App() {
         const parsed = JSON.parse(ls);
         if (Array.isArray(parsed)) {
           setITCosts(parsed);
+        }
+      }
+    } catch (e) { /* ignore */ }
+  }, []);
+
+  useEffect(() => {
+    try {
+      const ls = localStorage.getItem('vdbsBudget');
+      if (ls) {
+        const parsed = JSON.parse(ls);
+        if (Array.isArray(parsed)) {
+          setVDBSBudget(parsed);
         }
       }
     } catch (e) { /* ignore */ }
@@ -277,6 +290,13 @@ export default function App() {
     return getITCostsByCategoryD(itCosts, year, today).total;
   }, [itCosts, year, today]);
 
+  // VDB-S Budget für ausgewähltes Jahr
+  const vdbsBudgetTotal = useMemo(() => {
+    return vdbsBudget
+      .filter((item) => item.year === year)
+      .reduce((sum, item) => sum + item.budget2026, 0);
+  }, [vdbsBudget, year]);
+
   // Budget-Anzeige: Jahresbudget (falls vorhanden) oder Projektsumme
   const budgetSpent = kpis.costSum;
   const effectiveBudget = currentYearBudget !== null ? currentYearBudget : kpis.budgetPlannedSum;
@@ -285,8 +305,9 @@ export default function App() {
   // Warnung bei Überplanung (Projektbudgets > Jahresbudget)
   const showOverBudgetWarning = currentYearBudget !== null && kpis.budgetPlannedSum > currentYearBudget;
 
-  // Warnung bei Budgetüberschreitung (IT-Kosten + Projektbudgets > Jahresbudget)
-  const showITCostsBudgetWarning = currentYearBudget !== null && itCostsTotal + kpis.budgetPlannedSum > currentYearBudget;
+  // Warnung bei Budgetüberschreitung (IT-Kosten + VDB-S Budget + Projektbudgets > Jahresbudget)
+  const totalCommitted = itCostsTotal + vdbsBudgetTotal + kpis.budgetPlannedSum;
+  const showBudgetWarning = currentYearBudget !== null && totalCommitted > currentYearBudget;
   // Burndown entfernt; Soll-Ist-Kachel ersetzt die Darstellung
 
 
@@ -361,7 +382,7 @@ export default function App() {
               : `Budget (Jahr): ${new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR'}).format(kpis.budgetPlannedSum)}`}
             className="h-chart">
             <Suspense fallback={<div className="h-48 bg-slate-100 rounded animate-pulse" />}>
-              <BudgetDonut spent={budgetSpent} remaining={budgetRemaining} height={220} itCostsTotal={itCostsTotal} yearBudget={currentYearBudget} projectBudgetSum={kpis.budgetPlannedSum} />
+              <BudgetDonut spent={budgetSpent} remaining={budgetRemaining} height={220} itCostsTotal={itCostsTotal} yearBudget={currentYearBudget} projectBudgetSum={kpis.budgetPlannedSum} vdbsBudgetTotal={vdbsBudgetTotal} />
             </Suspense>
           </Card>
           <Card title={"Verzögerungen"} className="h-chart">
@@ -416,15 +437,18 @@ export default function App() {
         {/* Timeline am Ende */}
         <Timeline projects={filtered} bounds={bounds} yearOnly={yearOnly} year={year} />
 
-        {/* IT-Kosten Warnung */}
-        {showITCostsBudgetWarning && (
+        {/* Budget-Warnung (IT-Kosten + VDB-S + Projekte) */}
+        {showBudgetWarning && (
           <div className="mt-6 rounded-lg bg-red-50 p-4 text-sm text-red-800">
-            <strong>⚠️ Warnung:</strong> IT-Kosten (
-            {itCostsTotal.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' })}) +
-            Projektbudgets (
-            {kpis.budgetPlannedSum.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' })})
-            übersteigen Jahresbudget (
-            {currentYearBudget!.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' })})
+            <strong>⚠️ Warnung:</strong> Gesamtbudget überschritten!
+            <div className="mt-2 space-y-1">
+              <div>IT-Kosten: {itCostsTotal.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' })}</div>
+              <div>VDB-S Budget: {vdbsBudgetTotal.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' })}</div>
+              <div>Projektbudgets: {kpis.budgetPlannedSum.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' })}</div>
+              <div className="border-t border-red-200 pt-1 font-bold">
+                Gesamt: {totalCommitted.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' })} / Jahresbudget: {currentYearBudget!.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' })}
+              </div>
+            </div>
           </div>
         )}
       </div>

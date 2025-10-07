@@ -79,3 +79,14 @@ export interface ITCostsByProvider {
   total: number;
 }
 
+/**
+ * VDB-S Budgetposition (Servicebudgets, Arbeitskreise, Projekte)
+ */
+export interface VDBSBudgetItem {
+  id: string;                    // UUID oder Zeilen-ID
+  projectNumber: string;         // "101.0", "102.0", etc.
+  projectName: string;           // "Servicebudget Basis", etc.
+  budget2026: number;            // Budget für 2026 in Euro
+  year: number;                  // Jahr (2026)
+}
+
