@@ -105,10 +105,8 @@ const emptyProject = (): Project => ({
 
 const ProjectsAdmin: React.FC = () => {
   const [projects, setProjects] = useState<Project[]>([]);
-  const [dirty, setDirty] = useState(false);
   const [msg, setMsg] = useState<string>('');
   const [yearBudgets, setYearBudgets] = useState<YearBudget[]>([]);
-  const [yearBudgetsDirty, setYearBudgetsDirty] = useState(false);
   const currentYear = getCurrentYear();
 
   useEffect(() => {
@@ -142,13 +140,20 @@ const ProjectsAdmin: React.FC = () => {
     }
   }, []);
 
+  // Optimistic Save: Jede Änderung sofort persistieren
+  const saveProjects = (updated: Project[]) => {
+    setProjects(updated);
+    localStorage.setItem('projects_json', JSON.stringify(updated));
+    setMsg('Änderungen gespeichert.');
+    setTimeout(() => setMsg(''), 2000); // Clear message after 2s
+  };
+
   const onImportCSV = async (file?: File) => {
     if (!file) return;
     try {
       const text = await readFileAsText(file);
       const rows = parseProjectsCSV(text);
-      setProjects(rows);
-      setDirty(true);
+      saveProjects(rows);
       setMsg(`CSV importiert: ${rows.length} Zeilen`);
     } catch (err) {
       setMsg((err as Error)?.message || 'CSV konnte nicht geladen werden.');
@@ -164,53 +169,40 @@ const ProjectsAdmin: React.FC = () => {
     a.href = url; a.download = `projekte_${new Date().toISOString().slice(0,10)}.csv`; a.click();
     URL.revokeObjectURL(url);
   };
-  const onSave = () => {
-    localStorage.setItem('projects_json', JSON.stringify(projects));
-    setDirty(false);
-    setMsg('Gespeichert. Dashboard nutzt nun diese Daten.');
-  };
 
   const update = (i: number, k: keyof Project, v: any) => {
-    setProjects((prev) => {
-      const next = [...prev];
-      if (k === 'progress' || k === 'budgetPlanned' || k === 'costToDate') {
-        (next[i] as any)[k] = Number(v);
-      } else if (k === 'requiresAT82Check' || k === 'at82Completed') {
-        (next[i] as any)[k] = v === true || v === 'true';
-      } else {
-        (next[i] as any)[k] = v;
-      }
-      return next;
-    });
-    setDirty(true);
+    const next = [...projects];
+    if (k === 'progress' || k === 'budgetPlanned' || k === 'costToDate') {
+      (next[i] as any)[k] = Number(v);
+    } else if (k === 'requiresAT82Check' || k === 'at82Completed') {
+      (next[i] as any)[k] = v === true || v === 'true';
+    } else {
+      (next[i] as any)[k] = v;
+    }
+    saveProjects(next);
   };
-  const addRow = () => { setProjects((p) => [emptyProject(), ...p]); setDirty(true); };
-  const removeRow = (i: number) => { setProjects((p) => p.filter((_, idx) => idx !== i)); setDirty(true); };
+  const addRow = () => { saveProjects([emptyProject(), ...projects]); };
+  const removeRow = (i: number) => { saveProjects(projects.filter((_, idx) => idx !== i)); };
 
-  // YearBudgets CRUD
+  // YearBudgets CRUD (auto-save)
+  const saveYearBudgets = (updated: YearBudget[]) => {
+    setYearBudgets(updated);
+    localStorage.setItem('yearBudgets', JSON.stringify(updated));
+  };
+
   const addYearBudget = () => {
     const nextYear = yearBudgets.length > 0
       ? Math.max(...yearBudgets.map(yb => yb.year)) + 1
       : currentYear;
-    setYearBudgets((prev) => [...prev, { year: nextYear, budget: 0 }]);
-    setYearBudgetsDirty(true);
+    saveYearBudgets([...yearBudgets, { year: nextYear, budget: 0 }]);
   };
   const updateYearBudget = (i: number, key: keyof YearBudget, value: number) => {
-    setYearBudgets((prev) => {
-      const next = [...prev];
-      next[i] = { ...next[i], [key]: value };
-      return next;
-    });
-    setYearBudgetsDirty(true);
+    const next = [...yearBudgets];
+    next[i] = { ...next[i], [key]: value };
+    saveYearBudgets(next);
   };
   const removeYearBudget = (i: number) => {
-    setYearBudgets((prev) => prev.filter((_, idx) => idx !== i));
-    setYearBudgetsDirty(true);
-  };
-  const saveYearBudgets = () => {
-    localStorage.setItem('yearBudgets', JSON.stringify(yearBudgets));
-    setYearBudgetsDirty(false);
-    setMsg('Jahresbudgets gespeichert.');
+    saveYearBudgets(yearBudgets.filter((_, idx) => idx !== i));
   };
 
   // Warnung bei Überplanung berechnen
@@ -255,8 +247,7 @@ const ProjectsAdmin: React.FC = () => {
             <input id="adminCsvInput" type="file" accept=".csv" className="hidden" onChange={(e) => onImportCSV(e.target.files?.[0])} />
             <button onClick={() => document.getElementById('adminCsvInput')!.click()} className="rounded-lg border border-slate-300 px-4 py-2 text-sm hover:bg-slate-50 transition-colors">CSV importieren</button>
             <button onClick={onExportCSV} className="rounded-lg border border-slate-300 px-4 py-2 text-sm hover:bg-slate-50 transition-colors">CSV exportieren</button>
-            <button onClick={onSave} disabled={!dirty} className="rounded-lg bg-green-600 text-white hover:bg-green-700 px-4 py-2 text-sm font-medium disabled:bg-slate-300 disabled:cursor-not-allowed transition-colors">Speichern (lokal)</button>
-            {msg && <span className="text-sm text-slate-600 ml-2 bg-slate-100 px-3 py-1 rounded-md">{msg}</span>}
+            {msg && <span className="text-sm text-green-600 ml-2 bg-green-50 px-3 py-1 rounded-md font-medium">✓ {msg}</span>}
           </div>
         </Card>
 
@@ -270,13 +261,7 @@ const ProjectsAdmin: React.FC = () => {
               >
                 + Weiteres Jahr
               </button>
-              <button
-                onClick={saveYearBudgets}
-                disabled={!yearBudgetsDirty}
-                className="rounded-lg bg-green-600 text-white hover:bg-green-700 px-4 py-2 text-sm font-medium disabled:bg-slate-300 disabled:cursor-not-allowed transition-colors"
-              >
-                Jahresbudgets speichern
-              </button>
+              <span className="text-xs text-slate-500">Änderungen werden automatisch gespeichert</span>
             </div>
 
             {overBudgetWarnings.length > 0 && (
