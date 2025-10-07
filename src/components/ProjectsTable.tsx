@@ -98,7 +98,12 @@ const ProjectsTable: React.FC<Props> = ({ projects, year, yearOnly, plannedBudge
                       </div>
                     </div>
                     <div>
-                      <div className="text-xs text-slate-600 mb-1">Budget</div>
+                      <div className="text-xs text-slate-600 mb-1 flex items-center gap-1">
+                        Budget
+                        {p.budgetPlanned >= 75000 && (
+                          <span className="cursor-help" title="Genehmigungspflichtig (Budget ≥ €75.000)">🔐</span>
+                        )}
+                      </div>
                       <div className="flex items-center gap-2 mb-1">
                         <div className="flex-1" title={`${new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR'}).format(costs)} / ${new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR'}).format(plannedBudget)} • ${Math.round((costs / Math.max(plannedBudget, 1)) * 100)}%`}>
                           <ProgressBar value={(costs / Math.max(plannedBudget, 1)) * 100} />
