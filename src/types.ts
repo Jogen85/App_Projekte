@@ -29,3 +29,53 @@ export type YearBudget = {
   budget: number;
 };
 
+/**
+ * IT-Kostenposition (laufende Kosten wie Lizenzen, Wartung, etc.)
+ */
+export interface ITCost {
+  id: string;                    // UUID oder fortlaufende Nummer
+  description: string;           // "Microsoft 365 Business Lizenzen"
+  category: ITCostCategory;      // Hardware, Software, etc.
+  provider: string;              // "Microsoft", "Dell", "Telekom"
+  amount: number;                // Betrag in Euro (bei Frequenz Monthly/Quarterly wird automatisch hochgerechnet)
+  frequency: ITCostFrequency;    // Monatlich, vierteljährlich, jährlich, einmalig
+  startDate: string;             // YYYY-MM-DD (Vertragsbeginn)
+  endDate: string;               // YYYY-MM-DD (Vertragsende, '' = unbefristet)
+  costCenter: string;            // Kostenstelle/Abteilung, '' = nicht zugeordnet
+  notes: string;                 // Freitext (Vertragsnummer, Ansprechpartner, etc.)
+  year: number;                  // Jahr, für das dieser Eintrag gilt (2025, 2026, etc.)
+}
+
+export type ITCostCategory =
+  | 'hardware'              // Hardware (Server, PCs, Netzwerk)
+  | 'software_licenses'     // Software & Lizenzen
+  | 'maintenance_service'   // Wartung & Service
+  | 'training'              // Schulung & Weiterbildung
+  | 'other';                // Sonstiges
+
+export type ITCostFrequency =
+  | 'monthly'      // Monatliche Zahlung (× 12)
+  | 'quarterly'    // Vierteljährliche Zahlung (× 4)
+  | 'yearly'       // Jährliche Zahlung (× 1)
+  | 'one_time';    // Einmalige Zahlung (× 1)
+
+/**
+ * Aggregierte IT-Kosten nach Kategorie
+ */
+export interface ITCostsByCategory {
+  hardware: number;
+  software_licenses: number;
+  maintenance_service: number;
+  training: number;
+  other: number;
+  total: number;
+}
+
+/**
+ * Aggregierte IT-Kosten nach Dienstleister
+ */
+export interface ITCostsByProvider {
+  provider: string;
+  total: number;
+}
+

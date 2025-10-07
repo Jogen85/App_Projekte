@@ -86,3 +86,119 @@ export function costsYTDForYearD(p: { startD: Date; endD: Date; costToDate: numb
   return (p.costToDate || 0) * (yOverlap / elapsedDays);
 }
 
+// IT-Kosten Berechnungen
+import type { ITCost, ITCostsByCategory, ITCostsByProvider } from './types';
+
+/**
+ * Hilfsfunktion: Parst Datum-String zu Date
+ */
+function parseDate(dateStr: string): Date {
+  return toDate(dateStr);
+}
+
+/**
+ * Hilfsfunktion: Prüft ob Jahr ein Schaltjahr ist
+ */
+function isLeapYear(year: number): boolean {
+  return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
+}
+
+/**
+ * Berechnet die jährlichen Kosten einer IT-Kostenposition
+ * Berücksichtigt Frequenz und anteilige Berechnung bei unterjährigem Start/Ende
+ */
+export function calculateYearlyCostD(
+  cost: ITCost,
+  year: number,
+  today: Date = new Date()
+): number {
+  const yearStartD = new Date(year, 0, 1);
+  const yearEndD = new Date(year, 11, 31);
+
+  // Vertragszeitraum parsen
+  const startD = parseDate(cost.startDate);
+  const endD = cost.endDate ? parseDate(cost.endDate) : null;
+
+  // Wenn Vertrag komplett außerhalb des Jahres liegt → 0
+  if (startD > yearEndD) return 0;
+  if (endD && endD < yearStartD) return 0;
+
+  // Überlappende Tage im Jahr berechnen
+  const effectiveStartD = startD > yearStartD ? startD : yearStartD;
+  const effectiveEndD = endD && endD < yearEndD ? endD : yearEndD;
+  const overlapDaysD = daysBetween(effectiveStartD, effectiveEndD) + 1; // +1 für inklusiv
+
+  // Basis-Jahreskosten je nach Frequenz
+  let yearlyBaseAmount = 0;
+  switch (cost.frequency) {
+    case 'monthly':
+      yearlyBaseAmount = cost.amount * 12;
+      break;
+    case 'quarterly':
+      yearlyBaseAmount = cost.amount * 4;
+      break;
+    case 'yearly':
+      yearlyBaseAmount = cost.amount;
+      break;
+    case 'one_time':
+      // Einmalige Kosten nur im Jahr des Starts
+      if (startD.getFullYear() === year) {
+        return cost.amount;
+      }
+      return 0;
+  }
+
+  // Anteilige Berechnung bei unterjährigem Start/Ende
+  const daysInYear = isLeapYear(year) ? 366 : 365;
+  return (yearlyBaseAmount * overlapDaysD) / daysInYear;
+}
+
+/**
+ * Aggregiert IT-Kosten nach Kategorie für ein Jahr
+ */
+export function getITCostsByCategoryD(
+  costs: ITCost[],
+  year: number,
+  today: Date = new Date()
+): ITCostsByCategory {
+  const result: ITCostsByCategory = {
+    hardware: 0,
+    software_licenses: 0,
+    maintenance_service: 0,
+    training: 0,
+    other: 0,
+    total: 0,
+  };
+
+  costs.forEach((cost) => {
+    const yearlyCost = calculateYearlyCostD(cost, year, today);
+    result[cost.category] += yearlyCost;
+    result.total += yearlyCost;
+  });
+
+  return result;
+}
+
+/**
+ * Aggregiert IT-Kosten nach Dienstleister für ein Jahr
+ */
+export function getITCostsByProviderD(
+  costs: ITCost[],
+  year: number,
+  today: Date = new Date()
+): ITCostsByProvider[] {
+  const providerMap = new Map<string, number>();
+
+  costs.forEach((cost) => {
+    const yearlyCost = calculateYearlyCostD(cost, year, today);
+    if (yearlyCost > 0) {
+      const current = providerMap.get(cost.provider) || 0;
+      providerMap.set(cost.provider, current + yearlyCost);
+    }
+  });
+
+  return Array.from(providerMap.entries())
+    .map(([provider, total]) => ({ provider, total }))
+    .sort((a, b) => b.total - a.total); // Sortiert nach Höhe absteigend
+}
+

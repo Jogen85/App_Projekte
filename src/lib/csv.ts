@@ -1,4 +1,4 @@
-﻿import type { Project } from '../types';
+﻿import type { Project, ITCost, ITCostCategory, ITCostFrequency } from '../types';
 
 const REQUIRED_FIELDS = ['id','projectNumberInternal','projectNumberExternal','classification','title','owner','description','status','start','end','progress','budgetPlanned','costToDate','org','requiresAT82Check','at82Completed'] as const;
 const NULL_CHAR = String.fromCharCode(0);
@@ -188,3 +188,147 @@ export function projectsToCSV(projects: Project[], delimiter: CsvDelimiter = ';'
 }
 
 export const CSV_HEADERS = REQUIRED_FIELDS;
+
+// IT-Kosten CSV Parser
+const IT_COST_REQUIRED_FIELDS = ['id', 'description', 'category', 'provider', 'amount', 'frequency', 'startDate', 'endDate', 'costCenter', 'notes', 'year'] as const;
+
+/**
+ * Hilfsfunktion: Normalisiert Datum-String (DD.MM.YYYY → YYYY-MM-DD)
+ */
+function normalizeDateString(dateStr: string): string {
+  if (!dateStr) return '';
+  const str = dateStr.trim();
+
+  // Prüfe ob bereits YYYY-MM-DD Format
+  if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
+    return str;
+  }
+
+  // DD.MM.YYYY Format
+  const parts = str.split('.');
+  if (parts.length === 3 && parts[0].length === 2 && parts[1].length === 2 && parts[2].length === 4) {
+    return `${parts[2]}-${parts[1]}-${parts[0]}`;
+  }
+
+  return str;
+}
+
+/**
+ * Hilfsfunktion: Parst deutsche Zahlenformate
+ */
+function parseGermanNumber(value: string): number {
+  if (value == null || value === '') return 0;
+  let normalized = value.trim().replace(/\s+/g, '');
+
+  // German number format: 10.000,50 -> 10000.50
+  if (normalized.includes(',') && normalized.includes('.')) {
+    normalized = normalized.replace(/\./g, '').replace(',', '.');
+  } else if (normalized.includes(',')) {
+    // Only comma, assume decimal separator: 50,5 -> 50.5
+    normalized = normalized.replace(',', '.');
+  }
+
+  const num = Number(normalized);
+  return Number.isFinite(num) ? num : 0;
+}
+
+/**
+ * Parst CSV-Daten zu ITCost-Array
+ * Erwartet Spalten: id;description;category;provider;amount;frequency;startDate;endDate;costCenter;notes;year
+ */
+export function parseITCostsCSV(csv: string): ITCost[] {
+  const lines = csv.trim().split('\n');
+  if (lines.length === 0) return [];
+
+  // BOM entfernen falls vorhanden
+  let firstLine = lines[0].replace(/^\uFEFF/, '');
+  firstLine = firstLine.split(NULL_CHAR).join('');
+
+  // Delimiter erkennen (Semikolon oder Komma)
+  const delimiter = detectDelimiter(firstLine);
+
+  const records = parseRecords(csv, delimiter);
+  if (!records.length) return [];
+
+  const headers = records[0].map((h) => h.trim().replace(/^"|"$/g, ''));
+  const rows = records.slice(1);
+
+  return rows
+    .map((row, idx) => {
+      if (row.length !== headers.length) {
+        console.warn(`IT-Kosten Row ${idx + 2} has ${row.length} columns, expected ${headers.length}`);
+        return null;
+      }
+
+      const pick = (key: string, fallback = '') => {
+        const colIdx = headers.findIndex((h) => h.toLowerCase() === key.toLowerCase());
+        if (colIdx === -1 || colIdx >= row.length) return fallback;
+        return row[colIdx];
+      };
+
+      // Pflichtfelder prüfen
+      if (!pick('id') || !pick('description') || !pick('category') || !pick('provider') || !pick('amount') || !pick('frequency') || !pick('startDate') || !pick('year')) {
+        console.warn(`IT-Kosten Row ${idx + 2} missing required fields`);
+        return null;
+      }
+
+      // Category validieren
+      const validCategories: ITCostCategory[] = ['hardware', 'software_licenses', 'maintenance_service', 'training', 'other'];
+      const category = pick('category') as ITCostCategory;
+      if (!validCategories.includes(category)) {
+        console.warn(`IT-Kosten Row ${idx + 2} has invalid category: ${category}`);
+        return null;
+      }
+
+      // Frequency validieren
+      const validFrequencies: ITCostFrequency[] = ['monthly', 'quarterly', 'yearly', 'one_time'];
+      const frequency = pick('frequency') as ITCostFrequency;
+      if (!validFrequencies.includes(frequency)) {
+        console.warn(`IT-Kosten Row ${idx + 2} has invalid frequency: ${frequency}`);
+        return null;
+      }
+
+      // Datum normalisieren (DD.MM.YYYY → YYYY-MM-DD)
+      const startDate = normalizeDateString(pick('startDate'));
+      const endDate = normalizeDateString(pick('endDate'));
+
+      return {
+        id: pick('id'),
+        description: pick('description'),
+        category,
+        provider: pick('provider'),
+        amount: parseGermanNumber(pick('amount')),
+        frequency,
+        startDate,
+        endDate,
+        costCenter: pick('costCenter'),
+        notes: pick('notes'),
+        year: parseInt(pick('year'), 10),
+      } as ITCost;
+    })
+    .filter((p): p is ITCost => p !== null);
+}
+
+/**
+ * Serialisiert ITCost-Array zu CSV
+ */
+export function serializeITCostsCSV(costs: ITCost[], delimiter: CsvDelimiter = ';'): string {
+  const headers = IT_COST_REQUIRED_FIELDS;
+  const header = headers.join(delimiter);
+
+  const lines = costs.map((c) => [
+    escapeField(c.id, delimiter),
+    escapeField(c.description, delimiter),
+    escapeField(c.category, delimiter),
+    escapeField(c.provider, delimiter),
+    escapeField(c.amount.toFixed(2), delimiter),
+    escapeField(c.frequency, delimiter),
+    escapeField(c.startDate, delimiter),
+    escapeField(c.endDate || '', delimiter),
+    escapeField(c.costCenter || '', delimiter),
+    escapeField(c.notes || '', delimiter),
+    escapeField(c.year.toString(), delimiter),
+  ].join(delimiter));
+
+  return [header, ...lines].join('\n');
+}
