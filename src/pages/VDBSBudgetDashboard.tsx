@@ -198,6 +198,18 @@ export default function VDBSBudgetDashboard() {
           </div>
           <div className="flex items-center gap-4">
             <div>
+              <label className="mr-2 text-sm font-medium text-gray-700">Kategorie:</label>
+              <select
+                value={categoryFilter}
+                onChange={(e) => setCategoryFilter(e.target.value as 'all' | 'RUN' | 'CHANGE')}
+                className="rounded border border-gray-300 px-3 py-2 text-sm"
+              >
+                <option value="all">Alle</option>
+                <option value="RUN">Laufende Kosten</option>
+                <option value="CHANGE">Projekte</option>
+              </select>
+            </div>
+            <div>
               <label className="mr-2 text-sm font-medium text-gray-700">Jahr:</label>
               <select
                 value={selectedYear}
@@ -244,9 +256,9 @@ export default function VDBSBudgetDashboard() {
         {/* KPI-Zeile (3 Tiles) */}
         <div className="grid grid-cols-3 gap-3">
           <Card title={`Gesamtbudget ${selectedYear}`} className="h-[120px]">
-            <div className="flex h-full flex-col items-start justify-center">
+            <div className="flex h-full flex-col justify-center gap-2">
               <div className="text-4xl font-bold text-blue-600">{fmtCurrency(kpis.totalBudget)}</div>
-              <div className="mt-2 text-sm text-gray-600">{kpis.count} Positionen</div>
+              <div className="text-sm text-gray-600">{kpis.count} Positionen</div>
             </div>
           </Card>
           <Card title="Größte Position" className="h-[120px]">
@@ -279,31 +291,36 @@ export default function VDBSBudgetDashboard() {
         <div className="grid grid-cols-3 gap-3">
           {/* Chart 1: Budget nach Kategorie */}
           <Card title="Budget nach Kategorie" className="h-[280px]">
-            <ResponsiveContainer width="100%" height={200}>
+            <ResponsiveContainer width="100%" height={240}>
               <PieChart>
                 <Pie
                   data={categoryData}
                   dataKey="value"
                   nameKey="name"
                   cx="50%"
-                  cy="45%"
-                  outerRadius={80}
+                  cy="50%"
+                  outerRadius={85}
+                  label={({ name, value, percent }) => `${(percent * 100).toFixed(0)}%`}
+                  labelLine={{ stroke: '#666', strokeWidth: 1 }}
                 >
                   {categoryData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.name.includes('RUN') ? COLORS.RUN : COLORS.CHANGE} />
                   ))}
                 </Pie>
-                <Tooltip formatter={(value) => fmtCurrency(value as number)} />
+                <Tooltip
+                  formatter={(value) => fmtCurrency(value as number)}
+                  labelFormatter={(label) => label}
+                />
               </PieChart>
             </ResponsiveContainer>
-            <div className="mt-2 flex justify-center gap-4 text-xs">
+            <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-4 text-xs">
               <div className="flex items-center gap-1">
                 <div className="h-3 w-3 rounded-sm" style={{ backgroundColor: COLORS.RUN }} />
-                <span className="text-gray-700">Laufende Kosten: {fmtCompact(kpis.byCategory.RUN || 0)}</span>
+                <span className="text-gray-700">Laufende Kosten</span>
               </div>
               <div className="flex items-center gap-1">
                 <div className="h-3 w-3 rounded-sm" style={{ backgroundColor: COLORS.CHANGE }} />
-                <span className="text-gray-700">Projekte: {fmtCompact(kpis.byCategory.CHANGE || 0)}</span>
+                <span className="text-gray-700">Projekte</span>
               </div>
             </div>
           </Card>
@@ -327,65 +344,45 @@ export default function VDBSBudgetDashboard() {
             </ResponsiveContainer>
           </Card>
 
-          {/* Chart 3: Category Filter & Stats */}
-          <Card title="Filter & Statistik" className="h-[280px]">
-            <div className="flex flex-col gap-3">
-              <div>
-                <label className="mb-2 block text-xs font-medium text-gray-700">Kategorie filtern:</label>
-                <div className="flex flex-col gap-2">
-                  <button
-                    onClick={() => setCategoryFilter('all')}
-                    className={`rounded border px-3 py-2 text-sm transition-colors ${
-                      categoryFilter === 'all'
-                        ? 'border-blue-600 bg-blue-50 text-blue-700'
-                        : 'border-gray-300 bg-white hover:bg-gray-50'
-                    }`}
-                  >
-                    Alle
-                  </button>
-                  <button
-                    onClick={() => setCategoryFilter('RUN')}
-                    className={`rounded border px-3 py-2 text-sm transition-colors ${
-                      categoryFilter === 'RUN'
-                        ? 'border-blue-600 bg-blue-50 text-blue-700'
-                        : 'border-gray-300 bg-white hover:bg-gray-50'
-                    }`}
-                  >
-                    Laufende Kosten
-                  </button>
-                  <button
-                    onClick={() => setCategoryFilter('CHANGE')}
-                    className={`rounded border px-3 py-2 text-sm transition-colors ${
-                      categoryFilter === 'CHANGE'
-                        ? 'border-blue-600 bg-blue-50 text-blue-700'
-                        : 'border-gray-300 bg-white hover:bg-gray-50'
-                    }`}
-                  >
-                    Projekte
-                  </button>
+          {/* Chart 3: Budget-Übersicht */}
+          <Card title="Budget-Übersicht" className="h-[280px]">
+            <div className="flex h-full flex-col justify-center gap-4 p-4">
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Positionen gesamt:</span>
+                  <span className="text-lg font-bold text-gray-900">{kpis.count}</span>
                 </div>
-              </div>
-
-              <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
-                <h4 className="mb-2 text-xs font-semibold text-gray-700">Aktuelle Auswahl:</h4>
-                <div className="space-y-1 text-sm">
-                  <div className="flex justify-between">
-                    <span>Positionen:</span>
-                    <span className="font-medium">{kpis.count}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Gesamtbudget:</span>
-                    <span className="font-medium">{fmtCurrency(kpis.totalBudget)}</span>
-                  </div>
-                  {yearBudget && (
-                    <div className="flex justify-between border-t border-gray-300 pt-1">
-                      <span>Verbleibend:</span>
-                      <span className={`font-medium ${kpis.totalBudget <= yearBudget.budget ? 'text-green-600' : 'text-red-600'}`}>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Gesamtbudget:</span>
+                  <span className="text-lg font-bold text-blue-600">{fmtCurrency(kpis.totalBudget)}</span>
+                </div>
+                {yearBudget && (
+                  <>
+                    <div className="border-t border-gray-200 pt-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-600">Jahresbudget {selectedYear}:</span>
+                        <span className="text-lg font-medium text-gray-900">{fmtCurrency(yearBudget.budget)}</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-semibold text-gray-700">Verbleibend:</span>
+                      <span className={`text-xl font-bold ${kpis.totalBudget <= yearBudget.budget ? 'text-green-600' : 'text-red-600'}`}>
                         {fmtCurrency(yearBudget.budget - kpis.totalBudget)}
                       </span>
                     </div>
-                  )}
-                </div>
+                    <div className="mt-2">
+                      <div className="h-3 w-full rounded-full bg-gray-200">
+                        <div
+                          className={`h-3 rounded-full transition-all ${kpis.totalBudget <= yearBudget.budget ? 'bg-blue-600' : 'bg-red-600'}`}
+                          style={{ width: `${Math.min(100, (kpis.totalBudget / yearBudget.budget) * 100)}%` }}
+                        />
+                      </div>
+                      <div className="mt-1 text-xs text-center text-gray-600">
+                        {((kpis.totalBudget / yearBudget.budget) * 100).toFixed(1)}% verplant
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           </Card>
