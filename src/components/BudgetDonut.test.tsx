@@ -7,17 +7,18 @@ describe('BudgetDonut', () => {
     it('renders spent and remaining correctly', () => {
       render(<BudgetDonut spent={50000} remaining={50000} />);
 
-      // Should show both segments
-      expect(screen.getByText(/Ausgegeben/i)).toBeInTheDocument();
-      expect(screen.getByText(/Verbleibend/i)).toBeInTheDocument();
+      // Should show IST legend with "Projekte" and "Verbleibend"
+      expect(screen.getByText(/Ist:/i)).toBeInTheDocument();
+      expect(screen.getByText(/Projekte:/i)).toBeInTheDocument();
+      expect(screen.getByText(/Verbleibend:/i)).toBeInTheDocument();
       expect(screen.getAllByText(/50\.000,00/).length).toBeGreaterThan(0);
     });
 
     it('shows green color when spent <= 90%', () => {
       render(<BudgetDonut spent={80000} remaining={20000} />);
 
-      // Spent percentage = 80%
-      expect(screen.getByText(/80%/i)).toBeInTheDocument();
+      // Should show legend
+      expect(screen.getByText(/Ist:/i)).toBeInTheDocument();
       // Should not show overspend warning
       expect(screen.queryByText(/Budget überschritten/i)).not.toBeInTheDocument();
     });
@@ -25,8 +26,8 @@ describe('BudgetDonut', () => {
     it('shows amber color when spent between 90-105%', () => {
       render(<BudgetDonut spent={95000} remaining={5000} />);
 
-      // Spent percentage = 95%
-      expect(screen.getByText(/95%/i)).toBeInTheDocument();
+      // Should show legend
+      expect(screen.getByText(/Ist:/i)).toBeInTheDocument();
       expect(screen.queryByText(/Budget überschritten/i)).not.toBeInTheDocument();
     });
   });
@@ -44,8 +45,6 @@ describe('BudgetDonut', () => {
       // Budget = 100k, Spent = 120k, Overspend = 20k (20%)
       render(<BudgetDonut spent={120000} remaining={-20000} />);
 
-      // Total spent percentage should be 120%
-      expect(screen.getByText(/120%/i)).toBeInTheDocument();
       // Overspend percentage relative to budget should be 20%
       expect(screen.getByText(/\(20%\)/i)).toBeInTheDocument();
     });
@@ -65,7 +64,6 @@ describe('BudgetDonut', () => {
 
       expect(screen.getByText(/Budget überschritten/i)).toBeInTheDocument();
       expect(screen.getAllByText(/100\.000,00/).length).toBeGreaterThan(0);
-      expect(screen.getByText(/200%/i)).toBeInTheDocument();
     });
 
     it('shows aria-label indicating overspend', () => {
@@ -80,22 +78,22 @@ describe('BudgetDonut', () => {
     it('handles zero budget', () => {
       render(<BudgetDonut spent={0} remaining={0} />);
 
-      expect(screen.getByText(/Ausgegeben/i)).toBeInTheDocument();
+      expect(screen.getByText(/Ist:/i)).toBeInTheDocument();
       expect(screen.getAllByText(/0,00/).length).toBeGreaterThan(0);
     });
 
     it('handles zero spent with positive budget', () => {
       render(<BudgetDonut spent={0} remaining={100000} />);
 
-      expect(screen.getByText(/Verbleibend/i)).toBeInTheDocument();
-      expect(screen.getByText(/Ausgegeben/i)).toBeInTheDocument();
+      expect(screen.getByText(/Verbleibend:/i)).toBeInTheDocument();
+      expect(screen.getByText(/Projekte:/i)).toBeInTheDocument();
     });
 
     it('handles exact budget match (100%)', () => {
       render(<BudgetDonut spent={100000} remaining={0} />);
 
-      // Should show 100% but no overspend
-      expect(screen.getByText(/100%/i)).toBeInTheDocument();
+      // Should show legend but no overspend
+      expect(screen.getByText(/Ist:/i)).toBeInTheDocument();
       expect(screen.queryByText(/Budget überschritten/i)).not.toBeInTheDocument();
     });
 
@@ -111,15 +109,14 @@ describe('BudgetDonut', () => {
     it('shows red color when spent > 105%', () => {
       render(<BudgetDonut spent={110000} remaining={-10000} />);
 
-      // Should trigger red threshold (>105%)
-      expect(screen.getByText(/110%/i)).toBeInTheDocument();
+      // Should show overspend warning
+      expect(screen.getByText(/Budget überschritten/i)).toBeInTheDocument();
     });
 
     it('correctly calculates percentage for overspend scenarios', () => {
       // Budget = 50k, Spent = 60k, Overspend = 10k (20% over)
       render(<BudgetDonut spent={60000} remaining={-10000} />);
 
-      expect(screen.getByText(/120%/i)).toBeInTheDocument();
       expect(screen.getByText(/\(20%\)/i)).toBeInTheDocument();
     });
   });

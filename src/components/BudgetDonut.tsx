@@ -7,26 +7,41 @@ type Props = {
   remaining: number;
   height?: number; // px height for the tile chart area
   itCostsTotal?: number; // IT-Kosten Summe (laufende Kosten)
+  yearBudget?: number | null; // Jahresbudget falls konfiguriert
+  projectBudgetSum?: number; // Summe der Projektbudgets (PLAN)
 };
 
-export const BudgetDonut: React.FC<Props> = ({ spent, remaining, itCostsTotal }) => {
+export const BudgetDonut: React.FC<Props> = ({ spent, remaining, itCostsTotal, yearBudget, projectBudgetSum }) => {
   const itCosts = itCostsTotal || 0;
   const spentSafe = Math.max(0, spent);
   const budgetPlanned = spentSafe + remaining; // Original budget
+  const projectBudgetPlanned = projectBudgetSum || 0;
 
   // Wenn IT-Kosten vorhanden: Jahresbudget - IT-Kosten - Projektausgaben = Verbleibend
   const adjustedRemaining = itCosts > 0 ? remaining - itCosts : remaining;
   const isOverBudget = adjustedRemaining < 0;
 
+  // PLAN-Ebene: Verplanung prüfen (IT-Kosten + Projektbudgets vs. Jahresbudget)
+  const hasYearBudget = yearBudget !== null && yearBudget !== undefined;
+  const totalCommitted = itCosts + projectBudgetPlanned; // Was ist schon verplant?
+  const availableForNewProjects = hasYearBudget ? Math.max(0, yearBudget - totalCommitted) : 0;
+  const isOverCommitted = hasYearBudget && totalCommitted > yearBudget;
+
   // Bei Überschreitung: Zeige vollen Kreis (100% = Budget) + Überschreitungs-Segment
   const overspend = isOverBudget ? Math.abs(adjustedRemaining) : 0;
   const remainingSafe = Math.max(0, adjustedRemaining);
 
-  // Neue Logik: 3 Segmente wenn IT-Kosten vorhanden
+  // IST-Ebene (innerer Ring): Ausgaben
   const totalBudget = Math.max(1, budgetPlanned + itCosts);
   const remainingPct = (remainingSafe / totalBudget) * 100;
   const spentPct = Math.round((spentSafe / totalBudget) * 100);
   const itCostsPct = Math.round((itCosts / totalBudget) * 100);
+
+  // PLAN-Ebene (äußerer Ring): Verplanung
+  const planBudget = hasYearBudget ? yearBudget : totalBudget;
+  const itCostsPctPlan = hasYearBudget ? Math.round((itCosts / planBudget) * 100) : itCostsPct;
+  const projectBudgetPctPlan = hasYearBudget ? Math.round((projectBudgetPlanned / planBudget) * 100) : 0;
+  const availablePctPlan = hasYearBudget ? Math.round((availableForNewProjects / planBudget) * 100) : 0;
 
   const remainingColor = remainingPct > 20 ? COLORS.green   // >20% frei = gut
                        : remainingPct > 10 ? COLORS.amber   // 10-20% frei = Warnung
@@ -34,8 +49,11 @@ export const BudgetDonut: React.FC<Props> = ({ spent, remaining, itCostsTotal })
   const spentColor = COLORS.blue;  // immer blau (neutral)
   const itCostsColor = '#6b7280'; // gray-500 (fixe Kosten)
   const overspendColor = '#991b1b'; // red-800 for overspend
+  const projectBudgetColor = '#7c3aed'; // violet-600 (geplante Projektbudgets)
+  const availableColor = isOverCommitted ? '#dc2626' : '#10b981'; // red-600 oder green-500
 
-  const data = isOverBudget
+  // Daten für IST-Ring (innerer Ring)
+  const dataInner = isOverBudget
     ? itCosts > 0
       ? [
           { name: 'IT-Kosten (fix)', value: itCosts },
@@ -57,12 +75,30 @@ export const BudgetDonut: React.FC<Props> = ({ spent, remaining, itCostsTotal })
           { name: 'Ausgegeben', value: spentSafe },
         ];
 
+  // Daten für PLAN-Ring (äußerer Ring) - nur wenn Jahresbudget vorhanden
+  const dataOuter = hasYearBudget
+    ? isOverCommitted
+      ? [
+          { name: 'IT-Kosten (fix) - Plan', value: itCosts },
+          { name: 'Projektbudgets geplant', value: projectBudgetPlanned },
+          { name: 'Überplanung', value: Math.abs(availableForNewProjects) },
+        ]
+      : [
+          { name: 'IT-Kosten (fix) - Plan', value: itCosts },
+          { name: 'Projektbudgets geplant', value: projectBudgetPlanned },
+          { name: 'Verfügbar für neue Projekte', value: availableForNewProjects },
+        ]
+    : null;
+
   const total = totalBudget + overspend;
   const fmt = (n: number) => new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(n);
 
   const chartHeight = 150;
-  const outer = 60;
-  const inner = 40;
+  // Nested Donut: Äußerer Ring (PLAN) größer, innerer Ring (IST) kleiner
+  const outerOuter = 65; // PLAN Ring außen
+  const outerInner = 50; // PLAN Ring innen
+  const innerOuter = 45; // IST Ring außen
+  const innerInner = 28; // IST Ring innen (Loch in der Mitte)
 
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
@@ -70,7 +106,18 @@ export const BudgetDonut: React.FC<Props> = ({ spent, remaining, itCostsTotal })
       const name = String(item.name).toLowerCase();
       let pct: number;
 
-      if (name.includes('überschreitung')) {
+      // PLAN-Ring (äußerer Ring)
+      if (name.includes('überplanung')) {
+        pct = Math.round((Math.abs(availableForNewProjects) / Math.max(1, planBudget)) * 100);
+      } else if (name.includes('verfügbar für neue projekte')) {
+        pct = availablePctPlan;
+      } else if (name.includes('projektbudgets geplant')) {
+        pct = projectBudgetPctPlan;
+      } else if (name.includes('plan')) {
+        pct = itCostsPctPlan;
+      }
+      // IST-Ring (innerer Ring)
+      else if (name.includes('überschreitung')) {
         pct = Math.round((overspend / Math.max(1, total)) * 100);
       } else if (name.includes('verbleibend')) {
         pct = Math.round((remainingSafe / Math.max(1, total)) * 100);
@@ -95,15 +142,29 @@ export const BudgetDonut: React.FC<Props> = ({ spent, remaining, itCostsTotal })
       <div className="relative flex-shrink-0" style={{ height: chartHeight, width: '100%' }}>
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
-            <Pie data={data} dataKey="value" nameKey="name" outerRadius={outer} innerRadius={inner} strokeWidth={0} isAnimationActive animationDuration={700}>
-              {data.map((entry, index) => {
+            {/* Äußerer Ring (PLAN): Nur wenn Jahresbudget vorhanden */}
+            {dataOuter && (
+              <Pie data={dataOuter} dataKey="value" nameKey="name" outerRadius={outerOuter} innerRadius={outerInner} strokeWidth={0} isAnimationActive animationDuration={700}>
+                {dataOuter.map((entry, index) => {
+                  const name = entry.name.toLowerCase();
+                  let fill = itCostsColor;
+                  if (name.includes('überplanung')) fill = overspendColor;
+                  else if (name.includes('verfügbar')) fill = availableColor;
+                  else if (name.includes('projektbudgets')) fill = projectBudgetColor;
+                  return <Cell key={`outer-${index}`} fill={fill} />;
+                })}
+              </Pie>
+            )}
+            {/* Innerer Ring (IST): Ausgaben */}
+            <Pie data={dataInner} dataKey="value" nameKey="name" outerRadius={innerOuter} innerRadius={innerInner} strokeWidth={0} isAnimationActive animationDuration={700}>
+              {dataInner.map((entry, index) => {
                 const name = entry.name.toLowerCase();
                 let fill = COLORS.blue;
                 if (name.includes('überschreitung')) fill = overspendColor;
                 else if (name.includes('verbleibend')) fill = remainingColor;
                 else if (name.includes('it-kosten')) fill = itCostsColor;
                 else if (name.includes('projekte') || name.includes('ausgegeben')) fill = spentColor;
-                return <Cell key={`cell-${index}`} fill={fill} />;
+                return <Cell key={`inner-${index}`} fill={fill} />;
               })}
             </Pie>
             <Tooltip content={<CustomTooltip />} />
@@ -123,38 +184,49 @@ export const BudgetDonut: React.FC<Props> = ({ spent, remaining, itCostsTotal })
           </div>
         )}
 
-        <div className="flex items-center justify-center text-xs flex-shrink-0">
-          {isOverBudget ? (
-            <div className="flex items-center gap-2 flex-wrap justify-center">
-              {itCosts > 0 && (
-                <>
-                  <span className="inline-block w-2.5 h-2.5 rounded-full" style={{ backgroundColor: itCostsColor }} aria-hidden />
-                  <span className="text-slate-700">IT-Kosten (fix): {fmt(itCosts)} ({itCostsPct}%)</span>
-                  <span className="text-slate-400">|</span>
-                </>
-              )}
-              <span className="inline-block w-2.5 h-2.5 rounded-full" style={{ backgroundColor: spentColor }} aria-hidden />
-              <span className="text-slate-700">{itCosts > 0 ? "Projekte" : "Ausgegeben"}: {fmt(spentSafe)} ({spentPct}%)</span>
+        {/* Legende: 2 Zeilen (Plan / Ist) wenn Jahresbudget vorhanden */}
+        <div className="flex flex-col gap-1 text-xs flex-shrink-0">
+          {/* PLAN-Zeile (äußerer Ring) */}
+          {hasYearBudget && (
+            <div className="flex items-center justify-center gap-2 flex-wrap">
+              <span className="text-slate-600 font-medium">Plan:</span>
+              <span className="inline-block w-2.5 h-2.5 rounded-full" style={{ backgroundColor: itCostsColor }} aria-hidden />
+              <span className="text-slate-700">IT-Kosten: {fmt(itCosts)}</span>
               <span className="text-slate-400">|</span>
-              <span className="inline-block w-2.5 h-2.5 rounded-full" style={{ backgroundColor: overspendColor }} aria-hidden />
-              <span className="text-red-600 font-medium">Überschr.: {fmt(overspend)}</span>
-            </div>
-          ) : (
-            <div className="flex items-center gap-2 flex-wrap justify-center">
-              {itCosts > 0 && (
-                <>
-                  <span className="inline-block w-2.5 h-2.5 rounded-full" style={{ backgroundColor: itCostsColor }} aria-hidden />
-                  <span className="text-slate-700">IT-Kosten (fix): {fmt(itCosts)} ({itCostsPct}%)</span>
-                  <span className="text-slate-400">|</span>
-                </>
-              )}
-              <span className="inline-block w-2.5 h-2.5 rounded-full" style={{ backgroundColor: spentColor }} aria-hidden />
-              <span className="text-slate-700">{itCosts > 0 ? "Projekte" : "Ausgegeben"}: {fmt(spentSafe)} ({spentPct}%)</span>
+              <span className="inline-block w-2.5 h-2.5 rounded-full" style={{ backgroundColor: projectBudgetColor }} aria-hidden />
+              <span className="text-slate-700">Projektbudgets: {fmt(projectBudgetPlanned)}</span>
               <span className="text-slate-400">|</span>
-              <span className="inline-block w-2.5 h-2.5 rounded-full" style={{ backgroundColor: remainingColor }} aria-hidden />
-              <span className="text-slate-800 font-medium">Verbleibend: {fmt(remainingSafe)} ({Math.round(remainingPct)}%)</span>
+              <span className="inline-block w-2.5 h-2.5 rounded-full" style={{ backgroundColor: availableColor }} aria-hidden />
+              <span className={isOverCommitted ? "text-red-600 font-medium" : "text-slate-700"}>
+                {isOverCommitted ? `Überplanung: ${fmt(Math.abs(availableForNewProjects))}` : `Verfügbar: ${fmt(availableForNewProjects)}`}
+              </span>
             </div>
           )}
+          {/* IST-Zeile (innerer Ring) */}
+          <div className="flex items-center justify-center gap-2 flex-wrap">
+            <span className="text-slate-600 font-medium">Ist:</span>
+            {itCosts > 0 && (
+              <>
+                <span className="inline-block w-2.5 h-2.5 rounded-full" style={{ backgroundColor: itCostsColor }} aria-hidden />
+                <span className="text-slate-700">IT-Kosten: {fmt(itCosts)}</span>
+                <span className="text-slate-400">|</span>
+              </>
+            )}
+            <span className="inline-block w-2.5 h-2.5 rounded-full" style={{ backgroundColor: spentColor }} aria-hidden />
+            <span className="text-slate-700">Projekte: {fmt(spentSafe)}</span>
+            <span className="text-slate-400">|</span>
+            {isOverBudget ? (
+              <>
+                <span className="inline-block w-2.5 h-2.5 rounded-full" style={{ backgroundColor: overspendColor }} aria-hidden />
+                <span className="text-red-600 font-medium">Überschr.: {fmt(overspend)}</span>
+              </>
+            ) : (
+              <>
+                <span className="inline-block w-2.5 h-2.5 rounded-full" style={{ backgroundColor: remainingColor }} aria-hidden />
+                <span className="text-slate-800 font-medium">Verbleibend: {fmt(remainingSafe)}</span>
+              </>
+            )}
+          </div>
         </div>
 
       </div>
