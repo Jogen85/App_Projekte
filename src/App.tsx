@@ -11,12 +11,12 @@ import {
 } from './lib';
 import FiltersPanel from './components/FiltersPanel';
 import Timeline from './components/Timeline';
+import DashboardTabs from './components/DashboardTabs';
 
 const ProjectsTable = lazy(() => import('./components/ProjectsTable'));
 const BudgetDonut = lazy(() => import('./components/BudgetDonut'));
 const ProgressDelta = lazy(() => import('./components/ProgressDelta'));
 const ProjectDelays = lazy(() => import('./components/ProjectDelays'));
-const ITCostsTable = lazy(() => import('./components/ITCostsTable'));
 
 const DEMO_PROJECTS: Project[] = [
   { id: 'p1', projectNumberInternal: 'PINT-2025-001', projectNumberExternal: 'VDB-2025-01', classification: 'project_vdbs',
@@ -319,6 +319,9 @@ export default function App() {
           />
         </header>
 
+        {/* Tabs */}
+        <DashboardTabs />
+
         {csvError && (
           <Card>
             <div className="text-sm text-red-600">CSV konnte nicht verarbeitet werden: {csvError}</div>
@@ -425,15 +428,6 @@ export default function App() {
             {kpis.budgetPlannedSum.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' })})
             übersteigen Jahresbudget (
             {currentYearBudget!.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' })})
-          </div>
-        )}
-
-        {/* IT-Kosten Tabelle */}
-        {itCosts.length > 0 && (
-          <div className="mt-6">
-            <Suspense fallback={<div className="h-96 bg-slate-100 rounded animate-pulse" />}>
-              <ITCostsTable costs={itCosts} year={year} />
-            </Suspense>
           </div>
         )}
       </div>

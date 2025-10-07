@@ -4,6 +4,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import App from "./App";
 import ProjectsAdmin from "./pages/ProjectsAdmin";
 import ITCostsAdmin from "./pages/ITCostsAdmin";
+import ITCostsDashboard from "./pages/ITCostsDashboard";
 import "./index.css";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
@@ -11,6 +12,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<App />} />
+        <Route path="/it-costs" element={<ITCostsDashboard />} />
         <Route path="/admin" element={<ProjectsAdmin />} />
         <Route path="/admin/it-costs" element={<ITCostsAdmin />} />
       </Routes>
