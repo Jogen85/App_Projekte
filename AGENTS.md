@@ -7,7 +7,9 @@ Source lives under `src/`. The React entry point is `src/main.tsx`; shared primi
 Use `npm run dev` for the Vite dev server with HMR at http://localhost:5173. `npm run build` runs `tsc -b` and bundles for production. `npm run preview` serves the last build locally. `npm run typecheck` performs strict TypeScript checks without emitting files. `npm run lint` executes ESLint with the repository rules. `npm run test` runs Vitest once; use `npm run test:watch` for interactive mode.
 
 ## Coding Style & Naming Conventions
-Follow 2-space indentation, sorted imports, and remove unused symbols. Components and files are PascalCase, hooks follow the `useX` pattern, and utility modules stay camelCase. Favor Tailwind utilities; adjust shared tokens in `src/index.css` when necessary. UI copy remains German (e.g., `Verantwortlicher MA`, `Fortschritt %`, `CSV-Export`).
+Always use context7 when I need code generation, setup or configuration steps, or
+library/API documentation. This means you should automatically use the Context7 MCP
+tools to resolve library id and get library docs without me having to explicitly ask, Follow 2-space indentation, sorted imports, and remove unused symbols. Components and files are PascalCase, hooks follow the `useX` pattern, and utility modules stay camelCase. Favor Tailwind utilities; adjust shared tokens in `src/index.css` when necessary. UI copy remains German (e.g., `Verantwortlicher MA`, `Fortschritt %`, `CSV-Export`).
 
 ## Testing Guidelines
 Vitest with React Testing Library covers logic and rendering. Exercise prop variants, memoized data flows, and timeline edge cases. Keep tests fast, colocated, and mock CSV fetches when exploring data-loading paths. Run `npm run test -- --coverage` before larger refactors to spot regressions.

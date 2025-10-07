@@ -8,6 +8,11 @@ import ITCostsDashboard from "./pages/ITCostsDashboard";
 import VDBSBudgetDashboard from "./pages/VDBSBudgetDashboard";
 import VDBSBudgetAdmin from "./pages/VDBSBudgetAdmin";
 import "./index.css";
+import { ensureSeedData } from "./db/projectsDb";
+
+ensureSeedData().catch((error) => {
+  console.error("Failed to prepare IndexedDB", error);
+});
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>

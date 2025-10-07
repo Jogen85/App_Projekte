@@ -1,8 +1,10 @@
-import { Suspense, lazy, useEffect, useMemo, useState } from 'react';
+import { Suspense, lazy, useMemo, useState } from 'react';
+import { useLiveQuery } from 'dexie-react-hooks';
 import { Card, COLORS } from '../ui';
 import type { ITCost, ITCostCategory } from '../types';
 import { fmtDate, getToday, getCurrentYear, getITCostsByCategoryD, getITCostsByProviderD } from '../lib';
 import DashboardTabs from '../components/DashboardTabs';
+import { loadITCosts } from '../db/projectsDb';
 
 const ITCostsByCategoryChart = lazy(() => import('../components/ITCostsByCategoryChart'));
 const ITCostsByProviderChart = lazy(() => import('../components/ITCostsByProviderChart'));
@@ -11,24 +13,9 @@ const ITCostsTrendChart = lazy(() => import('../components/ITCostsTrendChart'));
 const ITCostsTable = lazy(() => import('../components/ITCostsTable'));
 
 export default function ITCostsDashboard() {
-  const [itCosts, setITCosts] = useState<ITCost[]>([]);
+  const itCosts = useLiveQuery(loadITCosts, [], [] as ITCost[]);
   const [year, setYear] = useState<number>(() => getCurrentYear());
   const today = getToday();
-
-  // IT-Kosten laden
-  useEffect(() => {
-    try {
-      const ls = localStorage.getItem('itCosts');
-      if (ls) {
-        const parsed = JSON.parse(ls);
-        if (Array.isArray(parsed)) {
-          setITCosts(parsed);
-        }
-      }
-    } catch (e) {
-      console.error('Failed to load IT costs:', e);
-    }
-  }, []);
 
   // Nach Jahr filtern
   const yearCosts = useMemo(() => itCosts.filter((c) => c.year === year), [itCosts, year]);

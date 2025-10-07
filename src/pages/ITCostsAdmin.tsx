@@ -1,198 +1,41 @@
 import { useEffect, useState, useMemo } from 'react';
+import { useLiveQuery } from 'dexie-react-hooks';
 import { parseITCostsCSV, serializeITCostsCSV } from '../lib/csv';
-import { ITCost, ITCostCategory, ITCostFrequency, YearBudget } from '../types';
+import { ITCost, ITCostCategory, ITCostFrequency, YearBudget, Project } from '../types';
 import { calculateYearlyCostD, getITCostsByCategoryD, plannedBudgetForYearD, toDate } from '../lib';
-
-const DEMO_IT_COSTS: ITCost[] = [
-  {
-    id: '1',
-    description: 'Microsoft 365 Business Standard (50 Lizenzen)',
-    category: 'software_licenses',
-    provider: 'Microsoft',
-    amount: 625,
-    frequency: 'monthly',
-    startDate: '2024-01-01',
-    endDate: '',
-    costCenter: 'IT',
-    notes: 'Vertragsnummer: MS-2024-001',
-    year: 2025,
-  },
-  {
-    id: '2',
-    description: 'Adobe Creative Cloud (10 Lizenzen)',
-    category: 'software_licenses',
-    provider: 'Adobe',
-    amount: 599,
-    frequency: 'monthly',
-    startDate: '2024-06-01',
-    endDate: '',
-    costCenter: 'Marketing',
-    notes: '',
-    year: 2025,
-  },
-  {
-    id: '3',
-    description: 'Server-Wartung (Dell PowerEdge)',
-    category: 'maintenance_service',
-    provider: 'Dell',
-    amount: 4500,
-    frequency: 'yearly',
-    startDate: '2024-03-01',
-    endDate: '2026-03-01',
-    costCenter: 'IT',
-    notes: 'Verlängerung alle 2 Jahre',
-    year: 2025,
-  },
-  {
-    id: '4',
-    description: 'Cisco Meraki Lizenz (40 Access Points)',
-    category: 'software_licenses',
-    provider: 'Cisco',
-    amount: 1200,
-    frequency: 'yearly',
-    startDate: '2023-01-01',
-    endDate: '',
-    costCenter: 'IT',
-    notes: 'Auto-Renewal aktiv',
-    year: 2025,
-  },
-  {
-    id: '5',
-    description: 'Atlassian Jira + Confluence (30 User)',
-    category: 'software_licenses',
-    provider: 'Atlassian',
-    amount: 450,
-    frequency: 'monthly',
-    startDate: '2024-01-01',
-    endDate: '',
-    costCenter: 'IT',
-    notes: '',
-    year: 2025,
-  },
-  {
-    id: '6',
-    description: 'Firewall-Wartung (Fortinet)',
-    category: 'maintenance_service',
-    provider: 'Fortinet',
-    amount: 800,
-    frequency: 'quarterly',
-    startDate: '2024-01-01',
-    endDate: '',
-    costCenter: 'IT',
-    notes: 'Support & Updates',
-    year: 2025,
-  },
-  {
-    id: '7',
-    description: 'Backup-Lösung (Veeam)',
-    category: 'software_licenses',
-    provider: 'Veeam',
-    amount: 2400,
-    frequency: 'yearly',
-    startDate: '2024-07-01',
-    endDate: '',
-    costCenter: 'IT',
-    notes: 'Enterprise Plus Edition',
-    year: 2025,
-  },
-  {
-    id: '8',
-    description: 'Cybersecurity-Schulung (Mitarbeiter)',
-    category: 'training',
-    provider: 'TÜV Rheinland',
-    amount: 3500,
-    frequency: 'one_time',
-    startDate: '2025-03-15',
-    endDate: '2025-03-15',
-    costCenter: 'HR',
-    notes: 'Jährliche Pflichtschulung',
-    year: 2025,
-  },
-  {
-    id: '9',
-    description: 'Hardware-Refresh (20 PCs)',
-    category: 'hardware',
-    provider: 'Dell',
-    amount: 25000,
-    frequency: 'one_time',
-    startDate: '2025-06-01',
-    endDate: '2025-06-01',
-    costCenter: 'IT',
-    notes: 'Ersatz für 2019er Modelle',
-    year: 2025,
-  },
-  {
-    id: '10',
-    description: 'Zoom Enterprise (100 Lizenzen)',
-    category: 'software_licenses',
-    provider: 'Zoom',
-    amount: 160,
-    frequency: 'monthly',
-    startDate: '2024-01-01',
-    endDate: '',
-    costCenter: 'IT',
-    notes: '',
-    year: 2025,
-  },
-  {
-    id: '11',
-    description: 'SAP S/4HANA Lizenz',
-    category: 'software_licenses',
-    provider: 'SAP',
-    amount: 12000,
-    frequency: 'yearly',
-    startDate: '2023-01-01',
-    endDate: '',
-    costCenter: 'Finanzen',
-    notes: 'Enterprise-Vertrag',
-    year: 2025,
-  },
-  {
-    id: '12',
-    description: 'Externe IT-Beratung',
-    category: 'other',
-    provider: 'Capgemini',
-    amount: 8000,
-    frequency: 'quarterly',
-    startDate: '2024-01-01',
-    endDate: '2025-12-31',
-    costCenter: 'IT',
-    notes: 'Strategieberatung',
-    year: 2025,
-  },
-];
+import { DEMO_IT_COSTS } from '../data/demoData';
+import {
+  loadITCosts,
+  saveITCosts as persistITCosts,
+  loadYearBudgets,
+  loadProjects,
+} from '../db/projectsDb';
 
 export default function ITCostsAdmin() {
   const [costs, setCosts] = useState<ITCost[]>([]);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [editingId, setEditingId] = useState<string | null>(null);
   const [yearBudgets, setYearBudgets] = useState<YearBudget[]>([]);
+  const costsFromDb = useLiveQuery(loadITCosts, [], DEMO_IT_COSTS);
+  const yearBudgetsFromDb = useLiveQuery(loadYearBudgets, [], [] as YearBudget[]);
+  const projectsFromDb = useLiveQuery(loadProjects, [], [] as Project[]);
 
-  // localStorage laden
   useEffect(() => {
-    const stored = localStorage.getItem('itCosts');
-    if (stored) {
-      try {
-        setCosts(JSON.parse(stored));
-      } catch (e) {
-        console.error('Failed to parse itCosts:', e);
-        setCosts(DEMO_IT_COSTS);
-        localStorage.setItem('itCosts', JSON.stringify(DEMO_IT_COSTS));
-      }
-    } else {
-      setCosts(DEMO_IT_COSTS);
-      localStorage.setItem('itCosts', JSON.stringify(DEMO_IT_COSTS));
-    }
+    setCosts(costsFromDb);
+  }, [costsFromDb]);
 
-    const storedBudgets = localStorage.getItem('yearBudgets');
-    if (storedBudgets) {
-      try {
-        setYearBudgets(JSON.parse(storedBudgets));
-      } catch (e) {
-        console.error('Failed to parse yearBudgets:', e);
-      }
+  useEffect(() => {
+    setYearBudgets(yearBudgetsFromDb);
+  }, [yearBudgetsFromDb]);
+
+  const saveCosts = async (updated: ITCost[]) => {
+    setCosts(updated);
+    try {
+      await persistITCosts(updated);
+    } catch (error) {
+      console.error('Failed to persist IT costs', error);
     }
-  }, []);
+  };
 
   // Nach Jahr filtern
   const filteredCosts = useMemo(
@@ -208,33 +51,20 @@ export default function ITCostsAdmin() {
     return getITCostsByCategoryD(filteredCosts, selectedYear).total;
   }, [filteredCosts, selectedYear]);
 
-  // Projektbudgets Summe (anteilig aus localStorage)
+  // Projektbudgets Summe (anteilig aus Projektdatenbank)
   const projectBudgetsTotal = useMemo(() => {
-    const stored = localStorage.getItem('projects_json');
-    if (!stored) return 0;
-    try {
-      const projects = JSON.parse(stored);
-      return projects.reduce((sum: number, p: any) => {
-        const normalized = {
-          startD: toDate(p.start),
-          endD: toDate(p.end),
-          budgetPlanned: p.budgetPlanned || 0,
-        };
-        return sum + plannedBudgetForYearD(normalized, selectedYear);
-      }, 0);
-    } catch (e) {
-      return 0;
-    }
-  }, [selectedYear]);
+    return projectsFromDb.reduce((sum: number, project) => {
+      const normalized = {
+        startD: toDate(project.start),
+        endD: toDate(project.end),
+        budgetPlanned: project.budgetPlanned || 0,
+      };
+      return sum + plannedBudgetForYearD(normalized, selectedYear);
+    }, 0);
+  }, [projectsFromDb, selectedYear]);
 
   // Warnung bei Überplanung
   const showBudgetWarning = yearBudget && itCostsTotal + projectBudgetsTotal > yearBudget.budget;
-
-  // Speichern
-  const saveCosts = (updated: ITCost[]) => {
-    setCosts(updated);
-    localStorage.setItem('itCosts', JSON.stringify(updated));
-  };
 
   // CRUD
   const handleAdd = () => {
@@ -251,17 +81,17 @@ export default function ITCostsAdmin() {
       notes: '',
       year: selectedYear,
     };
-    saveCosts([...costs, newCost]);
+    void saveCosts([...costs, newCost]);
     setEditingId(newCost.id);
   };
 
   const handleDelete = (id: string) => {
     if (!confirm('Wirklich löschen?')) return;
-    saveCosts(costs.filter((c) => c.id !== id));
+    void saveCosts(costs.filter((c) => c.id !== id));
   };
 
   const handleUpdate = (id: string, field: keyof ITCost, value: any) => {
-    saveCosts(costs.map((c) => (c.id === id ? { ...c, [field]: value } : c)));
+    void saveCosts(costs.map((c) => (c.id === id ? { ...c, [field]: value } : c)));
   };
 
   // CSV Import
@@ -274,7 +104,7 @@ export default function ITCostsAdmin() {
       const csv = ev.target?.result as string;
       const parsed = parseITCostsCSV(csv);
       if (parsed.length > 0) {
-        saveCosts(parsed);
+        void saveCosts(parsed);
         alert(`${parsed.length} IT-Kostenpositionen importiert`);
       } else {
         alert('CSV-Import fehlgeschlagen');

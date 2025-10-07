@@ -1,4 +1,5 @@
-﻿import '@testing-library/jest-dom/vitest';
+﻿import 'fake-indexeddb/auto';
+import '@testing-library/jest-dom/vitest';
 
 // Mock ResizeObserver for Recharts components
 global.ResizeObserver = class ResizeObserver {

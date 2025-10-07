@@ -1,4 +1,5 @@
-import React, { Suspense, lazy, useEffect, useMemo, useState } from 'react';
+import React, { Suspense, lazy, useMemo, useState } from 'react';
+import { useLiveQuery } from 'dexie-react-hooks';
 import { Card, COLORS } from './ui';
 import { parseProjectsCSV, projectsToCSV } from './lib/csv';
 import type { Project, NormalizedProject, YearBudget, ITCost, VDBSBudgetItem } from './types';
@@ -12,102 +13,27 @@ import {
 import FiltersPanel from './components/FiltersPanel';
 import Timeline from './components/Timeline';
 import DashboardTabs from './components/DashboardTabs';
+import { DEMO_PROJECTS } from './data/demoData';
+import {
+  loadProjects,
+  saveProjects as persistProjects,
+  loadYearBudgets,
+  loadITCosts,
+  loadVDBSBudget,
+} from './db/projectsDb';
 
 const ProjectsTable = lazy(() => import('./components/ProjectsTable'));
 const BudgetDonut = lazy(() => import('./components/BudgetDonut'));
 const ProgressDelta = lazy(() => import('./components/ProgressDelta'));
 const ProjectDelays = lazy(() => import('./components/ProjectDelays'));
 
-const DEMO_PROJECTS: Project[] = [
-  { id: 'p1', projectNumberInternal: 'PINT-2025-001', projectNumberExternal: 'VDB-2025-01', classification: 'project_vdbs',
-    title: 'DMS Aktenplan Migration (MBG)', owner: 'Christian Jürgens', description: 'Migration d.velop DMS der BB in die d.3 Cloud der MBG',
-    status: 'active', start: '2025-05-01', end: '2025-12-01', progress: 70, budgetPlanned: 120000, costToDate: 70000, org: 'MBG',
-    requiresAT82Check: false, at82Completed: false },
-  { id: 'p2', projectNumberInternal: 'PINT-2025-002', projectNumberExternal: 'CRM-2025-02', classification: 'project_vdbs',
-    title: 'Vertragsmanagement in d.3 (MBG)', owner: 'Michael Meis u. Ramona Friedrich', description: 'Aufbau eines Vertragsmanagements in d.3',
-    status: 'active', start: '2025-03-10', end: '2025-10-31', progress: 80, budgetPlanned: 60000, costToDate: 58000, org: 'BB',
-    requiresAT82Check: false, at82Completed: false },
-  { id: 'p3', projectNumberInternal: 'PINT-2025-003', projectNumberExternal: 'CRM-2025-03', classification: 'project_vdbs',
-    title: 'E-Eingangsrechnung in d.3 (MBG)', owner: 'Maren Kreis', description: 'Implementierung E-Eingangsrechnungsprozess über d.3',
-    status: 'active', start: '2025-07-01', end: '2025-11-30', progress: 35, budgetPlanned: 40000, costToDate: 12000, org: 'MBG',
-    requiresAT82Check: true, at82Completed: false },
-  { id: 'p4', projectNumberInternal: 'PINT-2025-004', projectNumberExternal: 'VDB-2025-04', classification: 'internal_dev',
-    title: 'Auslagerungsmanagement in Forum OSM (BB)', owner: 'Angela Ihns', description: 'Auslagerungsmanagement in Forum OSM aufbauen',
-    status: 'planned', start: '2025-11-01', end: '2026-02-28', progress: 0, budgetPlanned: 75000, costToDate: 0, org: 'BB',
-    requiresAT82Check: false, at82Completed: false },
-  { id: 'p5', projectNumberInternal: 'PINT-2025-005', projectNumberExternal: 'VDB-2025-05', classification: 'internal_dev',
-    title: 'Placetel-Webex Migration', owner: 'Christian Jürgens', description: 'Migrierte Telefonie/Collab-Plattform inkl. Endgeräte',
-    status: 'done', start: '2024-09-01', end: '2025-03-31', progress: 100, budgetPlanned: 15000, costToDate: 14500, org: 'BB',
-    requiresAT82Check: true, at82Completed: true },
-  { id: 'p6', projectNumberInternal: 'PINT-2025-006', projectNumberExternal: 'ERECH-2025-06', classification: 'project',
-    title: 'CRM light - MANTAU', owner: 'Chris Collin', description: 'Einführung einer CRM Lösung für Bürgschaftsbank und MBG',
-    status: 'planned', start: '2025-09-20', end: '2025-12-20', progress: 0, budgetPlanned: 10000, costToDate: 0, org: 'BB/MBG',
-    requiresAT82Check: false, at82Completed: false },
-  { id: 'p7', projectNumberInternal: 'PINT-2025-007', projectNumberExternal: undefined, classification: 'task',
-    title: 'Einführung DealMap', owner: 'Jens Körtge', description: 'Einführung der Kernbanken-Software DealMap für das Beteiligungsmanagement',
-    status: 'done', start: '2024-02-01', end: '2025-06-01', progress: 100, budgetPlanned: 100000, costToDate: 110000, org: 'MBG',
-    requiresAT82Check: false, at82Completed: false },
-  { id: 'p8', projectNumberInternal: 'PINT-2025-008', projectNumberExternal: 'ERECH-2025-08', classification: 'project_vdbs',
-    title: 'elektronische Personalakte d.3 (MBG)', owner: 'Michael Meis u. Ramona Friedrich', description: 'Digitale Personalakte - Verwaltung von den Bewerbungsunterlagen über das Vertragswerk bis hin zur Krankmeldung von sämtlichen Personaldokumente- Ziel: beschleunigt die Abwicklung der HR-Prozesse und einhaltung von Aufbewahrungsfristen',
-    status: 'planned', start: '2025-11-01', end: '2026-03-01', progress: 0, budgetPlanned: 5000, costToDate: 0, org: 'MBG',
-    requiresAT82Check: true, at82Completed: false },
-  { id: 'p9', projectNumberInternal: 'PINT-2025-009', projectNumberExternal: 'CRM-2025-09', classification: 'project_vdbs',
-    title: 'elektronische Unterschrift über d.velop Sign (MBG)', owner: 'Christian Jürgens', description: 'elektronische Unterschrift über d.velop Sign (MBG)',
-    status: 'done', start: '2025-06-01', end: '2025-09-01', progress: 100, budgetPlanned: 0, costToDate: 0, org: 'BB',
-    requiresAT82Check: false, at82Completed: false },
-  { id: 'p10', projectNumberInternal: 'PINT-2025-010', projectNumberExternal: undefined, classification: 'project',
-    title: 'elektronische Unterschrift über d.velop Sign (BB)', owner: 'Christian Jürgens', description: 'elektronische Unterschrift über d.velop Sign (BB)',
-    status: 'planned', start: '2025-11-01', end: '2025-12-20', progress: 0, budgetPlanned: 0, costToDate: 0, org: 'BB',
-    requiresAT82Check: false, at82Completed: false },
-  { id: 'p11', projectNumberInternal: 'PINT-2025-011', projectNumberExternal: 'CRM-2025-11', classification: 'project',
-    title: 'neue Servertechnik lokal (BB/MBG)', owner: 'Christian Jürgens', description: 'neue Servertechnik lokal (BB/MBG)',
-    status: 'active', start: '2025-08-01', end: '2025-10-31', progress: 50, budgetPlanned: 0, costToDate: 0, org: 'BB/MBG',
-    requiresAT82Check: false, at82Completed: false },
-  { id: 'p12', projectNumberInternal: 'PINT-2025-012', projectNumberExternal: 'DORA-2025-12', classification: 'project',
-    title: 'E-Ausgangsrechnung in d.3 (MBG)', owner: 'Christian Jürgens', description: 'E-Ausgangsrechnung in d.3 (MBG)',
-    status: 'planned', start: '2025-11-01', end: '2025-12-20', progress: 0, budgetPlanned: 0, costToDate: 0, org: 'BB',
-    requiresAT82Check: false, at82Completed: false },
-  { id: 'p13', projectNumberInternal: 'PINT-2025-013', projectNumberExternal: 'ERECH-2025-13', classification: 'internal_dev',
-    title: 'Life Cycle Management', owner: 'Christian Jürgens', description: 'Life Cycle Management im IT-Bereich einführen',
-    status: 'planned', start: '2025-11-01', end: '2025-12-20', progress: 0, budgetPlanned: 0, costToDate: 0, org: 'BB',
-    requiresAT82Check: false, at82Completed: false },
-  { id: 'p14', projectNumberInternal: 'PINT-2025-014', projectNumberExternal: 'CRM-2025-14', classification: 'project_vdbs',
-    title: 'OHB-Infrastruktur über d.3 (BMV)', owner: 'Christian Jürgens', description: 'OHB-Infrastruktur über d.3 (BMV)',
-    status: 'active', start: '2025-06-01', end: '2025-12-20', progress: 40, budgetPlanned: 0, costToDate: 0, org: 'BB',
-    requiresAT82Check: false, at82Completed: false },
-  { id: 'p15', projectNumberInternal: 'PINT-2025-015', projectNumberExternal: 'CRM-2025-15', classification: 'project',
-    title: 'OHB-Infrastruktur über d.3 (MBG)', owner: 'Christian Jürgens', description: 'OHB-Infrastruktur über d.3 (MBG)',
-    status: 'active', start: '2025-06-01', end: '2025-12-20', progress: 40, budgetPlanned: 0, costToDate: 0, org: 'BB',
-    requiresAT82Check: false, at82Completed: false },
-  { id: 'p16', projectNumberInternal: 'PINT-2025-016', projectNumberExternal: 'VDB-2025-16', classification: 'project',
-    title: 'Überarbeitung IT-OHB für DORA (BB)', owner: 'Christian Jürgens', description: 'Überarbeitung IT-OHB für DORA (BB)',
-    status: 'active', start: '2025-06-01', end: '2025-12-20', progress: 40, budgetPlanned: 0, costToDate: 0, org: 'BB',
-    requiresAT82Check: false, at82Completed: false },
-  { id: 'p17', projectNumberInternal: 'PINT-2025-017', projectNumberExternal: 'VDB-2025-17', classification: 'task',
-    title: 'Update d.3 auf Annual 2025 (BB)', owner: 'Christian Jürgens', description: 'Update d.3 auf Annual 2025 (BB)',
-    status: 'planned', start: '2025-11-01', end: '2025-12-20', progress: 0, budgetPlanned: 0, costToDate: 0, org: 'BB',
-    requiresAT82Check: false, at82Completed: false },
-  { id: 'p18', projectNumberInternal: 'PINT-2025-018', projectNumberExternal: 'DORA-2025-18', classification: 'internal_dev',
-    title: 'Anbindung fides an AD (BB)', owner: 'Christian Jürgens', description: 'Anbindung fides an Active Directory (AD) + Überarbeitung der Berechtigungsgruppen',
-    status: 'planned', start: '2025-11-01', end: '2025-12-20', progress: 0, budgetPlanned: 0, costToDate: 0, org: 'BB',
-    requiresAT82Check: false, at82Completed: false },
-  { id: 'p19', projectNumberInternal: 'PINT-2025-019', projectNumberExternal: 'ERECH-2025-19', classification: 'task',
-    title: 'Reisekostenabrechnung BMV/MBG', owner: 'Christian Jürgens', description: 'Reisekostenabrechnung BMV/MBG über Circular',
-    status: 'planned', start: '2025-11-01', end: '2025-12-20', progress: 0, budgetPlanned: 0, costToDate: 0, org: 'BB',
-    requiresAT82Check: false, at82Completed: false },
-  { id: 'p20', projectNumberInternal: 'PINT-2025-020', projectNumberExternal: 'ERECH-2025-20', classification: 'project',
-    title: 'Rollenkonzept erstellen', owner: 'Christian Jürgens', description: 'Rollenkonzept erstellen',
-    status: 'active', start: '2025-10-06', end: '2025-10-10', progress: 5, budgetPlanned: 0, costToDate: 0, org: 'BB/MBG',
-    requiresAT82Check: false, at82Completed: false },
-  { id: 'p21', projectNumberInternal: 'PINT-2025-021', projectNumberExternal: 'CRM-2025-21', classification: 'project',
-    title: 'Rezertifizierung', owner: 'Christian Jürgens', description: 'Rezertifizierung über neues Tool',
-    status: 'planned', start: '2025-10-13', end: '2025-10-20', progress: 0, budgetPlanned: 0, costToDate: 0, org: 'BB/MBG',
-    requiresAT82Check: false, at82Completed: false },
-];
 
 export default function App() {
   const today = getToday();
-  const [projects, setProjects] = useState<Project[]>(DEMO_PROJECTS);
+  const projects = useLiveQuery(loadProjects, [], DEMO_PROJECTS);
+  const yearBudgets = useLiveQuery(loadYearBudgets, [], [] as YearBudget[]);
+  const itCosts = useLiveQuery(loadITCosts, [], [] as ITCost[]);
+  const vdbsBudget = useLiveQuery(loadVDBSBudget, [], [] as VDBSBudgetItem[]);
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [orgFilter, setOrgFilter] = useState<string>('all');
   const [classificationFilter, setClassificationFilter] = useState<string>('all');
@@ -116,57 +42,6 @@ export default function App() {
   const [csvError, setCsvError] = useState<string | null>(null);
   const [at82RequiredFilter, setAt82RequiredFilter] = useState<string>('all');
   const [at82CompletedFilter, setAt82CompletedFilter] = useState<string>('all');
-  const [yearBudgets, setYearBudgets] = useState<YearBudget[]>([]);
-  const [itCosts, setITCosts] = useState<ITCost[]>([]);
-  const [vdbsBudget, setVDBSBudget] = useState<VDBSBudgetItem[]>([]);
-
-  useEffect(() => {
-    try {
-      const ls = localStorage.getItem('projects_json');
-      if (ls) {
-        const parsed = JSON.parse(ls);
-        if (parsed && parsed.length > 0) {
-          setProjects(parsed);
-        }
-      }
-    } catch (e) { /* ignore */ }
-  }, []);
-
-  useEffect(() => {
-    try {
-      const ls = localStorage.getItem('yearBudgets');
-      if (ls) {
-        const parsed = JSON.parse(ls);
-        if (Array.isArray(parsed)) {
-          setYearBudgets(parsed);
-        }
-      }
-    } catch (e) { /* ignore */ }
-  }, []);
-
-  useEffect(() => {
-    try {
-      const ls = localStorage.getItem('itCosts');
-      if (ls) {
-        const parsed = JSON.parse(ls);
-        if (Array.isArray(parsed)) {
-          setITCosts(parsed);
-        }
-      }
-    } catch (e) { /* ignore */ }
-  }, []);
-
-  useEffect(() => {
-    try {
-      const ls = localStorage.getItem('vdbsBudget');
-      if (ls) {
-        const parsed = JSON.parse(ls);
-        if (Array.isArray(parsed)) {
-          setVDBSBudget(parsed);
-        }
-      }
-    } catch (e) { /* ignore */ }
-  }, []);
 
   const normalized: NormalizedProject[] = useMemo(() =>
     projects.map((p) => ({
@@ -262,7 +137,9 @@ export default function App() {
     try {
       const text = await file.text();
       const rows = parseProjectsCSV(text);
-      if (rows.length) setProjects(rows as Project[]);
+      if (rows.length) {
+        await persistProjects(rows as Project[]);
+      }
       setCsvError(null);
     } catch (e: any) {
       setCsvError(e?.message || 'CSV konnte nicht geladen werden.');
@@ -455,7 +332,5 @@ export default function App() {
     </div>
   );
 }
-
-
 
 

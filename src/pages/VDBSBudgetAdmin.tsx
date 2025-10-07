@@ -1,8 +1,11 @@
 import { useEffect, useState } from 'react';
+import { useLiveQuery } from 'dexie-react-hooks';
 import { Link } from 'react-router-dom';
 import { VDBSBudgetItem } from '../types';
 import { Card } from '../ui';
 import { parseVDBSBudgetCSV, serializeVDBSBudgetCSV, readFileAsText } from '../lib/csv';
+import { DEMO_VDBS_BUDGET } from '../data/demoData';
+import { loadVDBSBudget, saveVDBSBudget as persistVDBSBudget } from '../db/projectsDb';
 
 export default function VDBSBudgetAdmin() {
   const [items, setItems] = useState<VDBSBudgetItem[]>([]);
@@ -10,27 +13,23 @@ export default function VDBSBudgetAdmin() {
   const [selectedYear, setSelectedYear] = useState(2026);
   const [msg, setMsg] = useState<string>('');
 
-  // Load from localStorage
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem('vdbsBudget');
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          setItems(parsed);
-        }
-      }
-    } catch (e) {
-      console.error('Failed to load VDB-S Budget:', e);
-    }
-  }, []);
+  const itemsFromDb = useLiveQuery(loadVDBSBudget, [], DEMO_VDBS_BUDGET);
 
-  // Auto-save
-  const saveItems = (updated: VDBSBudgetItem[]) => {
+  useEffect(() => {
+    setItems(itemsFromDb);
+  }, [itemsFromDb]);
+
+  const saveItems = async (updated: VDBSBudgetItem[]) => {
     setItems(updated);
-    localStorage.setItem('vdbsBudget', JSON.stringify(updated));
-    setMsg('✓ Änderungen gespeichert');
-    setTimeout(() => setMsg(''), 2000);
+    try {
+      await persistVDBSBudget(updated);
+      setMsg('✓ Änderungen gespeichert');
+      setTimeout(() => setMsg(''), 2000);
+    } catch (error) {
+      console.error('Failed to persist VDB-S budget', error);
+      setMsg('❌ Speichern fehlgeschlagen');
+      setTimeout(() => setMsg(''), 2000);
+    }
   };
 
   // CRUD operations
@@ -43,17 +42,17 @@ export default function VDBSBudgetAdmin() {
       budget2026: 0,
       year: selectedYear,
     };
-    saveItems([...items, newItem]);
+    void saveItems([...items, newItem]);
     setEditingId(newItem.id);
   };
 
   const handleDelete = (id: string) => {
     if (!confirm('Wirklich löschen?')) return;
-    saveItems(items.filter((item) => item.id !== id));
+    void saveItems(items.filter((item) => item.id !== id));
   };
 
   const handleUpdate = (id: string, field: keyof VDBSBudgetItem, value: any) => {
-    saveItems(
+    void saveItems(
       items.map((item) =>
         item.id === id
           ? {
@@ -74,7 +73,7 @@ export default function VDBSBudgetAdmin() {
       const text = await readFileAsText(file);
       const parsed = parseVDBSBudgetCSV(text);
       if (parsed.length > 0) {
-        saveItems(parsed);
+        void saveItems(parsed);
         setMsg(`✓ ${parsed.length} Positionen importiert`);
       } else {
         setMsg('⚠️ CSV-Import fehlgeschlagen (keine gültigen Zeilen)');
