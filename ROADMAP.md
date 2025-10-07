@@ -432,3 +432,8 @@ Ein Feature ist "done", wenn:
 - **Zusätzliche Verbesserungen**:
   - Dashboard Header vereinfacht (Commit `1950d8e`)
   - Sticky Header für Admin-Tabelle (Commit `8a1fadf`)
+
+### IT-Cockpit & Gesamtbudget
+- [x] Cockpit als neue Einstiegsseite mit KPIs, Budgetwarnungen, Deadlines
+- [x] Gesamtbudget-Tab (`/overall-budget`) kombiniert Projekte, IT-Kosten, VDB-S
+- [ ] Cockpit-Visualisierungen (Charts, Historien) weiter ausbauen

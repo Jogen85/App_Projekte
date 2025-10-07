@@ -89,7 +89,7 @@ const PINProtection: React.FC<PINProtectionProps> = ({
 
           <div className="text-center">
             <a
-              href="/"
+              href="/projects"
               className="text-sm text-blue-600 hover:underline"
             >
               Zurück zum Dashboard

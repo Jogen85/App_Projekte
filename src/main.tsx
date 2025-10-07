@@ -7,6 +7,8 @@ import ITCostsAdmin from "./pages/ITCostsAdmin";
 import ITCostsDashboard from "./pages/ITCostsDashboard";
 import VDBSBudgetDashboard from "./pages/VDBSBudgetDashboard";
 import VDBSBudgetAdmin from "./pages/VDBSBudgetAdmin";
+import ProjectsDashboard from "./pages/ProjectsDashboard";
+import OverallBudgetDashboard from "./pages/OverallBudgetDashboard";
 import "./index.css";
 import { ensureSeedData } from "./db/projectsDb";
 
@@ -19,6 +21,8 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<App />} />
+        <Route path="/projects" element={<ProjectsDashboard />} />
+        <Route path="/overall-budget" element={<OverallBudgetDashboard />} />
         <Route path="/it-costs" element={<ITCostsDashboard />} />
         <Route path="/vdbs-budget" element={<VDBSBudgetDashboard />} />
         <Route path="/admin" element={<ProjectsAdmin />} />

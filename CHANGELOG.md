@@ -5,6 +5,10 @@ Alle wichtigen Änderungen an diesem Projekt werden in dieser Datei dokumentiert
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/).
 
 ## [Unreleased]
+- feat: Cockpit als neue Startseite mit Projekt-/Budget-KPIs
+- feat: Gesamtbudgetplanung-Tab (Projekte, IT-Kosten, VDB-S)
+- refactor: Projektdashboard fokussiert auf Projektkosten, neue Highlight-URL-Parameter
+
 
 ## [1.4.0] - 2025-10-07
 

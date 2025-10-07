@@ -5,7 +5,9 @@ export default function DashboardTabs() {
   const currentPath = location.pathname;
 
   const tabs = [
-    { path: '/', label: 'Projekte' },
+    { path: '/', label: 'Cockpit' },
+    { path: '/projects', label: 'Projekte' },
+    { path: '/overall-budget', label: 'Gesamtbudget' },
     { path: '/it-costs', label: 'IT-Kosten' },
     { path: '/vdbs-budget', label: 'VDB-S Budget' },
   ];
@@ -13,7 +15,9 @@ export default function DashboardTabs() {
   return (
     <div className="flex gap-1 border-b border-gray-200">
       {tabs.map((tab) => {
-        const isActive = currentPath === tab.path;
+        const isActive =
+          currentPath === tab.path ||
+          (tab.path !== '/' && currentPath.startsWith(`${tab.path}/`));
         return (
           <Link
             key={tab.path}

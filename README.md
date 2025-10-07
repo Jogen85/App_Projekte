@@ -53,7 +53,7 @@
 public/
   data/projects.csv        # Demo-CSV (wird nicht automatisch geladen)
 src/
-  App.tsx                  # Dashboard (16:9 Layout, 1800px Container)
+  App.tsx                  # IT-Cockpit (Startseite, 16:9 Layout, 1800px Container)
   main.tsx                 # App-Entry, Router ("/", "/admin")
   ui.tsx                   # UI-Primitives (Card, Badge, ProgressBar mit Target-Linie)
   lib.ts                   # Zeit/Datums-Hilfen, RAG-Logik, Budgetfunktionen
@@ -69,7 +69,7 @@ src/
     TrafficLight.tsx       # Status Badge (32px Dot mit Ping Animation)
     PINProtection.tsx      # PIN-Schutz für Admin-Portal (4-stellig)
   pages/
-    ProjectsAdmin.tsx      # Admin-Editor (CSV/Inline, Jahresbudgets, localStorage)
+    ProjectsAdmin.tsx      # Admin-Editor (CSV/Inline, Jahresbudgets, Dexie)
   test/
     setup.ts               # Vitest Setup (ResizeObserver Mock)
 index.html                 # HTML, UTF-8, min-width: 1440px
@@ -128,7 +128,7 @@ Node 18+ empfohlen (Vite 5).
   - **AT 8.2 Compliance**: Zwei Checkbox-Spalten („erforderlich" und „durchgeführt")
 - **Dashboard-Quelle**:
   - Dashboard lädt automatisch `localStorage.projects_json`, falls vorhanden
-  - Fallback: `DEMO_PROJECTS` in `App.tsx` (6 Projekte mit AT 8.2 Daten)
+  - Fallback: `DEMO_PROJECTS` in `src/data/demoData.ts` (Cockpit + Projekte)
 
 ## :bar_chart: Anzeige-Logik (Ist-Stand)
 
@@ -279,3 +279,13 @@ Node 18+ empfohlen (Vite 5).
 
 - **Claude Code** (AI Assistant) – Implementierung & Dokumentation
 - **Christian J.** – Requirements & UX Feedback
+
+
+## Gesamtbudgetplanung
+- Neue Route `/overall-budget` bündelt Projektpläne, IT-Kosten und VDB-S Budgets
+- Zeigt Plan/ Ist-Kennzahlen, Warnungen und Restbudget
+
+## IT-Cockpit
+- Startseite unter `/` mit wichtigsten Kennzahlen
+- Kritische Projekte & Budgetüberschreitungen inkl. Deep-Link zu `/projects?highlight=<id>`
+- Deadlines, Schnellzugriffe auf alle Bereiche

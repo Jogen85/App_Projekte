@@ -150,7 +150,7 @@ const ProjectsAdmin: React.FC = () => {
         <div className="max-w-presentation mx-auto space-y-4">
         <header className="flex items-center justify-between">
           <h1 className="text-2xl font-bold">Admin &ndash; Projekte bearbeiten</h1>
-          <Link to="/" className="text-blue-600 hover:underline">Zum Dashboard</Link>
+          <Link to="/projects" className="text-blue-600 hover:underline">Zum Dashboard</Link>
         </header>
 
         <Card>
@@ -446,5 +446,4 @@ const ProjectsAdmin: React.FC = () => {
 };
 
 export default ProjectsAdmin;
-
 
