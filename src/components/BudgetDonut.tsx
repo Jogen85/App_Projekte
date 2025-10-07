@@ -24,7 +24,7 @@ export const BudgetDonut: React.FC<Props> = ({ spent, remaining, itCostsTotal, y
   // PLAN-Ebene: Verplanung prüfen (IT-Kosten + Projektbudgets vs. Jahresbudget)
   const hasYearBudget = yearBudget !== null && yearBudget !== undefined;
   const totalCommitted = itCosts + projectBudgetPlanned; // Was ist schon verplant?
-  const availableForNewProjects = hasYearBudget ? Math.max(0, yearBudget - totalCommitted) : 0;
+  const availableForNewProjects = hasYearBudget ? yearBudget - totalCommitted : 0; // Kann negativ sein (Überplanung)
   const isOverCommitted = hasYearBudget && totalCommitted > yearBudget;
 
   // Bei Überschreitung: Zeige vollen Kreis (100% = Budget) + Überschreitungs-Segment
@@ -92,6 +92,13 @@ export const BudgetDonut: React.FC<Props> = ({ spent, remaining, itCostsTotal, y
 
   const total = totalBudget + overspend;
   const fmt = (n: number) => new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(n);
+  // Kompakte Formatierung für große Beträge (>= €10.000 → "€40k")
+  const fmtCompact = (n: number) => {
+    if (Math.abs(n) >= 10000) {
+      return `€${Math.round(n / 1000)}k`;
+    }
+    return fmt(n);
+  };
 
   const chartHeight = 150;
   // Nested Donut: Äußerer Ring (PLAN) größer, innerer Ring (IST) kleiner
@@ -191,14 +198,14 @@ export const BudgetDonut: React.FC<Props> = ({ spent, remaining, itCostsTotal, y
             <div className="flex items-center justify-center gap-2 flex-wrap">
               <span className="text-slate-600 font-medium">Plan:</span>
               <span className="inline-block w-2.5 h-2.5 rounded-full" style={{ backgroundColor: itCostsColor }} aria-hidden />
-              <span className="text-slate-700">IT-Kosten: {fmt(itCosts)}</span>
+              <span className="text-slate-700">IT-Kosten: {fmtCompact(itCosts)}</span>
               <span className="text-slate-400">|</span>
               <span className="inline-block w-2.5 h-2.5 rounded-full" style={{ backgroundColor: projectBudgetColor }} aria-hidden />
-              <span className="text-slate-700">Projektbudgets: {fmt(projectBudgetPlanned)}</span>
+              <span className="text-slate-700">Projektbudgets: {fmtCompact(projectBudgetPlanned)}</span>
               <span className="text-slate-400">|</span>
               <span className="inline-block w-2.5 h-2.5 rounded-full" style={{ backgroundColor: availableColor }} aria-hidden />
               <span className={isOverCommitted ? "text-red-600 font-medium" : "text-slate-700"}>
-                {isOverCommitted ? `Überplanung: ${fmt(Math.abs(availableForNewProjects))}` : `Verfügbar: ${fmt(availableForNewProjects)}`}
+                {isOverCommitted ? `Überpl.: ${fmtCompact(Math.abs(availableForNewProjects))}` : `Verfügbar: ${fmtCompact(availableForNewProjects)}`}
               </span>
             </div>
           )}
