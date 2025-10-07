@@ -63,13 +63,15 @@ IT Portfolio Dashboard – React/TypeScript/Vite SPA for executive project overs
 - **`src/App.tsx`**: Main dashboard, orchestrates all KPI cards, filters, table, timeline (16:9 layout, 1800px container)
 
 ### Components (`src/components/`)
-- **`BudgetDonut.tsx`**: Year budget donut chart with overspend detection
-  - **New UX Logic**: Green/Yellow/Red for "Remaining" (important), Blue for "Spent" (neutral)
-  - Shows red warning banner when `remaining < 0`
-  - Fixed dimensions: chartHeight=150px, outer=60, inner=40
-  - **Jahresbudget-Integration**: Zeigt Jahresbudget vs. Ausgaben (falls konfiguriert)
-  - Info-Zeile: "Projektbudgets geplant: €XXX" (nur wenn Jahresbudget gesetzt)
-  - Props: `yearBudget`, `projectBudgetSum` für Zwei-Vergleichsebenen-Logik
+- **`BudgetDonut.tsx`**: Nested donut chart mit PLAN vs. IST Visualisierung
+  - **Äußerer Ring (PLAN)**: IT-Kosten (grau) | Projektbudgets geplant (violett) | Verfügbar/Überplanung (grün/rot)
+  - **Innerer Ring (IST)**: IT-Kosten (grau) | Projekte ausgegeben (blau) | Verbleibend (grün/gelb/rot)
+  - **Legende**: 2 Zeilen (Plan / Ist) mit kompakter Formatierung (≥€10k → "€40k")
+  - Überschreitungs-Warnung: Rotes Banner bei `remaining < 0`
+  - Überplanungs-Warnung: Roter äußerer Ring bei `totalCommitted > yearBudget`
+  - Fixed dimensions: chartHeight=150px, Outer Ring (65-50), Inner Ring (45-28)
+  - Props: `spent`, `remaining`, `itCostsTotal`, `yearBudget`, `projectBudgetSum`
+  - Tooltip zeigt Differenz (€ + %)
 - **`ProjectDelays.tsx`**: Verzögerungen-Kachel (ALLE verzögerten Projekte)
   - Zeigt alle Projekte mit delta < -tolerance (nur laufende)
   - Sortiert nach Delta (schlechteste zuerst)
@@ -91,8 +93,17 @@ IT Portfolio Dashboard – React/TypeScript/Vite SPA for executive project overs
   - Filters: Status, Org, Classification, Year, AT 8.2, highlighted project
 - **`Timeline.tsx`**: Gantt-style timeline with status-based colors, progress overlay, today marker
   - "Heute" label positioned right of line (-top-7 left-1) with white background
-- **`FiltersPanel.tsx`**: Status/org/classification/year/AT 8.2 filters with active filter banner
+- **`FiltersPanel.tsx`**: Status/org/classification/year/AT 8.2 filters with CSV buttons and admin link
+  - Zwei-Zeilen-Layout: Filter/CSV-Buttons (Zeile 1) + Admin-Link (Zeile 2, rechtsbündig)
+  - Optional admin link: `adminLink?: { href: string; label: string }`
+  - Struktur: `flex flex-col gap-2 items-end` für rechtsbündige Ausrichtung
 - **`TrafficLight.tsx`**: Modern status badge (32px dot) with ping animation (Tailwind native)
+- **`ITCostsTrendChart.tsx`**: Jahr-über-Jahr Kostenvergleich (Grouped Bar Chart)
+  - Vergleicht aktuelles Jahr vs. Vorjahr (z.B. 2025 vs. 2024)
+  - 5 Kategorien: Hardware, Software, Wartung, Schulung, Sonstiges
+  - Tooltip zeigt Differenz (€ + %)
+  - Farben: Vorjahr (grau), Aktuelles Jahr (blau)
+  - Y-Achse: Kompakt ("10k" statt "10000")
 
 ### Pages (`src/pages/`)
 - **`ProjectsAdmin.tsx`**: Admin CSV editor (no backend; localStorage)
@@ -101,9 +112,20 @@ IT Portfolio Dashboard – React/TypeScript/Vite SPA for executive project overs
   - Vergangene Jahre: readonly, ausgegraut mit "Gesperrt (Vergangenheit)"
   - Warnung bei Überplanung: Projektbudgets (anteilig) > Jahresbudget
   - Speicherung: `localStorage.yearBudgets` (separiert von projects_json)
+- **`ITCostsDashboard.tsx`**: IT-Kosten Dashboard mit Trend-Analyse
+  - **KPIs**: Gesamt IT-Kosten | Größter Kostenblock | Laufende Kostenpositionen
+  - **Charts**: Kosten nach Kategorie | Top 5 Dienstleister | Kosten nach Frequenz
+  - **Analyse**: Kostentrend (Jahr-über-Jahr) | Dienstleister-Übersicht
+  - Jahr-Filter rechts oben + Admin-Link "IT-Kosten verwalten" (blau)
+  - Keine `startDate`/`endDate` Felder mehr (entfernt v1.5.0)
+- **`ITCostsAdmin.tsx`**: IT-Kosten Verwaltung (CSV Import/Export)
+  - 9 Spalten: Beschreibung | Kategorie | Dienstleister | Betrag | Frequenz | Kostenstelle | Notizen | Jahreskosten | Aktionen
+  - Entfernt: `startDate`/`endDate` Spalten (v1.5.0)
+  - CSV kompatibel: Felder optional (Rückwärtskompatibilität)
 
 ### Lazy Loading
-- Charts (`BudgetDonut`, `TimeStatusOverview`, `ProgressDelta`) and `ProjectsTable` are code-split via `React.lazy`
+- Charts (`BudgetDonut`, `ITCostsTrendChart`, `ProgressDelta`) and `ProjectsTable` are code-split via `React.lazy`
+- IT-Kosten Charts: `ITCostsByCategoryChart`, `ITCostsByProviderChart`, `ITCostsByFrequencyChart`
 - Vite config (`vite.config.ts`) splits vendor bundles: `react-vendor`, `recharts-vendor`, `vendor`
 
 ## RAG (Traffic Light) Logic
@@ -192,6 +214,114 @@ IT Portfolio Dashboard – React/TypeScript/Vite SPA for executive project overs
 - Jahresbudgets: Separate localStorage-Key für Multi-Jahr-Planung
 
 ## Recent Changes & Evolution
+
+### Nested Budget Donut + IT-Kosten Redesign (2025-10-07) - v1.5.0
+
+**Major Changes**:
+
+#### 1. Nested Budget Donut (PLAN vs. IST Visualisierung)
+**Problem**: Nur IST-Zahlen sichtbar (Ausgaben), Verplanung nicht erkennbar
+
+**Lösung**: Doppelring-Donut mit 2 Ebenen
+- **Äußerer Ring (PLAN-Ebene)**: Was ist verplant?
+  - IT-Kosten (fix): grau
+  - Projektbudgets geplant: violett (#7c3aed)
+  - Verfügbar für neue Projekte: grün (oder rot bei Überplanung)
+- **Innerer Ring (IST-Ebene)**: Was ist ausgegeben?
+  - IT-Kosten (fix): grau
+  - Projekte ausgegeben: blau
+  - Verbleibend: grün/gelb/rot (nach Threshold)
+
+**Legende (2 Zeilen)**:
+```
+Plan: IT-Kosten: €200k | Projektbudgets: €308k | Überpl.: €40k
+Ist:  IT-Kosten: €200k | Projekte: €80k | Verbleibend: €220k
+```
+
+**Features**:
+- Kompakte Formatierung (≥€10k → "€40k")
+- Überplanungs-Warnung visuell im Donut (roter äußerer Ring)
+- Tooltip zeigt Differenz (€ + %)
+- Korrekte Berechnung: `yearBudget - totalCommitted` (erlaubt negative Werte)
+
+**Technisch**:
+- 2x `<Pie>` in einem PieChart (nested rings)
+- Ring-Größen: Outer (65-50), Inner (45-28)
+- Props: `yearBudget`, `projectBudgetSum`, `itCostsTotal`
+- Neue Funktion: `fmtCompact(n)` für große Beträge
+- Files: BudgetDonut.tsx (+125 lines, -56 lines), App.tsx (+1 line)
+
+**Bugfixes**:
+- Überplanung zeigte €0 statt €40.000 (`Math.max(0, ...)` entfernt)
+- Text gekürzt: "Überpl." statt "Überplanung"
+
+#### 2. IT-Kosten Dashboard Redesign
+**Problem**:
+- `startDate`/`endDate` nicht sinnvoll für laufende Kosten
+- "Auslaufende Verträge" ohne Dates sinnlos
+- "Aktive Verträge" KPI verwirrend
+
+**Lösung**:
+1. **Admin aufgeräumt**:
+   - `startDate`/`endDate` Spalten entfernt (11 → 9 Spalten)
+   - CSV Import/Export: Felder bleiben optional (Kompatibilität)
+
+2. **KPI umbenannt**:
+   - "Aktive Verträge" → **"Laufende Kostenpositionen"**
+   - Berechnung: `yearCosts.length` (einfache Anzahl)
+
+3. **Neue Komponente: ITCostsTrendChart.tsx**:
+   - **Ersetzt**: "Auslaufende Verträge (nächste 90 Tage)"
+   - **Chart-Typ**: Grouped Bar Chart (Recharts)
+   - **Daten**: Jahr-über-Jahr-Vergleich (z.B. 2024 vs. 2025)
+   - **Kategorien**: 5 Kostenblöcke (Hardware, Software, Wartung, Schulung, Sonstiges)
+   - **Features**:
+     - Tooltip zeigt Differenz (€ + %)
+     - Legende: Vorjahr (grau), Aktuelles Jahr (blau)
+     - Y-Achse: "k" Format (€10k statt €10.000)
+     - X-Achse: Kategorie-Namen (45° gedreht)
+   - **Mehrwert**: Trend-Erkennung, Kostensteigerung/-reduktion sichtbar
+
+**Technisch**:
+- Neue Datei: `src/components/ITCostsTrendChart.tsx` (110 Zeilen)
+- Entfernt: ContractExpiryList Import, activeContracts Logik
+- Admin: -2 Spalten, -33 Zeilen
+- Dashboard: -7 Zeilen
+
+#### 3. Verwaltungslinks Redesign
+**Problem**: Links unter Titel (links) kollidierten mit Tabs, uneinheitliche Farben (blau + lila)
+
+**Lösung**:
+1. **Position**: Links nach rechts oben (bei Filter/CSV-Bereich)
+2. **Farbe**: Einheitlich blau (text-blue-600)
+3. **Kontextabhängig**:
+   - Projekt-Dashboard → nur "Projekte verwalten"
+   - IT-Kosten Dashboard → nur "IT-Kosten verwalten"
+4. **Layout**: Zwei-Zeilen-Struktur mit rechtsbündigem Link
+   ```
+   [Filter... CSV-Buttons]
+           [Projekte verwalten]  ← rechtsbündig, eigene Zeile
+   ```
+
+**Technisch**:
+- FiltersPanel: Neuer Prop `adminLink?: { href: string; label: string }`
+- Struktur: `flex flex-col gap-2 items-end` (äußerer Container)
+- App.tsx: Links von Titel entfernt, via FiltersPanel übergeben
+- ITCostsDashboard: Link lila → blau, rechts oben platziert
+
+**Files Modified**:
+- FiltersPanel.tsx: +7 lines (adminLink Support)
+- App.tsx: -4 lines (Links entfernt)
+- ITCostsDashboard.tsx: +2 lines (Link umgezogen)
+
+**Commits**:
+- `86d5f37`: Nested Budget Donut mit PLAN/IST
+- `91c90fe`: Überplanungs-Berechnung Fix + kompakte Formatierung
+- `93aa1c0`: IT-Kosten Redesign - Kostentrend statt Verträge
+- `c286585`: Verwaltungslinks nach rechts + blau + kontextabhängig
+- `1e69560`: Admin-Link rechtsbündig in eigener Zeile
+
+---
 
 ### UX-Verbesserungen & Redundanz-Beseitigung (2025-10-07) - v1.4.0
 
