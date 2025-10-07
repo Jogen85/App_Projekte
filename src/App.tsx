@@ -14,7 +14,7 @@ import Timeline from './components/Timeline';
 const ProjectsTable = lazy(() => import('./components/ProjectsTable'));
 const BudgetDonut = lazy(() => import('./components/BudgetDonut'));
 const ProgressDelta = lazy(() => import('./components/ProgressDelta'));
-const TimeStatusOverview = lazy(() => import('./components/TimeStatusOverview'));
+const ProjectDelays = lazy(() => import('./components/ProjectDelays'));
 
 const DEMO_PROJECTS: Project[] = [
   { id: 'p1', projectNumberInternal: 'PINT-2025-001', projectNumberExternal: 'VDB-2025-01', classification: 'project_vdbs',
@@ -338,9 +338,13 @@ export default function App() {
               <BudgetDonut spent={budgetSpent} remaining={budgetRemaining} height={220} yearBudget={currentYearBudget} projectBudgetSum={kpis.budgetPlannedSum} />
             </Suspense>
           </Card>
-          <Card title={"Zeitlicher Status (laufende Projekte)"} className="h-chart">
+          <Card title={"Verzögerungen"} className="h-chart">
             <Suspense fallback={<div className="h-48 bg-slate-100 rounded animate-pulse" />}>
-              <TimeStatusOverview projects={normalized} height={220} />
+              <ProjectDelays
+                projects={normalized}
+                tolerance={progressTolerance}
+                onSelectProject={(id) => setHighlightProjectId(id)}
+              />
             </Suspense>
           </Card>
           <Card title={"Soll-Ist-Fortschritt (laufende Projekte)"} className="h-chart">
@@ -350,7 +354,6 @@ export default function App() {
                 selectedCategory={progressFilter === 'all' ? null : progressFilter}
                 tolerance={progressTolerance}
                 onChangeTolerance={(t) => setProgressTolerance(isNaN(t) ? 10 : t)}
-                onSelectProject={(id) => setHighlightProjectId(id)}
               />
             </Suspense>
           </Card>

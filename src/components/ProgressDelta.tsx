@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import type { NormalizedProject } from '../types';
-import { getToday, daysBetween, fmtDate } from '../lib';
+import { getToday, daysBetween } from '../lib';
 
 export type ProgressDeltaProps = {
   projects: NormalizedProject[];
@@ -9,12 +9,11 @@ export type ProgressDeltaProps = {
   selectedCategory?: 'behind' | 'ontrack' | 'ahead' | null;
   tolerance?: number; // +/- percentage points for on-track band
   onChangeTolerance?: (t: number) => void;
-  onSelectProject?: (id: string) => void;
 };
 
 function clamp(n: number, min = 0, max = 100) { return Math.max(min, Math.min(max, n)); }
 
-export default function ProgressDelta({ projects, height = 190, onSelectCategory, selectedCategory = null, tolerance = 10, onChangeTolerance, onSelectProject }: ProgressDeltaProps) {
+export default function ProgressDelta({ projects, height = 190, onSelectCategory, selectedCategory = null, tolerance = 10, onChangeTolerance }: ProgressDeltaProps) {
   const data = useMemo(() => {
     const list: Array<{
       id: string;
@@ -47,8 +46,7 @@ export default function ProgressDelta({ projects, height = 190, onSelectCategory
     const behind = list.filter(x => x.delta < -tol);
     const ontrack = list.filter(x => x.delta >= -tol && x.delta <= tol);
     const ahead = list.filter(x => x.delta > tol);
-    const top3 = [...list].sort((a, b) => a.delta - b.delta).slice(0, 3);
-    return { behind, ontrack, ahead, top3 };
+    return { behind, ontrack, ahead };
   }, [projects, tolerance]);
 
   return (
@@ -67,7 +65,7 @@ export default function ProgressDelta({ projects, height = 190, onSelectCategory
           <div className="text-lg font-semibold">{data.ahead.length}</div>
         </button>
       </div>
-      <div className="flex items-center justify-end mb-2 flex-shrink-0">
+      <div className="flex items-center justify-center mb-2 flex-shrink-0">
         <label className="text-xs text-slate-600 mr-2">Toleranz ±</label>
         <input
           aria-label="Toleranz in Prozentpunkten"
@@ -79,25 +77,6 @@ export default function ProgressDelta({ projects, height = 190, onSelectCategory
           className="w-16 rounded border border-slate-300 px-2 py-1 text-xs"
         />
         <span className="text-xs text-slate-600 ml-1">pp</span>
-      </div>
-
-      <div className="text-xs text-slate-600 mb-1 flex-shrink-0">Top 3 Verzögerungen</div>
-      <div className="space-y-2 overflow-y-auto flex-1 min-h-0">
-        {data.top3.map((p) => (
-          <button key={p.id} type="button" onClick={() => onSelectProject?.(p.id)} className="w-full flex items-center justify-between gap-3 text-left hover:bg-slate-50 rounded px-1 py-1">
-            <div className="min-w-0">
-              <div className="truncate text-sm text-slate-800">{p.title}</div>
-              <div className="text-xs text-slate-500">Fällig: {fmtDate(p.end)} • {p.daysLeft} Tage</div>
-            </div>
-            <div className="text-right">
-              <div className="text-sm font-medium" style={{ color: p.delta < -10 ? '#dc2626' : p.delta > 10 ? '#16a34a' : '#334155' }}>{p.delta.toFixed(1)}%</div>
-              <div className="text-[11px] text-slate-500">Soll {Math.round(p.soll)}% • Ist {Math.round(p.ist)}%</div>
-            </div>
-          </button>
-        ))}
-        {!data.top3.length && (
-          <div className="text-xs text-slate-500">Keine Projekte mit Verzögerung.</div>
-        )}
       </div>
     </div>
   );
