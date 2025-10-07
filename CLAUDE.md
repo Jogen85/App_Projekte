@@ -29,7 +29,11 @@ IT Portfolio Dashboard – React/TypeScript/Vite SPA for executive project overs
 
 ### Routing
 - `/` – Dashboard (main app)
+- `/it-costs` – IT-Kosten Dashboard
+- `/vdbs-budget` – VDB-S Budget Dashboard
 - `/admin` – CSV editor (inline table, import/export, localStorage persistence)
+- `/admin/it-costs` – IT-Kosten Admin
+- `/vdbs-budget-admin` – VDB-S Budget Admin
 - SPA routing via `vercel.json` rewrites (all routes → `/index.html`)
 
 ### Data Flow
@@ -50,13 +54,18 @@ IT Portfolio Dashboard – React/TypeScript/Vite SPA for executive project overs
    - German number format: `10.000,50` → 10000.5
 
 ### Core Modules
-- **`src/types.ts`**: `Project` (raw CSV), `NormalizedProject` (with parsed dates), `YearBudget` (year budget config)
-  - Fields: `projectNumberInternal` (string), `projectNumberExternal` (optional string), `classification` ('internal_dev' | 'project' | 'project_vdbs' | 'task')
-  - Fields: `requiresAT82Check`, `at82Completed` (boolean)
-  - Fields: `YearBudget` (year: number, budget: number)
+- **`src/types.ts`**: `Project` (raw CSV), `NormalizedProject` (with parsed dates), `YearBudget` (year budget config), `VDBSBudgetItem` (VDB-S budget positions)
+  - **Project Fields**: `projectNumberInternal` (string), `projectNumberExternal` (optional string), `classification` ('internal_dev' | 'project' | 'project_vdbs' | 'task')
+  - **Project Fields**: `requiresAT82Check`, `at82Completed` (boolean)
+  - **YearBudget**: `{ year: number, budget: number }`
+  - **VDBSBudgetItem**: `{ id: string, projectNumber: string, projectName: string, category: 'RUN' | 'CHANGE', budget2026: number, year: number }`
+    - category: RUN = laufende Kosten, CHANGE = Projekte
   - Removed field: `hoursPerMonth`
 - **`src/lib.ts`**: Date/time utilities, RAG (Red-Amber-Green) logic, budget calculations
 - **`src/lib/csv.ts`**: CSV parser/serializer (BOM handling, quote escaping, delimiter detection, German numbers, boolean parsing)
+  - `parseProjectsCSV()` / `projectsToCSV()` - Projekt-CSV (16 Felder)
+  - `parseITCostsCSV()` / `serializeITCostsCSV()` - IT-Kosten CSV (11 Felder)
+  - `parseVDBSBudgetCSV()` / `serializeVDBSBudgetCSV()` - VDB-S Budget CSV (4 Felder: Projekt Nr., Name, Kategorie, Budget)
 - **`src/ui.tsx`**: Reusable UI primitives (`Card`, `Badge` with 6 colors, `ProgressBar` with targetValue support)
   - Badge colors: green, amber, slate, blue, purple, cyan
 - **`src/main.tsx`**: App entry, React Router setup
@@ -64,13 +73,14 @@ IT Portfolio Dashboard – React/TypeScript/Vite SPA for executive project overs
 
 ### Components (`src/components/`)
 - **`BudgetDonut.tsx`**: Nested donut chart mit PLAN vs. IST Visualisierung
-  - **Äußerer Ring (PLAN)**: IT-Kosten (grau) | Projektbudgets geplant (violett) | Verfügbar/Überplanung (grün/rot)
-  - **Innerer Ring (IST)**: IT-Kosten (grau) | Projekte ausgegeben (blau) | Verbleibend (grün/gelb/rot)
+  - **Äußerer Ring (PLAN)**: IT-Kosten (grau) | VDB-S Budget (amber) | Projektbudgets geplant (violett) | Verfügbar/Überplanung (grün/rot)
+  - **Innerer Ring (IST)**: IT-Kosten (grau) | VDB-S Budget (amber) | Projekte ausgegeben (blau) | Verbleibend (grün/gelb/rot)
   - **Legende**: 2 Zeilen (Plan / Ist) mit kompakter Formatierung (≥€10k → "€40k")
   - Überschreitungs-Warnung: Rotes Banner bei `remaining < 0`
   - Überplanungs-Warnung: Roter äußerer Ring bei `totalCommitted > yearBudget`
+  - **Berechnung**: totalCommitted = IT-Kosten + VDB-S Budget + Projektbudgets
   - Fixed dimensions: chartHeight=150px, Outer Ring (65-50), Inner Ring (45-28)
-  - Props: `spent`, `remaining`, `itCostsTotal`, `yearBudget`, `projectBudgetSum`
+  - Props: `spent`, `remaining`, `itCostsTotal`, `vdbsBudgetTotal`, `yearBudget`, `projectBudgetSum`
   - Tooltip zeigt Differenz (€ + %)
 - **`ProjectDelays.tsx`**: Verzögerungen-Kachel (ALLE verzögerten Projekte)
   - Zeigt alle Projekte mit delta < -tolerance (nur laufende)
@@ -107,11 +117,12 @@ IT Portfolio Dashboard – React/TypeScript/Vite SPA for executive project overs
 
 ### Pages (`src/pages/`)
 - **`ProjectsAdmin.tsx`**: Admin CSV editor (no backend; localStorage)
+  - **Auto-Save**: Optimistic save pattern, keine "Speichern" Buttons mehr
   - **Jahresbudget-Verwaltung**: Separate Tabelle oberhalb Projekttabelle
   - Editierbarkeit: Nur aktuelles (2025) + nächstes Jahr (2026)
   - Vergangene Jahre: readonly, ausgegraut mit "Gesperrt (Vergangenheit)"
   - Warnung bei Überplanung: Projektbudgets (anteilig) > Jahresbudget
-  - Speicherung: `localStorage.yearBudgets` (separiert von projects_json)
+  - Speicherung: `localStorage.projects_json` + `localStorage.yearBudgets`
 - **`ITCostsDashboard.tsx`**: IT-Kosten Dashboard mit Trend-Analyse
   - **KPIs**: Gesamt IT-Kosten | Größter Kostenblock | Laufende Kostenpositionen
   - **Charts**: Kosten nach Kategorie | Top 5 Dienstleister | Kosten nach Frequenz
@@ -119,9 +130,30 @@ IT Portfolio Dashboard – React/TypeScript/Vite SPA for executive project overs
   - Jahr-Filter rechts oben + Admin-Link "IT-Kosten verwalten" (blau)
   - Keine `startDate`/`endDate` Felder mehr (entfernt v1.5.0)
 - **`ITCostsAdmin.tsx`**: IT-Kosten Verwaltung (CSV Import/Export)
+  - **Auto-Save**: Speichert jede Änderung sofort in localStorage
   - 9 Spalten: Beschreibung | Kategorie | Dienstleister | Betrag | Frequenz | Kostenstelle | Notizen | Jahreskosten | Aktionen
   - Entfernt: `startDate`/`endDate` Spalten (v1.5.0)
   - CSV kompatibel: Felder optional (Rückwärtskompatibilität)
+- **`VDBSBudgetDashboard.tsx`**: VDB-S Budget Dashboard (NEW v1.6.0)
+  - **KPI-Zeile**: 3 Tiles (Gesamtbudget €200k | Größte Position €35k | Budget-Verteilung RUN/CHANGE)
+  - **Chart-Zeile**: 3 Visualisierungen
+    - Budget nach Kategorie (Pie Chart, Blau=RUN, Violett=CHANGE)
+    - Top 5 Budgetpositionen (Horizontal Bar Chart)
+    - Filter & Statistik (Kategorie-Buttons + Live-Stats)
+  - **Tabelle**: 4 Spalten (Projekt Nr. | Name | Kategorie | Budget)
+    - Sortierung klickbar (↑↓ Indikator)
+    - Budget-Balken zeigen relative Größe
+    - Zebra-Striping + Hover-Effekt (bg-blue-50)
+    - Kategorie-Badges (Blau=Laufend, Violett=Projekt)
+  - **Layout**: 3 KPIs (120px) + 3 Charts (280px) + Tabelle (520px max-height)
+  - Jahr-Filter + Admin-Link "VDB-S Budget verwalten"
+  - localStorage: `vdbsBudget` (40 Positionen, €200.104 gesamt)
+- **`VDBSBudgetAdmin.tsx`**: VDB-S Budget Verwaltung (NEW v1.6.0)
+  - **Auto-Save**: Jede Änderung sofort persistiert
+  - 4 Spalten: Projekt Nr. | Name | Kategorie (RUN/CHANGE) | Budget 2026
+  - Inline-Editing + CSV Import/Export
+  - Kategorie-Select (RUN/CHANGE) beim Bearbeiten
+  - Gesamt-Summe im Footer
 
 ### Lazy Loading
 - Charts (`BudgetDonut`, `ITCostsTrendChart`, `ProgressDelta`) and `ProjectsTable` are code-split via `React.lazy`
@@ -207,13 +239,94 @@ IT Portfolio Dashboard – React/TypeScript/Vite SPA for executive project overs
 ## Data Persistence
 
 - **No backend**: All state lives in browser
-- Admin saves to `localStorage.projects_json` (JSON array of projects)
-- Admin saves to `localStorage.yearBudgets` (JSON array of YearBudget: `{year: number, budget: number}[]`)
-- Dashboard reads localStorage on mount, falls back to `DEMO_PROJECTS`
-- CSV import/export via Admin page (no server roundtrip)
+- **Auto-Save Pattern**: Alle Admin-Portale speichern jede Änderung sofort (optimistic save)
+- **localStorage Keys**:
+  - `projects_json` - Projekte (JSON array of Project)
+  - `yearBudgets` - Jahresbudgets (JSON array of YearBudget: `{year: number, budget: number}[]`)
+  - `itCosts` - IT-Kosten (JSON array of ITCost)
+  - `vdbsBudget` - VDB-S Budget (JSON array of VDBSBudgetItem)
+- Dashboard reads localStorage on mount, falls back to DEMO_* constants
+- CSV import/export via Admin pages (no server roundtrip)
 - Jahresbudgets: Separate localStorage-Key für Multi-Jahr-Planung
 
 ## Recent Changes & Evolution
+
+### VDB-S Budget Dashboard + Auto-Save Fixes (2025-10-07) - v1.6.0
+
+**Major Features**:
+
+#### 1. **VDB-S Budget Dashboard** (komplett neu)
+- **Neues 3. Dashboard-Tab** neben Projekte & IT-Kosten
+- **Routing**: `/vdbs-budget` (Dashboard) + `/vdbs-budget-admin` (Admin)
+- **Datenquelle**: 40 Budgetpositionen (€200.104 gesamt) aus Excel VDB-S (1).xlsx
+
+**Dashboard-Features**:
+- **KPI-Zeile** (3 Tiles wie andere Dashboards):
+  - Gesamtbudget €200.104 (40 Positionen)
+  - Größte Position €35.750 (Weiterer Ausbau VDB Service)
+  - Budget-Verteilung (RUN: €134k, CHANGE: €66k)
+
+- **Chart-Zeile** (3 Visualisierungen):
+  - **Pie Chart**: Budget nach Kategorie (Blau=RUN, Violett=CHANGE)
+  - **Bar Chart**: Top 5 Budgetpositionen (horizontal)
+  - **Filter Panel**: Live-Statistik + Kategorie-Filter (Alle/RUN/CHANGE)
+
+- **Verbesserte Tabelle**:
+  - 4 Spalten: Projekt Nr. | Name | **Kategorie** | Budget
+  - **Sortierung** klickbar (↑↓ Indikator)
+  - **Budget-Balken** zeigen relative Größe
+  - **Zebra-Striping** (Weiß/Grau alternierend)
+  - **Hover-Effekt** (bg-blue-50)
+  - **Kategorie-Badges** (Blau=Laufend, Violett=Projekt)
+
+**Kategorien-System**:
+- **RUN** (27 Positionen): Laufende Kosten (Servicebudgets, AKs, Betrieb)
+- **CHANGE** (13 Positionen): Projekte (Anbindungen, Modernisierungen, Features)
+- Filterbar über Chart 3
+
+**Admin-Portal**:
+- Inline-Editing (4 Spalten inkl. Kategorie-Select)
+- CSV Import/Export mit Kategorie-Spalte
+- Auto-Save (optimistic save pattern)
+
+**Integration**:
+- **BudgetDonut erweitert**: VDB-S Budget (amber) in PLAN + IST Ring
+- **Berechnung**: IT-Kosten + VDB-S + Projektbudgets vs. Jahresbudget
+- **Warnung**: "Gesamtbudget überschritten!" mit Aufschlüsselung
+
+**Technisch**:
+- Neue Datei: `VDBSBudgetDashboard.tsx` (380 Zeilen)
+- Neue Datei: `VDBSBudgetAdmin.tsx` (210 Zeilen)
+- Type erweitert: `VDBSBudgetItem` (category: 'RUN' | 'CHANGE')
+- CSV Parser: `parseVDBSBudgetCSV()` + `serializeVDBSBudgetCSV()`
+- localStorage: `vdbsBudget`
+- Recharts Integration: PieChart + BarChart
+
+#### 2. **Auto-Save Pattern für Admin-Portale**
+**Problem**: Race Condition beim Speichern (dirty-Flag asynchron)
+
+**Lösung**:
+- **ProjectsAdmin**: Optimistic Save statt dirty-Flag
+- **Entfernt**: "Speichern (lokal)" Button + `dirty` State
+- **Neu**: `saveProjects()` schreibt sofort bei jeder Änderung
+- **YearBudgets**: Gleiche Logik, auto-save bei jeder Änderung
+- **Feedback**: Grüne "✓ Änderungen gespeichert" Message (2s)
+- **Konsistent**: Alle 3 Admin-Portale nutzen jetzt optimistic save
+
+**Bugfix**:
+- localStorage.removeItem() Bug in App.tsx behoben
+- Dashboard löschte bei jedem Load die gespeicherten Projekte
+- TEMP-Code entfernt (war nie entfernt worden)
+
+**Commits**:
+- `7385182`: VDB-S Budget Dashboard + Integration in Jahresbudget
+- `dba393e`: VDB-S Budget Daten korrigiert + Projektnummern bereinigt
+- `bdd2924`: localStorage Reset für VDB-S Budget
+- `4e16b87`: Admin auto-save statt dirty-Flag (verhindert Datenverlust)
+- `496221a`: localStorage.removeItem() entfernt (verhinderte Persistierung)
+- `5918b69`: VDB-S Budget Dashboard UX-Verbesserungen (Charts, KPIs, Kategorien)
+
+---
 
 ### Nested Budget Donut + IT-Kosten Redesign (2025-10-07) - v1.5.0
 
