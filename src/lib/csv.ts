@@ -335,7 +335,7 @@ export function serializeITCostsCSV(costs: ITCost[], delimiter: CsvDelimiter = '
 
 /**
  * Parst VDB-S Budget CSV
- * Format: Projekt Nr.;Projekte;Budget 2026
+ * Format: Projekt Nr.;Projekte;Kategorie;Budget 2026
  */
 export function parseVDBSBudgetCSV(text: string): VDBSBudgetItem[] {
   const cleanText = text.replace(new RegExp(NULL_CHAR, 'g'), '');
@@ -364,6 +364,7 @@ export function parseVDBSBudgetCSV(text: string): VDBSBudgetItem[] {
 
       const projectNumber = pick('projekt nr');
       const projectName = pick('projekte');
+      const categoryStr = pick('kategorie', 'RUN').toUpperCase();
       const budget2026Str = pick('budget 2026');
 
       // Pflichtfelder prüfen
@@ -371,10 +372,14 @@ export function parseVDBSBudgetCSV(text: string): VDBSBudgetItem[] {
         return null;
       }
 
+      // Kategorie validieren
+      const category = (['RUN', 'CHANGE'].includes(categoryStr) ? categoryStr : 'RUN') as 'RUN' | 'CHANGE';
+
       return {
         id: `vdbs-${idx + 1}`,
         projectNumber: projectNumber.trim(),
         projectName: projectName.trim(),
+        category,
         budget2026: parseGermanNumber(budget2026Str),
         year: 2026,
       } as VDBSBudgetItem;
@@ -386,12 +391,13 @@ export function parseVDBSBudgetCSV(text: string): VDBSBudgetItem[] {
  * Serialisiert VDBSBudgetItem-Array zu CSV
  */
 export function serializeVDBSBudgetCSV(items: VDBSBudgetItem[], delimiter: CsvDelimiter = ';'): string {
-  const headers = ['Projekt Nr.', 'Projekte', 'Budget 2026'];
+  const headers = ['Projekt Nr.', 'Projekte', 'Kategorie', 'Budget 2026'];
   const header = headers.join(delimiter);
 
   const lines = items.map((item) => [
     escapeField(item.projectNumber, delimiter),
     escapeField(item.projectName, delimiter),
+    escapeField(item.category, delimiter),
     escapeField(item.budget2026.toFixed(2), delimiter),
   ].join(delimiter));
 

@@ -39,6 +39,7 @@ export default function VDBSBudgetAdmin() {
       id: Date.now().toString(),
       projectNumber: '',
       projectName: 'Neue Position',
+      category: 'RUN',
       budget2026: 0,
       year: selectedYear,
     };
@@ -176,6 +177,9 @@ export default function VDBSBudgetAdmin() {
                   <th className="border-b-2 border-gray-300 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-700">
                     Projektname
                   </th>
+                  <th className="border-b-2 border-gray-300 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-700">
+                    Kategorie
+                  </th>
                   <th className="border-b-2 border-gray-300 px-3 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-700">
                     Budget 2026 (€)
                   </th>
@@ -187,7 +191,7 @@ export default function VDBSBudgetAdmin() {
               <tbody>
                 {filteredItems.length === 0 ? (
                   <tr>
-                    <td colSpan={4} className="p-8 text-center text-gray-500">
+                    <td colSpan={5} className="p-8 text-center text-gray-500">
                       Keine Budgetpositionen für {selectedYear}. Klicke auf &quot;+ Neue Position&quot; zum Hinzufügen.
                     </td>
                   </tr>
@@ -204,7 +208,7 @@ export default function VDBSBudgetAdmin() {
                               value={item.projectNumber}
                               onChange={(e) => handleUpdate(item.id, 'projectNumber', e.target.value)}
                               className="w-24 rounded border px-2 py-1"
-                              placeholder="101.0"
+                              placeholder="101"
                             />
                           ) : (
                             <span className="font-mono text-xs">{item.projectNumber}</span>
@@ -220,6 +224,22 @@ export default function VDBSBudgetAdmin() {
                             />
                           ) : (
                             item.projectName
+                          )}
+                        </td>
+                        <td className="px-3 py-2">
+                          {isEditing ? (
+                            <select
+                              value={item.category}
+                              onChange={(e) => handleUpdate(item.id, 'category', e.target.value)}
+                              className="w-32 rounded border px-2 py-1"
+                            >
+                              <option value="RUN">RUN</option>
+                              <option value="CHANGE">CHANGE</option>
+                            </select>
+                          ) : (
+                            <span className={`inline-flex rounded px-2 py-1 text-xs font-medium ${item.category === 'RUN' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'}`}>
+                              {item.category}
+                            </span>
                           )}
                         </td>
                         <td className="px-3 py-2 text-right">
@@ -267,7 +287,7 @@ export default function VDBSBudgetAdmin() {
               </tbody>
               <tfoot className="bg-gray-100">
                 <tr className="border-t-2 border-gray-300">
-                  <td colSpan={2} className="px-3 py-3 text-right text-sm font-bold text-gray-900">
+                  <td colSpan={3} className="px-3 py-3 text-right text-sm font-bold text-gray-900">
                     Gesamt:
                   </td>
                   <td className="px-3 py-3 text-right text-sm font-bold text-gray-900">{fmtCurrency(totalBudget)}</td>

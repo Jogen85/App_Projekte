@@ -84,8 +84,9 @@ export interface ITCostsByProvider {
  */
 export interface VDBSBudgetItem {
   id: string;                    // UUID oder Zeilen-ID
-  projectNumber: string;         // "101.0", "102.0", etc.
+  projectNumber: string;         // "101", "102", etc.
   projectName: string;           // "Servicebudget Basis", etc.
+  category: 'RUN' | 'CHANGE';    // RUN = laufende Kosten, CHANGE = Projekte
   budget2026: number;            // Budget für 2026 in Euro
   year: number;                  // Jahr (2026)
 }
