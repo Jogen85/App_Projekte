@@ -1,39 +1,19 @@
 # Repository Guidelines
 
 ## Project Structure & Module Organization
-- React entry in `src/main.tsx`; shared primitives in `src/ui.tsx`; feature components live under `src/components/`.
-- `public/` stores static assets and CSV data such as `public/data/projects.csv`.
-- Global Tailwind setup stays in `src/index.css`; adjust shared tokens there.
-- Colocate tests as `*.test.ts` or `*.test.tsx` beside the files they cover.
+Source lives under `src/`. The React entry point is `src/main.tsx`; shared primitives stay in `src/ui.tsx`. Feature components belong in `src/components/`, with page-level containers in `src/pages/` such as `src/pages/ITCostsDashboard.tsx`. Static assets and CSV inputs like `public/data/projects.csv` remain under `public/`. Co-locate tests beside their targets as `*.test.ts` or `*.test.tsx`.
 
 ## Build, Test, and Development Commands
-- `npm run dev` starts the Vite dev server with HMR at http://localhost:5173.
-- `npm run build` runs `tsc -b` and creates the production bundle.
-- `npm run preview` serves the last build to mirror Vercel.
-- `npm run typecheck` runs strict TypeScript checks without emitting.
-- `npm run lint` executes ESLint using the repo rules.
-- `npm run test` triggers Vitest; append `--watch` for interactive runs.
+Use `npm run dev` for the Vite dev server with HMR at http://localhost:5173. `npm run build` runs `tsc -b` and bundles for production. `npm run preview` serves the last build locally. `npm run typecheck` performs strict TypeScript checks without emitting files. `npm run lint` executes ESLint with the repository rules. `npm run test` runs Vitest once; use `npm run test:watch` for interactive mode.
 
 ## Coding Style & Naming Conventions
-- Use 2 space indentation, sorted imports, and no unused symbols.
-- Keep React components and files in PascalCase; hooks follow `useX`.
-- Tailwind utilities are preferred; add local styles near the component when necessary.
-- UI copy remains German: reuse labels like `Verantwortlicher MA`, `Fortschritt %`, and `CSV-Export`.
+Follow 2-space indentation, sorted imports, and remove unused symbols. Components and files are PascalCase, hooks follow the `useX` pattern, and utility modules stay camelCase. Favor Tailwind utilities; adjust shared tokens in `src/index.css` when necessary. UI copy remains German (e.g., `Verantwortlicher MA`, `Fortschritt %`, `CSV-Export`).
 
 ## Testing Guidelines
-- Vitest and React Testing Library cover logic and rendering.
-- Ensure tests cover prop variants, memoized data, and timeline logic.
-- Run `npm run test -- --coverage` before sizable refactors to watch regressions.
-- Keep tests fast and colocated; mock CSV fetches as needed.
+Vitest with React Testing Library covers logic and rendering. Exercise prop variants, memoized data flows, and timeline edge cases. Keep tests fast, colocated, and mock CSV fetches when exploring data-loading paths. Run `npm run test -- --coverage` before larger refactors to spot regressions.
 
 ## Commit & Pull Request Guidelines
-- Follow Conventional Commit prefixes (`feat:`, `fix:`, `chore:`) matching history.
-- Validate `npm run build` and `npm run typecheck` before pushing.
-- PRs explain scope, link issues, and add German UI screenshots for visual changes.
-- Confirm SPA routing stays intact; keep `vercel.json` rewrites untouched.
+Adhere to Conventional Commit prefixes (`feat:`, `fix:`, `chore:`, etc.) as seen in history. Validate `npm run build` and `npm run typecheck` prior to pushing. Pull requests should outline scope, link related issues, and include German UI screenshots for visual changes. Confirm SPA routing stays intact and never modify `vercel.json` rewrites.
 
 ## Architecture & Configuration Tips
-- Stack: Vite, React 18, TypeScript, TailwindCSS, and `recharts` for charts.
-- Dashboard reads `public/data/projects.csv` or the `localStorage.projects_json` override.
-- Timeline colors: active `#1d4ed8`, planned `#f59e0b` with 45 degree hatch, done `#334155`; only active shows progress overlay.
-- Maintain today marker and German axis labels when adjusting the timeline.
+Stack: Vite, React 18, TypeScript, TailwindCSS, and `recharts` for charts. Data loads from `public/data/projects.csv` or the `localStorage.projects_json` override. Timeline colors: active `#1d4ed8`, planned `#f59e0b` with a 45-degree hatch, done `#334155`, with progress overlays only on active bars. Preserve the today marker and German axis labels when altering charts.
