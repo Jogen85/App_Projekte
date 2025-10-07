@@ -229,7 +229,8 @@ export default function App() {
   }, [progressTolerance, today]);
   const filteredByProgress = useMemo(() => {
     if (progressFilter === 'all') return filtered;
-    return filtered.filter((p) => categoryForProject(p as any) === progressFilter);
+    // Nur laufende Projekte kategorisieren (konsistent mit ProgressDelta-Komponente)
+    return filtered.filter((p) => p.statusNorm === 'active' && categoryForProject(p as any) === progressFilter);
   }, [filtered, progressFilter, categoryForProject]);
 
   const onCSVUpload = async (file?: File) => {
@@ -342,7 +343,7 @@ export default function App() {
               <TimeStatusOverview projects={normalized} height={220} />
             </Suspense>
           </Card>
-          <Card title={"Soll-Ist-Fortschritt"} className="h-chart">
+          <Card title={"Soll-Ist-Fortschritt (laufende Projekte)"} className="h-chart">
             <Suspense fallback={<div className="h-48 bg-slate-100 rounded animate-pulse" />}>
               <ProgressDelta projects={filtered as any} height={220}
                 onSelectCategory={(c) => setProgressFilter((prev) => prev === c ? 'all' : c)}
