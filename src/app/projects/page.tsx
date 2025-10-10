@@ -244,7 +244,7 @@ function ProjectsDashboardContent() {
             setAt82CompletedFilter={setAt82CompletedFilter}
             onCSVUpload={onCSVUpload}
             onDownloadTemplate={downloadCSVTemplate}
-            adminLink={{ href: '/admin', label: 'Projekte verwalten' }}
+            adminLink={{ href: '/admin/projects', label: 'Projekte verwalten' }}
           />
         </header>
 
