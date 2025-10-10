@@ -621,3 +621,4 @@ Ist:  IT-Kosten: €200k | Projekte: €80k | Verbleibend: €220k
 - **Backend/sync**: Serverless persistence or Git-based workflow for collaboration
 - **PDF/Excel Export**: Generate reports from dashboard
 - **Multi-User Collaboration**: Real-time updates and permissions
+- to memorize
