@@ -39,8 +39,6 @@ export interface ITCost {
   provider: string;              // "Microsoft", "Dell", "Telekom"
   amount: number;                // Betrag in Euro (bei Frequenz Monthly/Quarterly wird automatisch hochgerechnet)
   frequency: ITCostFrequency;    // Monatlich, vierteljährlich, jährlich, einmalig
-  startDate: string;             // YYYY-MM-DD (Vertragsbeginn)
-  endDate: string;               // YYYY-MM-DD (Vertragsende, '' = unbefristet)
   costCenter: string;            // Kostenstelle/Abteilung, '' = nicht zugeordnet
   notes: string;                 // Freitext (Vertragsnummer, Ansprechpartner, etc.)
   year: number;                  // Jahr, für das dieser Eintrag gilt (2025, 2026, etc.)

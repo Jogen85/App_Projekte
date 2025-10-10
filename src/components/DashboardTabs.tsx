@@ -1,8 +1,10 @@
-import { useLocation, Link } from 'react-router-dom';
+'use client'
+
+import { usePathname } from 'next/navigation'
+import Link from 'next/link'
 
 export default function DashboardTabs() {
-  const location = useLocation();
-  const currentPath = location.pathname;
+  const pathname = usePathname()
 
   const tabs = [
     { path: '/', label: 'Cockpit' },
@@ -10,18 +12,18 @@ export default function DashboardTabs() {
     { path: '/overall-budget', label: 'Gesamtbudget' },
     { path: '/it-costs', label: 'IT-Kosten' },
     { path: '/vdbs-budget', label: 'VDB-S Budget' },
-  ];
+  ]
 
   return (
     <div className="flex gap-1 border-b border-gray-200">
       {tabs.map((tab) => {
         const isActive =
-          currentPath === tab.path ||
-          (tab.path !== '/' && currentPath.startsWith(`${tab.path}/`));
+          pathname === tab.path ||
+          (tab.path !== '/' && pathname?.startsWith(`${tab.path}/`))
         return (
           <Link
             key={tab.path}
-            to={tab.path}
+            href={tab.path}
             className={`
               px-6 py-3 text-sm font-medium transition-colors
               ${
@@ -33,8 +35,8 @@ export default function DashboardTabs() {
           >
             {tab.label}
           </Link>
-        );
+        )
       })}
     </div>
-  );
+  )
 }

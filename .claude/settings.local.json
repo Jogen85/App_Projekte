@@ -24,7 +24,13 @@
       "Bash(where python)",
       "Bash(C:Python313python.exe -c \"\nimport openpyxl\n\n# Excel-Datei öffnen\nwb = openpyxl.load_workbook(''c:/Users/cjuer/Downloads/VDB-S (1).xlsx'', data_only=True)\nws = wb.active\n\n# Alle Zeilen ausgeben (erste 50 Zeilen)\nfor i, row in enumerate(ws.iter_rows(min_row=1, max_row=50, values_only=True), 1):\n    print(f''Row {i}: {row}'')\n\")",
       "Bash(\"/c/Python313/python.exe\" -c \"\nimport openpyxl\n\nwb = openpyxl.load_workbook(''c:/Users/cjuer/Downloads/VDB-S (1).xlsx'', data_only=True)\nws = wb.active\n\nfor i, row in enumerate(ws.iter_rows(min_row=1, max_row=50, values_only=True), 1):\n    print(f''Row {i}: {row}'')\n\")",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "mcp__neon__list_projects",
+      "mcp__neon__prepare_database_migration",
+      "mcp__neon__run_sql_transaction",
+      "mcp__neon__get_connection_string",
+      "Bash(npm run:*)",
+      "mcp__neon__run_sql"
     ],
     "deny": [],
     "ask": []
