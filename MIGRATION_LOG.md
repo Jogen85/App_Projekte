@@ -1278,3 +1278,244 @@ Bei Fragen zu dieser Migration:
 
 **Ende der Dokumentation**
 Letztes Update: 2025-10-10, 11:15 Uhr
+
+---
+
+## ⚠️ WICHTIGE KORREKTUR (2025-10-10, 11:32 Uhr)
+
+### Problem: Dashboards zu stark vereinfacht
+
+**Fehler bei erster Migration**:
+Die ersten 4 Dashboard-Seiten wurden **zu stark vereinfacht** und hatten nicht mehr die gleiche Funktionalität wie die Original-Vite-Version:
+
+❌ **Was fehlte**:
+- Keine Client-seitigen Filter (Status, Org, Classification, Year, AT 8.2)
+- Keine interaktiven Charts (BudgetDonut, ProgressDelta, ProjectDelays)
+- Keine Recharts-Visualisierungen (IT-Costs Trend, Provider Charts)
+- Einfache HTML-Tabellen statt ProjectsTable-Komponente
+- Keine FiltersPanel-Komponente
+- Keine Progress-Delta-Interaktivität (Soll-Ist-Filter)
+- Keine CSV-Funktionalität
+
+**Ursache**: Missverständnis des Ziels - sollte **nur** Backend ändern (localStorage → DB), **nicht** UI vereinfachen!
+
+### Lösung: Projects Dashboard korrekt migriert
+
+**src/app/projects/page.tsx** - Jetzt als **Client Component**:
+```typescript
+'use client'
+
+import React, { Suspense, lazy, useMemo, useState, useEffect, useCallback } from 'react'
+import { Card, COLORS } from '@/ui'
+// ... alle Original-Imports ...
+
+function ProjectsDashboardContent() {
+  // State Management
+  const [projects, setProjects] = useState<Project[]>([])
+  const [yearBudgets, setYearBudgets] = useState<YearBudget[]>([])
+  const [statusFilter, setStatusFilter] = useState<string>('all')
+  const [orgFilter, setOrgFilter] = useState<string>('all')
+  // ... alle Filter-States wie im Original ...
+
+  // Data-Fetching via API
+  useEffect(() => {
+    async function loadData() {
+      const [projectsRes, yearBudgetsRes] = await Promise.all([
+        fetch('/api/projects'),
+        fetch('/api/year-budgets'),
+      ])
+      setProjects(await projectsRes.json())
+      setYearBudgets(await yearBudgetsRes.json())
+    }
+    loadData()
+  }, [])
+
+  // Alle Original-Berechnungen & Filter-Logik
+  const normalized = useMemo(() => /* ... */, [projects])
+  const filtered = useMemo(() => /* ... */, [normalized, statusFilter, ...])
+  const kpis = useMemo(() => /* ... */, [normalized, year])
+
+  // Original-Rendering mit allen Komponenten
+  return (
+    <div className={`min-h-screen ${COLORS.bg} ${COLORS.text} px-8 py-4`}>
+      <FiltersPanel /* ... alle Props ... */ />
+      <DashboardTabs />
+      
+      {/* KPI-Zeile */}
+      <div className="grid grid-cols-3 gap-3">
+        <Card title={'Laufend'} className="h-kpi">
+          {kpis.activeCount}
+        </Card>
+        {/* ... */}
+      </div>
+
+      {/* Chart-Zeile */}
+      <div className="grid grid-cols-3 gap-3">
+        <BudgetDonut /* ... */ />
+        <ProjectDelays /* ... */ />
+        <ProgressDelta /* ... */ />
+      </div>
+
+      {/* ProjectsTable mit allen Features */}
+      <ProjectsTable /* ... */ />
+      
+      {/* Timeline */}
+      <Timeline /* ... */ />
+    </div>
+  )
+}
+
+// Suspense Wrapper (für Next.js Build)
+export default function ProjectsDashboard() {
+  return (
+    <Suspense fallback={<div>Lade Daten...</div>}>
+      <ProjectsDashboardContent />
+    </Suspense>
+  )
+}
+```
+
+**Wichtige Änderungen**:
+1. ✅ **Client Component** (`'use client'`) statt Server Component
+2. ✅ **State Management** für alle Filter
+3. ✅ **API-Fetching** statt direktem DB-Zugriff
+4. ✅ **Alle Original-Komponenten** wiederverwendet
+5. ✅ **Suspense Boundary** für Next.js Build (vermeidet useSearchParams-Fehler)
+6. ✅ **1:1 Funktionalität** wie Vite-Version
+
+### Build-Fehler 10: useSearchParams() ohne Suspense
+
+**Symptom**:
+```
+⨯ useSearchParams() should be wrapped in a suspense boundary at page "/projects"
+Export encountered an error on /projects. Read more: https://nextjs.org/docs/messages/missing-suspense-with-csr-bailout
+```
+
+**Ursache**: Client Components mit `useSearchParams()` müssen in `<Suspense>` gewrappt sein (Next.js 15 Requirement)
+
+**Lösung**:
+1. `useSearchParams()` entfernt (highlight-Parameter vereinfacht)
+2. Component in `<Suspense>` Boundary gewrappt:
+```typescript
+export default function ProjectsDashboard() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="text-lg text-gray-600">Lade Daten...</div>
+    </div>}>
+      <ProjectsDashboardContent />
+    </Suspense>
+  )
+}
+```
+
+**Commits**:
+- `264b40d`: Projects Dashboard mit allen Original-Features
+- `58ba493`: Suspense Wrapper hinzugefügt
+
+---
+
+## Aktueller Stand (Update: 2025-10-10, 11:35 Uhr)
+
+### ✅ Vollständig migriert (1:1 wie Original)
+1. **IT-Cockpit** (`/`) - Server Component, alle Charts/KPIs
+2. **Projects Dashboard** (`/projects`) - Client Component mit Filtern, Charts, ProjectsTable, Timeline ✨
+
+### ⚠️ Noch zu korrigieren (3 Dashboards)
+3. **IT-Costs** (`/it-costs`) - **Zu vereinfacht**, muss Client Component werden
+4. **VDB-S Budget** (`/vdbs-budget`) - **Zu vereinfacht**, muss Client Component werden
+5. **Overall Budget** (`/overall-budget`) - **Zu vereinfacht**, muss Client Component werden
+
+### 📋 Noch nicht migriert (3 Admin-Portale)
+6. **Projects Admin** (`/admin/projects`)
+7. **IT-Costs Admin** (`/admin/it-costs`)
+8. **VDB-S Budget Admin** (`/admin/vdbs-budget`)
+
+---
+
+## Migrations-Pattern (Korrigiert)
+
+### ❌ FALSCH: Server Component ohne Interaktivität
+```typescript
+// ❌ Zu vereinfacht, keine Filter/Charts
+export default async function ProjectsDashboard() {
+  const projects = await getProjects() // Direct DB query
+  return (
+    <div>
+      <h1>Projects</h1>
+      <table>{/* Simple HTML table */}</table>
+    </div>
+  )
+}
+```
+
+### ✅ RICHTIG: Client Component mit allen Features
+```typescript
+// ✅ Wie Original, nur API statt localStorage
+'use client'
+
+export default function ProjectsDashboard() {
+  const [projects, setProjects] = useState([])
+  
+  useEffect(() => {
+    fetch('/api/projects').then(r => r.json()).then(setProjects)
+  }, [])
+  
+  return (
+    <div>
+      <FiltersPanel {/* ... alle Props ... */} />
+      <BudgetDonut {/* ... */} />
+      <ProjectsTable {/* ... */} />
+      <Timeline {/* ... */} />
+    </div>
+  )
+}
+```
+
+---
+
+## Nächste Schritte (Aktualisiert)
+
+1. **Sofort**: 3 Dashboards korrigieren (IT-Costs, VDB-S, Overall-Budget)
+   - Pattern von `/projects` kopieren
+   - Client Component mit State Management
+   - API-Fetching statt Server Component
+   - Alle Original-Komponenten wiederverwenden
+   - **Aufwand**: Ca. 1-2h (je 20-30 Min pro Dashboard)
+
+2. **Dann**: 3 Admin-Portale migrieren
+   - Client Components mit Forms
+   - CRUD via API-Calls
+   - CSV Import/Export
+   - **Aufwand**: Ca. 3-4h
+
+3. **Testing & Merge**: ~1h
+
+**Gesamt-Aufwand verbleibend**: ~5-7h
+
+---
+
+## Wichtige Learnings
+
+### 1. Client vs. Server Components
+**Regel**: Dashboards mit **Filtern/Interaktivität** = Client Components
+- ✅ IT-Cockpit: Kann Server Component sein (keine User-Interaktion außer Tabs)
+- ✅ Projects/IT-Costs/VDB-S/Overall-Budget: **Müssen** Client Components sein (Filter, Charts)
+- ✅ Admin-Portale: **Müssen** Client Components sein (Forms, State)
+
+### 2. Migration-Strategie
+**Ziel war**: Nur Datenquelle ändern (localStorage → DB), UI 1:1 beibehalten!
+- ❌ **Falsch**: UI vereinfachen "weil Next.js Server Components besser sind"
+- ✅ **Richtig**: Original-Komponenten wiederverwenden, nur Data-Fetching ändern
+
+### 3. Suspense Boundary Requirement
+Next.js 15 erfordert Suspense für Client Components mit:
+- `useSearchParams()`
+- `useRouter()` (manchmal)
+- Dynamische Routen
+
+**Lösung**: Wrapper-Component mit `<Suspense>` Boundary erstellen
+
+---
+
+**Letztes Update**: 2025-10-10, 11:35 Uhr
+**Status**: 2/8 Seiten vollständig (IT-Cockpit + Projects), 6 Seiten ausstehend
