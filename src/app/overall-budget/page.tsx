@@ -153,8 +153,8 @@ function OverallBudgetDashboardContent() {
                 ))}
               </select>
             </div>
-            <a href="/admin" className="text-sm text-blue-600 hover:underline">
-              Verwaltung
+            <a href="/admin/overall-budget" className="text-sm text-blue-600 hover:underline">
+              Budgets verwalten
             </a>
           </div>
         </header>

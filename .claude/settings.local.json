@@ -33,7 +33,8 @@
       "mcp__neon__run_sql",
       "Bash(cat:*)",
       "Bash(git log:*)",
-      "Bash(awk:*)"
+      "Bash(awk:*)",
+      "Bash(xargs basename:*)"
     ],
     "deny": [],
     "ask": []
