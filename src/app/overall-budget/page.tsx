@@ -9,7 +9,6 @@ import {
   costsYTDForYearD,
   getITCostsByCategoryD,
   getToday,
-  fmtDate,
 } from '@/lib'
 import DashboardTabs from '@/components/DashboardTabs'
 import { Card, COLORS } from '@/ui'

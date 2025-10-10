@@ -3,7 +3,7 @@
 import React, { Suspense, useMemo, useState, useEffect } from 'react'
 import type { VDBSBudgetItem, YearBudget } from '@/types'
 import { Card, Badge, COLORS } from '@/ui'
-import { getCurrentYear, fmtDate, getToday } from '@/lib'
+import { getCurrentYear } from '@/lib'
 import DashboardTabs from '@/components/DashboardTabs'
 import {
   ResponsiveContainer,
@@ -24,7 +24,6 @@ const CHART_COLORS = {
 }
 
 function VDBSBudgetDashboardContent() {
-  const today = getToday()
   const [vdbsBudget, setVDBSBudget] = useState<VDBSBudgetItem[]>([])
   const [yearBudgets, setYearBudgets] = useState<YearBudget[]>([])
   const [selectedYear, setSelectedYear] = useState(2026)

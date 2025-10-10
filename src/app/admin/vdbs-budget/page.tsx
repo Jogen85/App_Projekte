@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react'
 import type { VDBSBudgetItem } from '@/types'
-import { Card, Badge, COLORS } from '@/ui'
+import { Card, COLORS } from '@/ui'
 import { parseVDBSBudgetCSV, serializeVDBSBudgetCSV } from '@/lib/csv'
 
 const emptyVDBSBudgetItem = (): VDBSBudgetItem => ({

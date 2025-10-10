@@ -30,7 +30,10 @@
       "mcp__neon__run_sql_transaction",
       "mcp__neon__get_connection_string",
       "Bash(npm run:*)",
-      "mcp__neon__run_sql"
+      "mcp__neon__run_sql",
+      "Bash(cat:*)",
+      "Bash(git log:*)",
+      "Bash(awk:*)"
     ],
     "deny": [],
     "ask": []

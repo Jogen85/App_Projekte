@@ -1,6 +1,6 @@
 'use client'
 
-import React, { Suspense, lazy, useMemo, useState, useEffect, useCallback } from 'react'
+import React, { Suspense, lazy, useMemo, useState, useEffect } from 'react'
 import { Card, COLORS } from '@/ui'
 import { parseProjectsCSV, projectsToCSV } from '@/lib/csv'
 import type { Project, NormalizedProject, YearBudget } from '@/types'
