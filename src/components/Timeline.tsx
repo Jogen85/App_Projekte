@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { Card, COLORS } from '../ui';
-import { daysBetween, yearStart, yearEnd, fmtDate, clamp, getToday } from '../lib';
+import { yearStart, yearEnd, fmtDate, clamp, getToday } from '../lib';
 import type { NormalizedProject } from '../types';
 
 type Props = {
