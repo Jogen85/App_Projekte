@@ -1,7 +1,6 @@
 'use client'
 
 import React, { Suspense, lazy, useMemo, useState, useEffect, useCallback } from 'react'
-import { useSearchParams } from 'next/navigation'
 import { Card, COLORS } from '@/ui'
 import { parseProjectsCSV, projectsToCSV } from '@/lib/csv'
 import type { Project, NormalizedProject, YearBudget } from '@/types'
@@ -28,7 +27,7 @@ const BudgetDonut = lazy(() => import('@/components/BudgetDonut'))
 const ProgressDelta = lazy(() => import('@/components/ProgressDelta'))
 const ProjectDelays = lazy(() => import('@/components/ProjectDelays'))
 
-export default function ProjectsDashboard() {
+function ProjectsDashboardContent() {
   const today = getToday()
   const [projects, setProjects] = useState<Project[]>([])
   const [yearBudgets, setYearBudgets] = useState<YearBudget[]>([])
@@ -150,30 +149,7 @@ export default function ProjectsDashboard() {
   // Progress filter (Soll-Ist)
   const [progressFilter, setProgressFilter] = useState<'all' | 'behind' | 'ontrack' | 'ahead'>('all')
   const [progressTolerance, setProgressTolerance] = useState<number>(10)
-  const [highlightProjectId, setHighlightProjectIdState] = useState<string | null>(null)
-  const searchParams = useSearchParams()
-
-  useEffect(() => {
-    const highlight = searchParams?.get('highlight')
-    if (highlight && highlight !== highlightProjectId) {
-      setHighlightProjectIdState(highlight)
-    } else if (!highlight && highlightProjectId) {
-      setHighlightProjectIdState(null)
-    }
-  }, [searchParams, highlightProjectId])
-
-  const setHighlightProjectId = useCallback((id: string | null) => {
-    setHighlightProjectIdState(id)
-    if (typeof window !== 'undefined') {
-      const url = new URL(window.location.href)
-      if (id) {
-        url.searchParams.set('highlight', id)
-      } else {
-        url.searchParams.delete('highlight')
-      }
-      window.history.replaceState({}, '', url.toString())
-    }
-  }, [])
+  const [highlightProjectId, setHighlightProjectId] = useState<string | null>(null)
 
   const categoryForProject = React.useCallback(
     (p: NormalizedProject): 'behind' | 'ontrack' | 'ahead' => {
@@ -443,5 +419,13 @@ export default function ProjectsDashboard() {
         )}
       </div>
     </div>
+  )
+}
+
+export default function ProjectsDashboard() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-gray-50 flex items-center justify-center"><div className="text-lg text-gray-600">Lade Daten...</div></div>}>
+      <ProjectsDashboardContent />
+    </Suspense>
   )
 }
