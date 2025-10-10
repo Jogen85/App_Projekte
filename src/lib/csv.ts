@@ -189,29 +189,8 @@ export function projectsToCSV(projects: Project[], delimiter: CsvDelimiter = ';'
 
 export const CSV_HEADERS = REQUIRED_FIELDS;
 
-// IT-Kosten CSV Parser
-const IT_COST_REQUIRED_FIELDS = ['id', 'description', 'category', 'provider', 'amount', 'frequency', 'startDate', 'endDate', 'costCenter', 'notes', 'year'] as const;
-
-/**
- * Hilfsfunktion: Normalisiert Datum-String (DD.MM.YYYY → YYYY-MM-DD)
- */
-function normalizeDateString(dateStr: string): string {
-  if (!dateStr) return '';
-  const str = dateStr.trim();
-
-  // Prüfe ob bereits YYYY-MM-DD Format
-  if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
-    return str;
-  }
-
-  // DD.MM.YYYY Format
-  const parts = str.split('.');
-  if (parts.length === 3 && parts[0].length === 2 && parts[1].length === 2 && parts[2].length === 4) {
-    return `${parts[2]}-${parts[1]}-${parts[0]}`;
-  }
-
-  return str;
-}
+// IT-Kosten CSV Parser (v1.5.0: startDate/endDate removed)
+const IT_COST_REQUIRED_FIELDS = ['id', 'description', 'category', 'provider', 'amount', 'frequency', 'costCenter', 'notes', 'year'] as const;
 
 /**
  * Hilfsfunktion: Parst deutsche Zahlenformate
@@ -266,8 +245,8 @@ export function parseITCostsCSV(csv: string): ITCost[] {
         return row[colIdx];
       };
 
-      // Pflichtfelder prüfen
-      if (!pick('id') || !pick('description') || !pick('category') || !pick('provider') || !pick('amount') || !pick('frequency') || !pick('startDate') || !pick('year')) {
+      // Pflichtfelder prüfen (v1.5.0: startDate/endDate nicht mehr erforderlich)
+      if (!pick('id') || !pick('description') || !pick('category') || !pick('provider') || !pick('amount') || !pick('frequency') || !pick('year')) {
         console.warn(`IT-Kosten Row ${idx + 2} missing required fields`);
         return null;
       }
@@ -288,10 +267,6 @@ export function parseITCostsCSV(csv: string): ITCost[] {
         return null;
       }
 
-      // Datum normalisieren (DD.MM.YYYY → YYYY-MM-DD)
-      const startDate = normalizeDateString(pick('startDate'));
-      const endDate = normalizeDateString(pick('endDate'));
-
       return {
         id: pick('id'),
         description: pick('description'),
@@ -299,8 +274,6 @@ export function parseITCostsCSV(csv: string): ITCost[] {
         provider: pick('provider'),
         amount: parseGermanNumber(pick('amount')),
         frequency,
-        startDate,
-        endDate,
         costCenter: pick('costCenter'),
         notes: pick('notes'),
         year: parseInt(pick('year'), 10),
@@ -310,7 +283,7 @@ export function parseITCostsCSV(csv: string): ITCost[] {
 }
 
 /**
- * Serialisiert ITCost-Array zu CSV
+ * Serialisiert ITCost-Array zu CSV (v1.5.0: ohne startDate/endDate)
  */
 export function serializeITCostsCSV(costs: ITCost[], delimiter: CsvDelimiter = ';'): string {
   const headers = IT_COST_REQUIRED_FIELDS;
@@ -323,8 +296,6 @@ export function serializeITCostsCSV(costs: ITCost[], delimiter: CsvDelimiter = '
     escapeField(c.provider, delimiter),
     escapeField(c.amount.toFixed(2), delimiter),
     escapeField(c.frequency, delimiter),
-    escapeField(c.startDate, delimiter),
-    escapeField(c.endDate || '', delimiter),
     escapeField(c.costCenter || '', delimiter),
     escapeField(c.notes || '', delimiter),
     escapeField(c.year.toString(), delimiter),
