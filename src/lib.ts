@@ -90,67 +90,29 @@ export function costsYTDForYearD(p: { startD: Date; endD: Date; costToDate: numb
 import type { ITCost, ITCostsByCategory, ITCostsByProvider } from './types';
 
 /**
- * Hilfsfunktion: Parst Datum-String zu Date
- */
-function parseDate(dateStr: string): Date {
-  return toDate(dateStr);
-}
-
-/**
- * Hilfsfunktion: Prüft ob Jahr ein Schaltjahr ist
- */
-function isLeapYear(year: number): boolean {
-  return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
-}
-
-/**
  * Berechnet die jährlichen Kosten einer IT-Kostenposition
- * Berücksichtigt Frequenz und anteilige Berechnung bei unterjährigem Start/Ende
+ * Berücksichtigt nur die Frequenz (keine Start/Enddaten mehr seit v1.5.0)
  */
 export function calculateYearlyCostD(
   cost: ITCost,
   year: number,
   _today: Date = new Date()
 ): number {
-  const yearStartD = new Date(year, 0, 1);
-  const yearEndD = new Date(year, 11, 31);
+  // Nur Kosten für das angegebene Jahr berücksichtigen
+  if (cost.year !== year) return 0;
 
-  // Vertragszeitraum parsen
-  const startD = parseDate(cost.startDate);
-  const endD = cost.endDate ? parseDate(cost.endDate) : null;
-
-  // Wenn Vertrag komplett außerhalb des Jahres liegt → 0
-  if (startD > yearEndD) return 0;
-  if (endD && endD < yearStartD) return 0;
-
-  // Überlappende Tage im Jahr berechnen
-  const effectiveStartD = startD > yearStartD ? startD : yearStartD;
-  const effectiveEndD = endD && endD < yearEndD ? endD : yearEndD;
-  const overlapDaysD = daysBetween(effectiveStartD, effectiveEndD) + 1; // +1 für inklusiv
-
-  // Basis-Jahreskosten je nach Frequenz
-  let yearlyBaseAmount = 0;
+  // Jahreskosten je nach Frequenz
   switch (cost.frequency) {
     case 'monthly':
-      yearlyBaseAmount = cost.amount * 12;
-      break;
+      return cost.amount * 12;
     case 'quarterly':
-      yearlyBaseAmount = cost.amount * 4;
-      break;
+      return cost.amount * 4;
     case 'yearly':
-      yearlyBaseAmount = cost.amount;
-      break;
     case 'one_time':
-      // Einmalige Kosten nur im Jahr des Starts
-      if (startD.getFullYear() === year) {
-        return cost.amount;
-      }
+      return cost.amount;
+    default:
       return 0;
   }
-
-  // Anteilige Berechnung bei unterjährigem Start/Ende
-  const daysInYear = isLeapYear(year) ? 366 : 365;
-  return (yearlyBaseAmount * overlapDaysD) / daysInYear;
 }
 
 /**
