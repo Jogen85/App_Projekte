@@ -7,7 +7,7 @@
 - **8 Dashboard & Admin Pages**
   - IT-Cockpit (main dashboard with KPIs & alerts)
   - Projects, IT-Costs, VDB-S Budget, Overall Budget dashboards
-  - 3 Admin portals with CRUD + CSV export
+  - 4 Admin portals with CRUD + CSV Import/Export
 - **Real-time PostgreSQL Database** (Neon Serverless)
   - 76 records: 21 projects, 12 IT costs, 40 VDB-S budget items, 3 year budgets
 - **Advanced Budget Visualization**
@@ -72,15 +72,15 @@ src/
 │   ├── vdbs-budget/page.tsx        # VDB-S Budget Dashboard (Client Component)
 │   ├── overall-budget/page.tsx     # Overall Budget Dashboard (Client Component)
 │   ├── admin/
-│   │   ├── projects/page.tsx       # Projects Admin (CRUD)
-│   │   ├── it-costs/page.tsx       # IT-Costs Admin (CRUD)
-│   │   ├── vdbs-budget/page.tsx    # VDB-S Budget Admin (CRUD)
-│   │   └── overall-budget/page.tsx # Overall Budget Admin (Year Budgets)
+│   │   ├── projects/page.tsx       # Projects Admin (CRUD + CSV Import/Export)
+│   │   ├── it-costs/page.tsx       # IT-Costs Admin (CRUD + CSV Import/Export)
+│   │   ├── vdbs-budget/page.tsx    # VDB-S Budget Admin (CRUD + CSV Import/Export)
+│   │   └── overall-budget/page.tsx # Overall Budget Admin (CRUD + CSV Import/Export)
 │   └── api/                        # API Routes (CRUD for all entities)
 ├── components/                     # React components (charts, tables, filters)
 ├── lib/
 │   ├── db.ts                       # Database client
-│   ├── csv.ts                      # CSV serialization (export)
+│   ├── csv.ts                      # CSV Import/Export with validation
 │   └── utils.ts                    # Date utils, RAG logic, calculations
 ├── types.ts                        # TypeScript types
 └── data/demoData.ts                # Demo data (for seeding)
@@ -144,11 +144,27 @@ Deployed on Vercel with automatic builds from Git.
 - **Budget RAG**: Red (>105%), Amber (>90% + progress <80%), Green
 - **Time RAG**: Red (overdue or delta <-15pp), Amber (delta <-5pp), Green
 
+## 📥 CSV Import/Export (v1.7.0)
+
+All admin portals support CSV Import/Export with:
+- **Flexible Date Formats**: `DD.MM.YYYY` (German) or `YYYY-MM-DD` (ISO)
+- **Number Formats**: German (`10.000,50`) or standard (`10000.50`)
+- **Detailed Error Reporting**: Line-by-line validation with exact field/value/expected format
+- **Auto-Encoding Detection**: UTF-8 + BOM, Windows-1252 fallback
+
+**Example CSV (both formats work):**
+```csv
+id;...;start;end;...
+p1;...;10.03.2025;31.12.2025;...  ✅ German dates
+p2;...;2025-01-15;2025-06-30;...  ✅ ISO dates
+```
+
+See `CLAUDE.md` for complete validation rules.
+
 ## 🧪 Known Limitations
 
 1. **Desktop-only**: No mobile optimization (min-width: 1440px)
-2. **CSV Import**: Only export functionality (no import in Next.js version)
-3. **German UI**: All labels in German
+2. **German UI**: All labels in German
 
 ## 📝 License
 

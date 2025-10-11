@@ -1617,3 +1617,110 @@ Migration Status: ✅ **VOLLSTÄNDIG ABGESCHLOSSEN**
   - Server/Client Components Guidance
 
 **Bereit für Merge**: Branch `Datenbank` → `main`
+
+---
+
+## CSV Import/Export Enhancement (2025-01-11, v1.7.0)
+
+### Problem: Deutsches Datumsformat nicht mehr unterstützt
+
+**Kontext**: Bei der Datenbankmi gration wurden striktere Validierungen für CSV-Importe eingeführt. Der CSV-Parser akzeptierte nur noch ISO-Datumsformat (`YYYY-MM-DD`), was bestehende CSV-Dateien im deutschen Format (`DD.MM.YYYY`) unbrauchbar machte.
+
+**Fehlermeldung**:
+```
+❌ Ungültiges Datumsformat
+  - Wert: "10.03.2025"
+  - Erwartet: YYYY-MM-DD
+```
+
+### Implementierte Lösung
+
+#### 1. Flexibler Datum-Parser (src/lib/csv.ts:145-179)
+Neue Funktion `parseFlexibleDate()` hinzugefügt, die beide Formate akzeptiert:
+- **Deutsches Format**: `DD.MM.YYYY` (z.B. "10.03.2025")
+- **ISO-Format**: `YYYY-MM-DD` (z.B. "2025-03-10")
+
+**Funktionsweise**:
+- Regex-basierte Erkennung beider Formate
+- Automatische Konvertierung zu ISO-Format für Datenbank
+- Validierung: Monat 1-12, Tag 1-31, Jahr 1900-2100
+
+#### 2. CSV-Parser Aktualisiert
+**parseProjectsCSV()** erweitert:
+- Verwendet `parseFlexibleDate()` für start/end Datumsfelder
+- Fehlermeldung zeigt: "DD.MM.YYYY oder YYYY-MM-DD"
+- Start < End Validierung mit konvertierten Daten
+
+#### 3. Erweiterte Fehlerbehandlung
+
+**CSVParseError Klasse** (seit v1.6.0, erweitert in v1.7.0):
+```typescript
+export class CSVParseError extends Error {
+  constructor(
+    message: string,
+    public readonly errors: CSVErrorDetail[],
+    public readonly successCount: number = 0
+  )
+
+  toDetailedMessage(): string // Formatiert Fehler-Details
+}
+```
+
+**Fehler-Details enthalten**:
+- Zeilennummer (exakt)
+- Feldname
+- Tatsächlicher Wert
+- Erwartetes Format
+
+**Beispiel-Ausgabe**:
+```
+❌ CSV-Import fehlgeschlagen (2 Fehler, 18 erfolgreich)
+
+Zeile 5: (Feld: start)
+  - Ungültiges Datumsformat
+  - Wert: "03/10/2025"
+  - Erwartet: DD.MM.YYYY oder YYYY-MM-DD
+
+Zeile 12: (Feld: category)
+  - Ungültige Kategorie
+  - Wert: "foo"
+  - Erwartet: hardware, software_licenses, ...
+```
+
+### Unterstützte CSV-Szenarien
+
+**Kompatibilität**:
+```csv
+id;...;start;end;...
+p1;...;10.03.2025;31.12.2025;...  ✅ Deutsches Format
+p2;...;2025-01-15;2025-06-30;...  ✅ ISO-Format
+p3;...;15.02.2025;2025-12-20;...  ✅ Gemischte Formate
+```
+
+### Betroffene Dateien
+- `src/lib/csv.ts`: +48 Zeilen (parseFlexibleDate + Validierung)
+- `CLAUDE.md`: Dokumentation erweitert (CSV Features Section)
+- `README.md`: CSV Import/Export Section hinzugefügt
+- `test-german-dates.csv`: Test-CSV mit beiden Formaten
+
+### Testfall
+Test-CSV erstellt mit 3 Szenarien:
+1. Beide Daten deutsch (10.03.2025, 31.12.2025)
+2. Beide Daten ISO (2025-01-15, 2025-06-30)
+3. Gemischt (15.02.2025, 2025-12-20)
+
+**Build-Status**: ✅ TypeScript + Next.js Build erfolgreich
+
+### Rückwärtskompatibilität
+✅ **Vollständig kompatibel** mit bestehenden CSV-Dateien:
+- Alte CSV-Dateien (deutsches Format) funktionieren wieder
+- Neue CSV-Dateien (ISO-Format) funktionieren weiterhin
+- Mischformate innerhalb einer Datei möglich
+
+**Commit**: `8c5e536` (CSV-Fehlerbehandlung + YearBudgets CSV)
+**Commit**: TBD (Flexible Date-Format Support)
+
+---
+
+**Letztes Update**: 2025-01-11
+**Status**: ✅ CSV Import/Export vollständig mit flexiblem Datumsformat

@@ -1,0 +1,4 @@
+id;projectNumberInternal;projectNumberExternal;classification;title;owner;description;status;start;end;progress;budgetPlanned;costToDate;org;requiresAT82Check;at82Completed
+test-de-1;PINT-2025-TEST;EXT-001;project;Test Deutsches Datum;Max Mustermann;Test mit DD.MM.YYYY Format;active;10.03.2025;31.12.2025;50;50000;25000;BB;Ja;Nein
+test-de-2;PINT-2025-TEST2;;internal_dev;Test ISO Datum;Anna Schmidt;Test mit YYYY-MM-DD Format;planned;2025-01-15;2025-06-30;0;30000;0;BB;Nein;Nein
+test-de-3;PINT-2025-TEST3;;project;Test Gemischt;Peter Pan;Start deutsch, Ende ISO;active;15.02.2025;2025-12-20;75;100000;80000;BB;Ja;Ja

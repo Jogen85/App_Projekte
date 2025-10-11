@@ -42,10 +42,10 @@ IT Portfolio Dashboard – Next.js 15 application for executive project oversigh
 - `/overall-budget` – Overall Budget Dashboard (Client Component)
 
 **Admin Portals** (Client Components with CRUD):
-- `/admin/projects` – Projects Admin (CRUD + CSV Export)
-- `/admin/it-costs` – IT-Kosten Admin (CRUD + CSV Export)
-- `/admin/vdbs-budget` – VDB-S Budget Admin (CRUD + CSV Export)
-- `/admin/overall-budget` – Overall Budget Admin (Year Budgets CRUD)
+- `/admin/projects` – Projects Admin (CRUD + CSV Import/Export)
+- `/admin/it-costs` – IT-Kosten Admin (CRUD + CSV Import/Export)
+- `/admin/vdbs-budget` – VDB-S Budget Admin (CRUD + CSV Import/Export)
+- `/admin/overall-budget` – Overall Budget Admin (Year Budgets CRUD + CSV Import/Export)
 
 **API Routes** (Server-side):
 - `/api/projects` (GET, POST)
@@ -134,7 +134,8 @@ CREATE TABLE vdbs_budget (
 3. **Admin Portals**:
    - Client Components with forms
    - CRUD operations via API routes
-   - CSV Export functionality (client-side serialization)
+   - CSV Import/Export functionality (client-side serialization)
+   - Enhanced error reporting with detailed validation messages
    - Auto-save on every change
 
 ### Core Modules
@@ -158,10 +159,14 @@ CREATE TABLE vdbs_budget (
   - Budget calculations (`plannedBudgetForYearD`, `calculateYearlyCostD`)
   - Number formatting (`fmtEuro`, `fmtCompact`)
 
-- **`src/lib/csv.ts`**: CSV serialization (for export only)
-  - `projectsToCSV()`, `serializeITCostsCSV()`, `serializeVDBSBudgetCSV()`
-  - German number format support
-  - BOM handling for Excel compatibility
+- **`src/lib/csv.ts`**: CSV Import/Export with validation
+  - **Export**: `projectsToCSV()`, `serializeITCostsCSV()`, `serializeVDBSBudgetCSV()`, `serializeYearBudgetsCSV()`
+  - **Import**: `parseProjectsCSV()`, `parseITCostsCSV()`, `parseVDBSBudgetCSV()`, `parseYearBudgetsCSV()`
+  - **Error Handling**: `CSVParseError` class with detailed line-by-line error reporting
+  - **Date Formats**: Supports both `DD.MM.YYYY` (German) and `YYYY-MM-DD` (ISO)
+  - **Number Formats**: German format (`10.000,50`) and standard format (`10000.50`)
+  - **Encoding**: Auto-detection (UTF-8 + BOM, Windows-1252 fallback)
+  - **Validation**: Header checks, required fields, data types, ranges, enums
 
 - **`src/ui.tsx`**: Reusable UI primitives
   - `Card`, `Badge` (6 colors), `ProgressBar`
@@ -323,21 +328,103 @@ See `MIGRATION_LOG.md` for detailed migration history.
 
 3. ✅ **Date dependencies**: Include `today` in all date-based useMemo/useCallback
 
-4. ✅ **German number format**: CSV parser handles `10.000,50` → 10000.5
+4. ✅ **Date format flexibility**: CSV parser accepts both formats
+   - German: `DD.MM.YYYY` (e.g., `10.03.2025`)
+   - ISO: `YYYY-MM-DD` (e.g., `2025-03-10`)
+   - Auto-converts to ISO for database storage
 
-5. ✅ **Boolean parsing**: Supports `Ja`/`Nein`/`true`/`false`/`yes`/`no`/`1`/`0`
+5. ✅ **German number format**: CSV parser handles `10.000,50` → 10000.5
 
-6. ✅ **Suspense Boundary**: Client Components with `useSearchParams()` must be wrapped in `<Suspense>`
+6. ✅ **Boolean parsing**: Supports `Ja`/`Nein`/`true`/`false`/`yes`/`no`/`1`/`0`
+
+7. ✅ **CSV Error Reporting**: Detailed validation with row/field/value context
+   - Shows exact line number, field name, actual value, expected format
+   - Multiple errors collected and displayed at once
+   - Longer timeout (10s) for reading complex error messages
+
+8. ✅ **Suspense Boundary**: Client Components with `useSearchParams()` must be wrapped in `<Suspense>`
 
 ## Known Limitations
 
 1. **Desktop-only**: No mobile optimization (min-width: 1440px)
 2. **Budget Donut**: Fixed dimensions (150px, outer=60, inner=40)
-3. **CSV Import**: Only export functionality (no import in Next.js version)
+
+## CSV Import/Export Features (v1.7.0)
+
+### Supported Entities
+All four admin portals support CSV Import/Export:
+1. **Projects** (`/admin/projects`)
+2. **IT-Kosten** (`/admin/it-costs`)
+3. **VDB-S Budget** (`/admin/vdbs-budget`)
+4. **Jahresbudgets** (`/admin/overall-budget`)
+
+### Date Format Support
+CSV Import accepts **both** date formats automatically:
+- **German Format**: `DD.MM.YYYY` (e.g., `10.03.2025`, `31.12.2025`)
+- **ISO Format**: `YYYY-MM-DD` (e.g., `2025-03-10`, `2025-12-31`)
+
+**Example CSV (both work):**
+```csv
+id;...;start;end;...
+p1;...;10.03.2025;31.12.2025;...  ✅ German format
+p2;...;2025-01-15;2025-06-30;...  ✅ ISO format
+p3;...;15.02.2025;2025-12-20;...  ✅ Mixed formats
+```
+
+### Error Reporting
+Detailed validation errors show:
+- **Row number** (exact line in CSV)
+- **Field name** (which column failed)
+- **Actual value** (what was provided)
+- **Expected format** (what's required)
+
+**Example error message:**
+```
+❌ CSV-Import fehlgeschlagen (3 Fehler, 18 erfolgreich)
+
+Zeile 5: (Feld: category)
+  - Ungültige Kategorie
+  - Wert: "foo"
+  - Erwartet: hardware, software_licenses, maintenance_service, training, other
+
+Zeile 12:
+  - Pflichtfeld "amount" fehlt oder ist leer
+
+Zeile 18: (Feld: start)
+  - Ungültiges Datumsformat
+  - Wert: "03/10/2025"
+  - Erwartet: DD.MM.YYYY oder YYYY-MM-DD
+```
+
+### Validation Rules
+
+#### Projects (16 validations)
+- **Required**: id, title, owner, start, end
+- **Classification**: `internal_dev | project | project_vdbs | task`
+- **Status**: `planned | active | done`
+- **Progress**: 0-100
+- **Dates**: `DD.MM.YYYY` or `YYYY-MM-DD`, start < end
+
+#### IT-Kosten (9 validations)
+- **Required**: id, description, category, provider, amount, frequency, year
+- **Category**: `hardware | software_licenses | maintenance_service | training | other`
+- **Frequency**: `monthly | quarterly | yearly | one_time`
+- **Year**: 2020-2030
+- **Amount**: ≥ 0
+
+#### VDB-S Budget (5 validations)
+- **Required**: Projekt Nr., Projekte, Budget 2026
+- **Category**: `RUN | CHANGE`
+- **Budget**: ≥ 0
+
+#### Jahresbudgets (4 validations)
+- **Required**: Jahr, Budget
+- **Year**: 2020-2030
+- **Budget**: ≥ 0
 
 ## Future Enhancements
 
-- CSV Import via API route (bulk insert)
 - PDF/Excel Export
 - Multi-User Collaboration
 - Real-time updates (WebSockets)
+- CSV Import preview mode

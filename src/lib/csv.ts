@@ -135,6 +135,49 @@ function requireHeaders(headers: string[]): asserts headers is string[] {
   }
 }
 
+/**
+ * Parst Datum in beiden Formaten:
+ * - DD.MM.YYYY (deutsch)
+ * - YYYY-MM-DD (ISO)
+ *
+ * @returns ISO-Format (YYYY-MM-DD) oder null bei ungültigem Format
+ */
+function parseFlexibleDate(dateStr: string): string | null {
+  if (!dateStr || !dateStr.trim()) return null;
+
+  const str = dateStr.trim();
+
+  // Deutsch: DD.MM.YYYY
+  const germanMatch = /^(\d{2})\.(\d{2})\.(\d{4})$/.exec(str);
+  if (germanMatch) {
+    const [, day, month, year] = germanMatch;
+    // Validierung: Monat 1-12, Tag 1-31 (grob)
+    const d = parseInt(day, 10);
+    const m = parseInt(month, 10);
+    const y = parseInt(year, 10);
+    if (m < 1 || m > 12) return null;
+    if (d < 1 || d > 31) return null;
+    if (y < 1900 || y > 2100) return null;
+    return `${year}-${month}-${day}`;
+  }
+
+  // ISO: YYYY-MM-DD
+  const isoMatch = /^(\d{4})-(\d{2})-(\d{2})$/.exec(str);
+  if (isoMatch) {
+    const [, year, month, day] = isoMatch;
+    // Validierung: Monat 1-12, Tag 1-31 (grob)
+    const d = parseInt(day, 10);
+    const m = parseInt(month, 10);
+    const y = parseInt(year, 10);
+    if (m < 1 || m > 12) return null;
+    if (d < 1 || d > 31) return null;
+    if (y < 1900 || y > 2100) return null;
+    return str;
+  }
+
+  return null; // Ungültiges Format
+}
+
 export function parseProjectsCSV(text: string): Project[] {
   if (!text) return [];
   let cleaned = text;
@@ -248,28 +291,31 @@ export function parseProjectsCSV(text: string): Project[] {
       });
     }
 
-    // Date validation (basic format check)
-    if (start && !/^\d{4}-\d{2}-\d{2}$/.test(start)) {
+    // Date validation (supports both DD.MM.YYYY and YYYY-MM-DD)
+    const startConverted = parseFlexibleDate(start);
+    const endConverted = parseFlexibleDate(end);
+
+    if (start && !startConverted) {
       errors.push({
         row: rowNum,
         field: 'start',
         value: start,
-        expected: 'YYYY-MM-DD',
+        expected: 'DD.MM.YYYY oder YYYY-MM-DD',
         message: 'Ungültiges Datumsformat'
       });
     }
-    if (end && !/^\d{4}-\d{2}-\d{2}$/.test(end)) {
+    if (end && !endConverted) {
       errors.push({
         row: rowNum,
         field: 'end',
         value: end,
-        expected: 'YYYY-MM-DD',
+        expected: 'DD.MM.YYYY oder YYYY-MM-DD',
         message: 'Ungültiges Datumsformat'
       });
     }
 
-    // Date logic validation
-    if (start && end && start > end) {
+    // Date logic validation (using converted ISO dates)
+    if (startConverted && endConverted && startConverted > endConverted) {
       errors.push({
         row: rowNum,
         message: 'Start-Datum darf nicht nach End-Datum liegen',
@@ -286,8 +332,8 @@ export function parseProjectsCSV(text: string): Project[] {
       owner: owner,
       description: pick('description'),
       status: (status || 'planned').toLowerCase(),
-      start: start,
-      end: end,
+      start: startConverted || start, // Use converted ISO format
+      end: endConverted || end, // Use converted ISO format
       progress: progressNum,
       budgetPlanned: numeric(pick('budgetPlanned')),
       costToDate: numeric(pick('costToDate')),
