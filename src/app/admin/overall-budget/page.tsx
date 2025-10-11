@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react'
 import type { YearBudget, Project } from '@/types'
-import { Card, COLORS } from '@/ui'
+import { Card, TYPOGRAPHY, LAYOUT } from '@/ui'
 import { getCurrentYear, overlapDays, daysBetween, yearStart, yearEnd } from '@/lib'
 import { parseYearBudgetsCSV, serializeYearBudgetsCSV, readFileAsText, CSVParseError } from '@/lib/csv'
 
@@ -230,12 +230,15 @@ export default function OverallBudgetAdmin() {
   }
 
   return (
-    <div className={`min-h-screen ${COLORS.bg} ${COLORS.text} p-6`}>
-      <div className="max-w-[1800px] mx-auto space-y-4">
-        <header className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">Admin – Jahresbudgets verwalten</h1>
-          <a href="/overall-budget" className="text-blue-600 hover:underline">
-            Zum Dashboard
+    <div className={LAYOUT.pageContainer}>
+      <div className={LAYOUT.contentWrapper}>
+        <header className={LAYOUT.header}>
+          <div>
+            <h1 className={TYPOGRAPHY.pageTitle}>Admin – Jahresbudgets verwalten</h1>
+            <p className={TYPOGRAPHY.pageSubtitle}>Jahresbudgets definieren, importieren und exportieren</p>
+          </div>
+          <a href="/overall-budget" className="text-sm text-blue-600 hover:underline font-medium">
+            ← Zurück zum Dashboard
           </a>
         </header>
 

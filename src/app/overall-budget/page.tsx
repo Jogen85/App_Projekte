@@ -10,8 +10,7 @@ import {
   getITCostsByCategoryD,
   getToday,
 } from '@/lib'
-import DashboardTabs from '@/components/DashboardTabs'
-import { Card, COLORS } from '@/ui'
+import { Card, TYPOGRAPHY, LAYOUT } from '@/ui'
 
 const BudgetDonut = lazy(() => import('@/components/BudgetDonut'))
 
@@ -128,13 +127,13 @@ function OverallBudgetDashboardContent() {
   }
 
   return (
-    <div className={`min-h-screen ${COLORS.bg} ${COLORS.text} px-8 py-4`}>
-      <div className="max-w-presentation mx-auto space-y-3">
+    <div className={LAYOUT.pageContainer}>
+      <div className={LAYOUT.contentWrapper}>
         {/* Header */}
-        <header className="flex items-end justify-between">
+        <header className={LAYOUT.header}>
           <div>
-            <h1 className="text-2xl font-bold">Gesamtbudgetplanung</h1>
-            <p className={'text-sm ' + COLORS.subtext}>
+            <h1 className={TYPOGRAPHY.pageTitle}>Gesamtbudgetplanung</h1>
+            <p className={TYPOGRAPHY.pageSubtitle}>
               Konsolidierte Übersicht über Projektbudgets, IT-Kosten und VDB-S Budget
             </p>
           </div>
@@ -144,7 +143,7 @@ function OverallBudgetDashboardContent() {
               <select
                 value={year}
                 onChange={(e) => setYear(Number(e.target.value))}
-                className="rounded border border-gray-300 px-3 py-2 text-sm"
+                className="rounded border border-slate-300 px-3 py-2 text-sm"
               >
                 {Array.from({ length: 10 }, (_, i) => currentYear - 5 + i).map((y) => (
                   <option key={y} value={y}>
@@ -158,9 +157,6 @@ function OverallBudgetDashboardContent() {
             </a>
           </div>
         </header>
-
-        {/* Tabs */}
-        <DashboardTabs />
 
         {/* Warnings */}
         {calculations.warningPlan && (

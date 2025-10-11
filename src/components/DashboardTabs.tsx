@@ -15,28 +15,43 @@ export default function DashboardTabs() {
   ]
 
   return (
-    <div className="flex gap-1 border-b border-gray-200">
-      {tabs.map((tab) => {
-        const isActive =
-          pathname === tab.path ||
-          (tab.path !== '/' && pathname?.startsWith(`${tab.path}/`))
-        return (
-          <Link
-            key={tab.path}
-            href={tab.path}
-            className={`
-              px-6 py-3 text-sm font-medium transition-colors
-              ${
-                isActive
-                  ? 'border-b-2 border-blue-600 text-blue-600'
-                  : 'text-gray-600 hover:text-gray-900'
-              }
-            `}
-          >
-            {tab.label}
-          </Link>
-        )
-      })}
-    </div>
+    <nav className="sticky top-0 z-50 bg-white border-b border-slate-200 shadow-sm">
+      <div className="mx-auto max-w-presentation px-8">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-6">
+            <div className="py-4">
+              <h1 className="text-xl font-bold text-slate-900">IT Portfolio Dashboard</h1>
+              <p className="text-xs text-slate-500">Executive Project Oversight</p>
+            </div>
+          </div>
+          <div className="flex gap-1">
+            {tabs.map((tab) => {
+              const isActive =
+                pathname === tab.path ||
+                (tab.path !== '/' && pathname?.startsWith(`${tab.path}/`))
+              return (
+                <Link
+                  key={tab.path}
+                  href={tab.path}
+                  className={`
+                    px-5 py-4 text-sm font-medium transition-all relative
+                    ${
+                      isActive
+                        ? 'text-blue-600'
+                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                    }
+                  `}
+                >
+                  {tab.label}
+                  {isActive && (
+                    <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600"></span>
+                  )}
+                </Link>
+              )
+            })}
+          </div>
+        </div>
+      </div>
+    </nav>
   )
 }

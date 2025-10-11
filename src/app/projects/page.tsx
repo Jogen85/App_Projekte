@@ -1,7 +1,7 @@
 'use client'
 
 import React, { Suspense, lazy, useMemo, useState, useEffect } from 'react'
-import { Card, COLORS } from '@/ui'
+import { Card, TYPOGRAPHY, LAYOUT } from '@/ui'
 import { parseProjectsCSV, projectsToCSV } from '@/lib/csv'
 import type { Project, NormalizedProject, YearBudget } from '@/types'
 import {
@@ -20,7 +20,6 @@ import {
 } from '@/lib'
 import FiltersPanel from '@/components/FiltersPanel'
 import Timeline from '@/components/Timeline'
-import DashboardTabs from '@/components/DashboardTabs'
 
 const ProjectsTable = lazy(() => import('@/components/ProjectsTable'))
 const BudgetDonut = lazy(() => import('@/components/BudgetDonut'))
@@ -220,12 +219,12 @@ function ProjectsDashboardContent() {
   }
 
   return (
-    <div className={`min-h-screen ${COLORS.bg} ${COLORS.text} px-8 py-4`}>
-      <div className="max-w-presentation mx-auto space-y-3">
-        <header className="flex items-end justify-between">
+    <div className={LAYOUT.pageContainer}>
+      <div className={LAYOUT.contentWrapper}>
+        <header className={LAYOUT.header}>
           <div>
-            <h1 className="text-2xl font-bold">IT-Projektübersicht</h1>
-            <p className={'text-sm ' + COLORS.subtext}>Stand: {fmtDate(today)}</p>
+            <h1 className={TYPOGRAPHY.pageTitle}>IT-Projektübersicht</h1>
+            <p className={TYPOGRAPHY.pageSubtitle}>Stand: {fmtDate(today)}</p>
           </div>
           <FiltersPanel
             statusFilter={statusFilter}
@@ -247,8 +246,6 @@ function ProjectsDashboardContent() {
             adminLink={{ href: '/admin/projects', label: 'Projekte verwalten' }}
           />
         </header>
-
-        <DashboardTabs />
 
         {csvError && (
           <Card>

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import type { ITCost, ITCostCategory } from '@/types'
-import { Card, COLORS } from '@/ui'
+import { Card, TYPOGRAPHY, LAYOUT } from '@/ui'
 import { parseITCostsCSV, serializeITCostsCSV, readFileAsText, CSVParseError } from '@/lib/csv'
 import { getCurrentYear } from '@/lib'
 
@@ -233,12 +233,15 @@ export default function ITCostsAdmin() {
   }
 
   return (
-    <div className={`min-h-screen ${COLORS.bg} ${COLORS.text} p-6`}>
-      <div className="max-w-[1800px] mx-auto space-y-4">
-        <header className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">Admin – IT-Kosten verwalten</h1>
-          <a href="/it-costs" className="text-blue-600 hover:underline">
-            Zum Dashboard
+    <div className={LAYOUT.pageContainer}>
+      <div className={LAYOUT.contentWrapper}>
+        <header className={LAYOUT.header}>
+          <div>
+            <h1 className={TYPOGRAPHY.pageTitle}>Admin – IT-Kosten verwalten</h1>
+            <p className={TYPOGRAPHY.pageSubtitle}>IT-Kosten verwalten, importieren und exportieren</p>
+          </div>
+          <a href="/it-costs" className="text-sm text-blue-600 hover:underline font-medium">
+            ← Zurück zum Dashboard
           </a>
         </header>
 

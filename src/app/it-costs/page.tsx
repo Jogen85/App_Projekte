@@ -1,7 +1,7 @@
 'use client'
 
 import React, { Suspense, lazy, useMemo, useState, useEffect } from 'react'
-import { Card, COLORS } from '@/ui'
+import { Card, TYPOGRAPHY, LAYOUT } from '@/ui'
 import type { ITCost, ITCostCategory } from '@/types'
 import {
   fmtDate,
@@ -10,7 +10,6 @@ import {
   getITCostsByCategoryD,
   getITCostsByProviderD,
 } from '@/lib'
-import DashboardTabs from '@/components/DashboardTabs'
 
 const ITCostsByCategoryChart = lazy(() => import('@/components/ITCostsByCategoryChart'))
 const ITCostsByProviderChart = lazy(() => import('@/components/ITCostsByProviderChart'))
@@ -90,13 +89,13 @@ function ITCostsDashboardContent() {
   }
 
   return (
-    <div className={`min-h-screen ${COLORS.bg} ${COLORS.text} px-8 py-4`}>
-      <div className="max-w-presentation mx-auto space-y-3">
+    <div className={LAYOUT.pageContainer}>
+      <div className={LAYOUT.contentWrapper}>
         {/* Header */}
-        <header className="flex items-end justify-between">
+        <header className={LAYOUT.header}>
           <div>
-            <h1 className="text-2xl font-bold">IT-Kostenübersicht</h1>
-            <p className={'text-sm ' + COLORS.subtext}>Stand: {fmtDate(today)}</p>
+            <h1 className={TYPOGRAPHY.pageTitle}>IT-Kostenübersicht</h1>
+            <p className={TYPOGRAPHY.pageSubtitle}>Stand: {fmtDate(today)}</p>
           </div>
           <div className="flex items-center gap-4">
             <div>
@@ -104,7 +103,7 @@ function ITCostsDashboardContent() {
               <select
                 value={year}
                 onChange={(e) => setYear(Number(e.target.value))}
-                className="rounded border border-gray-300 px-3 py-2 text-sm"
+                className="rounded border border-slate-300 px-3 py-2 text-sm"
               >
                 {Array.from({ length: 10 }, (_, i) => getCurrentYear() - 5 + i).map((y) => (
                   <option key={y} value={y}>
@@ -118,9 +117,6 @@ function ITCostsDashboardContent() {
             </a>
           </div>
         </header>
-
-        {/* Tabs */}
-        <DashboardTabs />
 
         {/* KPI-Zeile */}
         <div className="grid grid-cols-3 gap-3">

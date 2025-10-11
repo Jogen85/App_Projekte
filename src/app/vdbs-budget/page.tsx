@@ -2,9 +2,8 @@
 
 import React, { Suspense, useMemo, useState, useEffect } from 'react'
 import type { VDBSBudgetItem, YearBudget } from '@/types'
-import { Card, Badge, COLORS } from '@/ui'
+import { Card, Badge, TYPOGRAPHY, LAYOUT } from '@/ui'
 import { getCurrentYear } from '@/lib'
-import DashboardTabs from '@/components/DashboardTabs'
 import {
   ResponsiveContainer,
   PieChart,
@@ -166,13 +165,13 @@ function VDBSBudgetDashboardContent() {
   }
 
   return (
-    <div className={`min-h-screen ${COLORS.bg} ${COLORS.text} px-8 py-4`}>
-      <div className="mx-auto max-w-presentation space-y-3">
+    <div className={LAYOUT.pageContainer}>
+      <div className={LAYOUT.contentWrapper}>
         {/* Header */}
-        <header className="flex items-end justify-between">
+        <header className={LAYOUT.header}>
           <div>
-            <h1 className="text-2xl font-bold">VDB-S Budget</h1>
-            <p className={'text-sm ' + COLORS.subtext}>Budgetplanung für VDB-Service, Arbeitskreise und Projekte</p>
+            <h1 className={TYPOGRAPHY.pageTitle}>VDB-S Budget</h1>
+            <p className={TYPOGRAPHY.pageSubtitle}>Budgetplanung für VDB-Service, Arbeitskreise und Projekte</p>
           </div>
           <div className="flex items-center gap-4">
             <div>
@@ -180,7 +179,7 @@ function VDBSBudgetDashboardContent() {
               <select
                 value={categoryFilter}
                 onChange={(e) => setCategoryFilter(e.target.value as 'all' | 'RUN' | 'CHANGE')}
-                className="rounded border border-gray-300 px-3 py-2 text-sm"
+                className="rounded border border-slate-300 px-3 py-2 text-sm"
               >
                 <option value="all">Alle</option>
                 <option value="RUN">Laufende Kosten</option>
@@ -192,7 +191,7 @@ function VDBSBudgetDashboardContent() {
               <select
                 value={selectedYear}
                 onChange={(e) => setSelectedYear(Number(e.target.value))}
-                className="rounded border border-gray-300 px-3 py-2 text-sm"
+                className="rounded border border-slate-300 px-3 py-2 text-sm"
               >
                 {Array.from({ length: 10 }, (_, i) => currentYear - 2 + i).map((y) => (
                   <option key={y} value={y}>
@@ -206,9 +205,6 @@ function VDBSBudgetDashboardContent() {
             </a>
           </div>
         </header>
-
-        {/* Tabs */}
-        <DashboardTabs />
 
         {/* Warnung bei Überplanung */}
         {showWarning && (

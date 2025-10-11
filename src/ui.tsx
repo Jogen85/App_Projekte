@@ -14,6 +14,18 @@ export const COLORS = {
   slate: "#64748b",
 };
 
+export const TYPOGRAPHY = {
+  pageTitle: "text-2xl font-bold text-slate-900",
+  pageSubtitle: "text-sm text-slate-600 mt-1",
+  sectionTitle: "text-lg font-semibold text-slate-800",
+};
+
+export const LAYOUT = {
+  pageContainer: "min-h-screen bg-slate-50 text-slate-800",
+  contentWrapper: "mx-auto max-w-presentation px-8 py-6 space-y-4",
+  header: "flex items-end justify-between",
+};
+
 export const ragColorDot = (status: string) =>
   ({ green: COLORS.green, amber: COLORS.amber, red: COLORS.red } as Record<string,string>)[status] || COLORS.slate;
 

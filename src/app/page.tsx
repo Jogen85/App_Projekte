@@ -10,8 +10,7 @@ import {
   daysBetween,
   getITCostsByCategoryD,
 } from '@/lib'
-import { Card } from '@/ui'
-import DashboardTabs from '@/components/DashboardTabs'
+import { Card, TYPOGRAPHY, LAYOUT } from '@/ui'
 import Link from 'next/link'
 
 async function getProjects(): Promise<Project[]> {
@@ -211,21 +210,19 @@ export default async function ITCockpitPage() {
   const warningActual = yearBudget && totalActual > yearBudget.budget
 
   return (
-    <div className="min-h-screen bg-gray-50 px-8 py-4">
-      <div className="mx-auto max-w-[1800px] space-y-4">
-        <header className="flex flex-wrap items-end justify-between gap-3">
+    <div className={LAYOUT.pageContainer}>
+      <div className={LAYOUT.contentWrapper}>
+        <header className={LAYOUT.header}>
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">IT-Cockpit</h1>
-            <p className="mt-1 text-sm text-gray-600">
+            <h1 className={TYPOGRAPHY.pageTitle}>IT-Cockpit</h1>
+            <p className={TYPOGRAPHY.pageSubtitle}>
               Verdichtete Kennzahlen, Warnungen und Schnellzugriffe über alle Bereiche.
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-gray-700">Jahr: {year}</span>
+            <span className="text-sm font-medium text-slate-700">Jahr: {year}</span>
           </div>
         </header>
-
-        <DashboardTabs />
 
         <div className="grid gap-3 md:grid-cols-4">
           <Card title="Projekte gesamt" className="h-[120px]">

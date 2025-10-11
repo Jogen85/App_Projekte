@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import type { Project } from '@/types'
-import { Card, COLORS } from '@/ui'
+import { Card, TYPOGRAPHY, LAYOUT } from '@/ui'
 import { parseProjectsCSV, projectsToCSV, readFileAsText, CSVParseError } from '@/lib/csv'
 
 const emptyProject = (): Project => ({
@@ -235,12 +235,15 @@ export default function ProjectsAdmin() {
   }
 
   return (
-    <div className={`min-h-screen ${COLORS.bg} ${COLORS.text} p-6`}>
-      <div className="max-w-[1800px] mx-auto space-y-4">
-        <header className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">Admin – Projekte bearbeiten</h1>
-          <a href="/projects" className="text-blue-600 hover:underline">
-            Zum Dashboard
+    <div className={LAYOUT.pageContainer}>
+      <div className={LAYOUT.contentWrapper}>
+        <header className={LAYOUT.header}>
+          <div>
+            <h1 className={TYPOGRAPHY.pageTitle}>Admin – Projekte bearbeiten</h1>
+            <p className={TYPOGRAPHY.pageSubtitle}>Projektdaten verwalten, importieren und exportieren</p>
+          </div>
+          <a href="/projects" className="text-sm text-blue-600 hover:underline font-medium">
+            ← Zurück zum Dashboard
           </a>
         </header>
 

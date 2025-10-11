@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import './globals.css'
+import DashboardTabs from '@/components/DashboardTabs'
 
 export const metadata: Metadata = {
   title: 'IT Portfolio Dashboard',
@@ -13,7 +14,8 @@ export default function RootLayout({
 }) {
   return (
     <html lang="de">
-      <body className="min-w-[1440px] bg-gray-50 text-gray-900 antialiased">
+      <body className="min-w-[1440px] bg-slate-50 text-slate-900 antialiased">
+        <DashboardTabs />
         {children}
       </body>
     </html>
