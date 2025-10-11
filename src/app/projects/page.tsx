@@ -310,24 +310,6 @@ function ProjectsDashboardContent() {
                 projectBudgetSum={kpis.budgetPlannedSum}
               />
             </Suspense>
-            <div className="mt-3 grid grid-cols-2 gap-y-1 text-xs text-slate-600">
-              {currentYearBudget !== null && (
-                <>
-                  <span className="font-medium text-slate-700">Jahresbudget</span>
-                  <span className="text-right">
-                    {currentYearBudget.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' })}
-                  </span>
-                </>
-              )}
-              <span className="font-medium text-slate-700">Projektplan gesamt</span>
-              <span className="text-right">
-                {kpis.budgetPlannedSum.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' })}
-              </span>
-              <span className="font-medium text-slate-700">Ist (YTD)</span>
-              <span className="text-right">
-                {budgetSpent.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' })}
-              </span>
-            </div>
           </Card>
           <Card title={'Verzögerungen'} className="h-chart">
             <Suspense fallback={<div className="h-48 bg-slate-100 rounded animate-pulse" />}>
