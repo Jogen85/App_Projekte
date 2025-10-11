@@ -130,15 +130,18 @@ export default function ProjectsAdmin() {
 
       setMsg(`⏳ Importiere ${rows.length} Projekte...`)
 
-      // Batch import with error tracking
+      // Batch import with UPSERT (update existing, insert new)
       const errors: Array<{ row: number; project: Project; error: string }> = []
       let successCount = 0
+      let updatedCount = 0
+      let insertedCount = 0
 
       for (let i = 0; i < rows.length; i++) {
         const project = rows[i]
         try {
+          // Use PATCH for UPSERT (insert or update)
           const res = await fetch('/api/projects', {
-            method: 'POST',
+            method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(project),
           })
@@ -151,7 +154,14 @@ export default function ProjectsAdmin() {
               error: `${errorData.error}${errorData.details ? ' – ' + errorData.details : ''}`
             })
           } else {
+            const data = await res.json()
             successCount++
+            // Track if it was an update or insert (future enhancement)
+            if (data.upserted) {
+              updatedCount++
+            } else {
+              insertedCount++
+            }
           }
         } catch (error: any) {
           errors.push({
@@ -169,10 +179,10 @@ export default function ProjectsAdmin() {
 
       // Show results
       if (errors.length === 0) {
-        showMessage(`✓ CSV importiert: ${successCount} Projekte erfolgreich`)
+        showMessage(`✓ CSV importiert: ${successCount} Projekte erfolgreich (aktualisiert/neu erstellt)`)
       } else {
         const errorMsg = [
-          `❌ CSV-Import abgeschlossen: ${successCount} erfolgreich, ${errors.length} fehlgeschlagen\n`,
+          `⚠️ CSV-Import abgeschlossen: ${successCount} erfolgreich, ${errors.length} fehlgeschlagen\n`,
           ...errors.slice(0, 10).map(e =>
             `\nZeile ${e.row} (ID: ${e.project.id}):\n  - ${e.error}`
           )

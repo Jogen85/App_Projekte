@@ -157,17 +157,57 @@ Zeile 15 (ID: p14):
 
 ---
 
+## UPSERT-Strategie (v1.8.1)
+
+### Problem: "Projekt existiert bereits"
+Beim CSV-Import von **existierenden** Projekten (z.B. nach manueller Bearbeitung in Excel) schlug der Import fehl mit:
+```
+❌ Projekt existiert bereits – Projekt-ID "p1" ist bereits vergeben
+```
+
+### Lösung: PostgreSQL UPSERT
+Neue **PATCH-Route** `/api/projects` mit `ON CONFLICT ... DO UPDATE`:
+
+**Strategie:**
+- Wenn Projekt-ID **neu** → INSERT (erstellen)
+- Wenn Projekt-ID **existiert** → UPDATE (überschreiben)
+- **Keine Fehler** bei duplizierten IDs!
+
+**SQL:**
+```sql
+INSERT INTO projects (...) VALUES (...)
+ON CONFLICT (id) DO UPDATE SET
+  title = EXCLUDED.title,
+  owner = EXCLUDED.owner,
+  ...
+  updated_at = NOW()
+```
+
+**Erfolgsmeldung:**
+```
+✓ CSV importiert: 21 Projekte erfolgreich (aktualisiert/neu erstellt)
+```
+
+**Use Case:**
+1. Exportiere Projekte als CSV
+2. Bearbeite in Excel (Fortschritt, Budget, Status)
+3. Re-importiere → **Alle Änderungen werden überschrieben**
+
+---
+
 ## Next Steps (optional)
 
 ### Weitere Verbesserungen:
-1. **Transaction-Support**: Rollback bei Fehler im Batch
-2. **Dry-Run Mode**: CSV validieren ohne Import
-3. **Import-History**: Log aller Importe mit Zeitstempel
-4. **Duplicate Detection**: Warnung bei ähnlichen Projekttiteln
-5. **Progress Bar**: Visueller Fortschritt während Import
+1. ✅ **UPSERT-Support**: Implementiert mit PATCH-Route
+2. **Transaction-Support**: Rollback bei Fehler im Batch
+3. **Dry-Run Mode**: CSV validieren ohne Import
+4. **Import-History**: Log aller Importe mit Zeitstempel
+5. **Duplicate Detection**: Warnung bei ähnlichen Projekttiteln
+6. **Progress Bar**: Visueller Fortschritt während Import
+7. **Import-Modus-Auswahl**: UI-Toggle für INSERT/UPDATE/UPSERT
 
 ---
 
 **Status:** ✅ Implementiert und getestet (TypeScript check erfolgreich)
-**Version:** 1.8.0 – Enhanced Error Handling
+**Version:** 1.8.1 – UPSERT Support for CSV Import
 **Datum:** 2025-10-11
