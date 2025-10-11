@@ -170,10 +170,12 @@ CREATE TABLE vdbs_budget (
   - **Encoding**: Auto-detection (UTF-8 + BOM, Windows-1252 fallback)
   - **Validation**: Header checks, required fields, data types, ranges, enums
 
-- **`src/ui.tsx`**: Reusable UI primitives
+- **`src/ui.tsx`**: Reusable UI primitives + Design-Tokens (v2.0.0)
   - `Card`, `Badge` (6 colors), `ProgressBar`
+  - `TYPOGRAPHY`: Zentrale Typografie-Definitionen
+  - `LAYOUT`: Container-Klassen für konsistente Layouts
 
-- **`src/app/layout.tsx`**: Root layout with metadata
+- **`src/app/layout.tsx`**: Root layout mit DashboardTabs-Integration (v2.0.0)
 - **`src/app/page.tsx`**: IT-Cockpit (Server Component)
 
 ### Components (`src/components/`)
@@ -213,7 +215,11 @@ CREATE TABLE vdbs_budget (
   - Today marker
 
 **Navigation**:
-- **`DashboardTabs.tsx`**: Tab navigation (Client Component)
+- **`DashboardTabs.tsx`**: Tab navigation mit dynamischen Titeln (Client Component, v2.0.0)
+  - Sticky Header mit `sticky top-0 z-50`
+  - Dynamische Titel pro Tab (ändert sich bei Navigation)
+  - Logo-Bereich zeigt aktiven Tab-Titel + Untertitel
+  - Tab-Konfiguration: `{ path, label, title, subtitle }`
   - Uses Next.js `Link` and `usePathname`
 
 ### API Routes Pattern
@@ -463,12 +469,20 @@ Zeile 18: (Feld: start)
 
 ## Documentation
 
+- **`UI_MODERNIZATION.md`**: Umfassende Dokumentation der UI-Modernisierung v2.0.0 (Navigation, Design-Tokens)
 - **`ERROR_HANDLING_IMPROVEMENTS.md`**: Umfassende Dokumentation der Fehlerbehandlung und UPSERT-Strategie
 - **`MIGRATION_LOG.md`**: Migrations-Historie von Vite zu Next.js
 - **`CLAUDE.md`**: Diese Datei (Projekt-Overview für Claude Code)
 
 ## Version History
 
+- **v2.0.0** (2025-01-11): UI-Modernisierung – Dynamische Navigation und Design-System
+  - Zentrale Design-Tokens (TYPOGRAPHY, LAYOUT)
+  - Sticky Navigation mit Tab-abhängigen Titeln
+  - Keine doppelten Überschriften mehr
+  - Einheitliche Farben (Slate statt Gray)
+  - Konsistente Abstände über alle Seiten
+  - Siehe: `UI_MODERNIZATION.md`
 - **v1.9.0** (2025-10-11): Einheitliche UPSERT-Strategie für alle CSV-Imports
 - **v1.8.1** (2025-10-11): UPSERT-Support für Projekte-CSV-Import
 - **v1.8.0** (2025-10-11): Erweiterte Fehlerbehandlung mit PostgreSQL Error-Code-Mapping
