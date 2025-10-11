@@ -102,12 +102,18 @@ CREATE TABLE it_costs (
   category TEXT NOT NULL CHECK (category IN ('hardware', 'software_licenses', 'maintenance_service', 'training', 'other')),
   provider TEXT NOT NULL,
   amount DECIMAL(12,2) NOT NULL,
-  frequency TEXT NOT NULL CHECK (frequency IN ('monthly', 'quarterly', 'yearly', 'one_time')),
+  frequency TEXT NOT NULL CHECK (frequency IN ('monthly', 'quarterly', 'biannual', 'yearly', 'one_time')),
   cost_center TEXT,
   notes TEXT,
   year INTEGER NOT NULL
 );
 ```
+**Frequenzen (v1.10.0):**
+- `monthly` – Monatlich (× 12)
+- `quarterly` – Vierteljährlich (× 4)
+- `biannual` – **Halbjährlich (× 2)** ✨ NEU
+- `yearly` – Jährlich (× 1)
+- `one_time` – Einmalig (× 1)
 
 #### 4. `vdbs_budget` (40 records)
 ```sql
@@ -138,7 +144,7 @@ CREATE TABLE vdbs_budget (
    - CRUD operations via API routes
    - CSV Import/Export functionality (client-side serialization)
    - Enhanced error reporting with detailed validation messages
-   - Auto-save on every change
+   - **Optimistic UI-Updates** (v1.10.0): Änderungen sofort sichtbar, dann API-Call im Hintergrund
 
 ### Core Modules
 
@@ -357,6 +363,13 @@ See `MIGRATION_LOG.md` for detailed migration history.
    - Keine Fehler bei duplizierten IDs
    - Workflow: Export → Excel-Bearbeitung → Re-Import (überschreibt Änderungen)
 
+10. ✅ **Optimistic UI-Updates (v1.10.0)**: Alle Admin-Portale verwenden Optimistic Update Pattern
+   - State wird **sofort** aktualisiert (UI zeigt Änderungen instant)
+   - API-Call läuft **nicht blockierend** im Hintergrund
+   - Bei Fehler: Automatischer Rollback + Error-Toast + Reload
+   - Pattern: `onChange → State update (0ms) → API-Call (200-500ms) → Toast`
+   - Betrifft: Alle 4 Admin-Bereiche (Projekte, IT-Kosten, VDB-S, Overall Budget)
+
 ## Known Limitations
 
 1. **Desktop-only**: No mobile optimization (min-width: 1440px)
@@ -443,7 +456,7 @@ Zeile 18: (Feld: start)
 #### IT-Kosten (9 validations)
 - **Required**: id, description, category, provider, amount, frequency, year
 - **Category**: `hardware | software_licenses | maintenance_service | training | other`
-- **Frequency**: `monthly | quarterly | yearly | one_time`
+- **Frequency**: `monthly | quarterly | biannual | yearly | one_time` (v1.10.0: biannual hinzugefügt)
 - **Year**: 2020-2030
 - **Amount**: ≥ 0
 
@@ -472,10 +485,18 @@ Zeile 18: (Feld: start)
 - **`UI_MODERNIZATION.md`**: Umfassende Dokumentation der UI-Modernisierung v2.0.0 (Navigation, Design-Tokens)
 - **`ERROR_HANDLING_IMPROVEMENTS.md`**: Umfassende Dokumentation der Fehlerbehandlung und UPSERT-Strategie
 - **`MIGRATION_LOG.md`**: Migrations-Historie von Vite zu Next.js
+- **`CHANGELOG_2025-01-11.md`**: Detaillierte Dokumentation aller Änderungen v1.10.0 (UI-Fixes, Halbjährlich, Optimistic Updates)
 - **`CLAUDE.md`**: Diese Datei (Projekt-Overview für Claude Code)
 
 ## Version History
 
+- **v1.10.0** (2025-01-11): **Optimistic UI-Updates + Halbjährlich-Frequenz**
+  - 🎯 **Optimistic Updates**: Alle Admin-Bereiche reagieren sofort (0ms statt 200-500ms)
+  - 🎯 **Neue Frequenz**: "Halbjährlich" (biannual) für IT-Kosten (× 2 Multiplikator)
+  - 🐛 **UI-Fixes**: Budget-Zahlen Überlappung + Legende abgeschnitten behoben
+  - 📊 **Betroffene Bereiche**: IT-Kosten, Projekte, VDB-S Budget, Overall Budget
+  - 📄 **Dokumentation**: `CHANGELOG_2025-01-11.md` (vollständige Details)
+  - **Commits**: 41ebb81, 2ae62e4, f87c370, a7ce7cd, 78509ab
 - **v2.0.0** (2025-01-11): UI-Modernisierung – Dynamische Navigation und Design-System
   - Zentrale Design-Tokens (TYPOGRAPHY, LAYOUT)
   - Sticky Navigation mit Tab-abhängigen Titeln
