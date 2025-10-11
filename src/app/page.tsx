@@ -217,7 +217,7 @@ export default async function ITCockpitPage() {
         </header>
 
         <div className="grid gap-3 md:grid-cols-4">
-          <Card title="Projekte gesamt" className="h-[120px]">
+          <Card title="Projekte gesamt" className="min-h-[120px]">
             <div className="flex h-full flex-col justify-center gap-1">
               <div className="text-3xl font-bold text-blue-600">{normalizedProjects.length}</div>
               <div className="text-xs text-gray-500">
@@ -226,7 +226,7 @@ export default async function ITCockpitPage() {
             </div>
           </Card>
 
-          <Card title="Projektkosten" className="h-[120px]">
+          <Card title="Projektkosten" className="min-h-[120px]">
             <div className="flex h-full flex-col justify-center gap-2">
               <div className="text-xs uppercase tracking-wide text-gray-500">Plan {year}</div>
               <div className="text-lg font-semibold text-gray-900">{fmtCurrency(projectPlan)}</div>
@@ -235,14 +235,14 @@ export default async function ITCockpitPage() {
             </div>
           </Card>
 
-          <Card title="IT-Kosten" className="h-[120px]">
+          <Card title="IT-Kosten" className="min-h-[120px]">
             <div className="flex h-full flex-col justify-center gap-2">
               <div className="text-2xl font-bold text-gray-900">{fmtCurrency(itCostSummary.total)}</div>
               <div className="text-xs text-gray-500">Aktuelles Jahr</div>
             </div>
           </Card>
 
-          <Card title="VDB-S Budget" className="h-[120px]">
+          <Card title="VDB-S Budget" className="min-h-[120px]">
             <div className="flex h-full flex-col justify-center gap-2">
               <div className="text-2xl font-bold text-gray-900">{fmtCurrency(vdbsTotal)}</div>
               <div className="text-xs text-gray-500">Geplante Positionen {year}</div>

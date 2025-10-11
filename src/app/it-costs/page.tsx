@@ -117,7 +117,7 @@ function ITCostsDashboardContent() {
 
         {/* KPI-Zeile */}
         <div className="grid grid-cols-3 gap-3">
-          <Card title={`Gesamt IT-Kosten ${year}`} className="h-kpi">
+          <Card title={`Gesamt IT-Kosten ${year}`} className="min-h-[120px]">
             <div className="flex h-full flex-col justify-center">
               <div className="text-4xl font-bold text-blue-600">{fmt(kpis.total)}</div>
               <div className="mt-2 text-sm text-gray-600">
@@ -126,7 +126,7 @@ function ITCostsDashboardContent() {
             </div>
           </Card>
 
-          <Card title="Größter Kostenblock" className="h-kpi">
+          <Card title="Größter Kostenblock" className="min-h-[120px]">
             <div className="flex h-full flex-col justify-center">
               <div className="text-2xl font-bold text-gray-900">{kpis.topCategory.name}</div>
               <div className="mt-2 text-xl font-semibold text-blue-600">{fmt(kpis.topCategory.value)}</div>
@@ -136,7 +136,7 @@ function ITCostsDashboardContent() {
             </div>
           </Card>
 
-          <Card title="Laufende Kostenpositionen" className="h-kpi">
+          <Card title="Laufende Kostenpositionen" className="min-h-[120px]">
             <div className="flex h-full flex-col justify-center">
               <div className="text-4xl font-bold text-green-600">{yearCosts.length}</div>
               <div className="mt-2 text-sm text-gray-600">Erfasste Kostenpositionen</div>

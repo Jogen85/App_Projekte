@@ -189,7 +189,7 @@ function OverallBudgetDashboardContent() {
 
         {/* KPI Cards */}
         <div className="grid grid-cols-4 gap-3">
-          <Card title={`Jahresbudget ${year}`} className="h-kpi">
+          <Card title={`Jahresbudget ${year}`} className="min-h-[120px]">
             <div className="flex h-full flex-col justify-center">
               <div className="text-2xl font-bold text-blue-600">
                 {calculations.yearBudget ? fmtCurrency(calculations.yearBudget.budget) : '—'}
@@ -198,7 +198,7 @@ function OverallBudgetDashboardContent() {
             </div>
           </Card>
 
-          <Card title="Geplante Ausgaben" className="h-kpi">
+          <Card title="Geplante Ausgaben" className="min-h-[120px]">
             <div className="flex h-full flex-col justify-center">
               <div
                 className={`text-2xl font-bold ${calculations.warningPlan ? 'text-amber-600' : 'text-gray-900'}`}
@@ -216,7 +216,7 @@ function OverallBudgetDashboardContent() {
             </div>
           </Card>
 
-          <Card title="Ist-Ausgaben" className="h-kpi">
+          <Card title="Ist-Ausgaben" className="min-h-[120px]">
             <div className="flex h-full flex-col justify-center">
               <div
                 className={`text-2xl font-bold ${calculations.warningActual ? 'text-red-600' : 'text-gray-900'}`}
@@ -234,7 +234,7 @@ function OverallBudgetDashboardContent() {
             </div>
           </Card>
 
-          <Card title="Budget-Auslastung" className="h-kpi">
+          <Card title="Budget-Auslastung" className="min-h-[120px]">
             <div className="flex h-full flex-col justify-center">
               {calculations.yearBudget ? (
                 <>

@@ -221,13 +221,13 @@ function VDBSBudgetDashboardContent() {
 
         {/* KPI-Zeile (3 Tiles) */}
         <div className="grid grid-cols-3 gap-3">
-          <Card title={`Gesamtbudget ${selectedYear}`} className="h-kpi">
+          <Card title={`Gesamtbudget ${selectedYear}`} className="min-h-[120px]">
             <div className="flex h-full flex-col justify-center gap-1">
               <div className="text-3xl font-bold text-blue-600">{fmtCurrency(kpis.totalBudget)}</div>
               <div className="text-sm text-gray-600">{kpis.count} Positionen</div>
             </div>
           </Card>
-          <Card title="Größte Position" className="h-kpi">
+          <Card title="Größte Position" className="min-h-[120px]">
             <div className="flex h-full flex-col justify-center">
               {kpis.largestItem ? (
                 <>
@@ -239,7 +239,7 @@ function VDBSBudgetDashboardContent() {
               )}
             </div>
           </Card>
-          <Card title="Budget-Verteilung" className="h-kpi">
+          <Card title="Budget-Verteilung" className="min-h-[120px]">
             <div className="flex h-full flex-col justify-center gap-2">
               <div className="flex items-center justify-between text-sm">
                 <span className="text-gray-600">RUN (Laufend):</span>
