@@ -208,6 +208,206 @@ ON CONFLICT (id) DO UPDATE SET
 
 ---
 
-**Status:** ✅ Implementiert und getestet (TypeScript check erfolgreich)
-**Version:** 1.8.1 – UPSERT Support for CSV Import
+---
+
+## Einheitliche UPSERT-Strategie für alle CSV-Imports (v1.9.0)
+
+### Übersicht
+**Alle 4 Admin-Portale** nutzen jetzt die identische UPSERT-Strategie:
+- ✅ Projekte (`/admin/projects`)
+- ✅ IT-Kosten (`/admin/it-costs`)
+- ✅ VDB-S Budget (`/admin/vdbs-budget`)
+- ✅ Jahresbudgets (`/admin/overall-budget`)
+
+### Implementierte API-Routes
+
+| Route | Methode | UPSERT Key | Status |
+|-------|---------|------------|--------|
+| `/api/projects` | PATCH | `id` | ✅ |
+| `/api/it-costs` | PATCH | `id` | ✅ |
+| `/api/vdbs-budget` | PATCH | `id` | ✅ |
+| `/api/year-budgets` | PATCH | `year` | ✅ |
+
+### Einheitliche Features
+
+#### 1. PostgreSQL UPSERT
+Alle PATCH-Routen verwenden `ON CONFLICT ... DO UPDATE`:
+```sql
+INSERT INTO table (...) VALUES (...)
+ON CONFLICT (unique_key) DO UPDATE SET
+  field1 = EXCLUDED.field1,
+  field2 = EXCLUDED.field2,
+  updated_at = NOW()
+```
+
+#### 2. Validierung (Pre-DB-Check)
+**Projekte:**
+- Pflichtfelder: `id`, `title`, `owner`, `start`, `end`
+- Datumsformat: `YYYY-MM-DD` (ISO)
+- Enums: `classification`, `status`
+- Ranges: `progress` (0-100)
+
+**IT-Kosten:**
+- Pflichtfelder: `id`, `description`, `category`, `provider`, `amount`, `frequency`, `year`
+- Enums: `category`, `frequency`
+- Ranges: `amount` (≥0), `year` (2020-2030)
+
+**VDB-S Budget:**
+- Pflichtfelder: `id`, `projectNumber`, `projectName`, `category`, `budget2026`, `year`
+- Enums: `category` (RUN/CHANGE)
+- Ranges: `budget2026` (≥0), `year` (2020-2030)
+
+**Jahresbudgets:**
+- Pflichtfelder: `year`, `budget`
+- Ranges: `budget` (≥0), `year` (2020-2030)
+
+#### 3. PostgreSQL Error-Code-Mapping
+Einheitlich über alle Routen:
+```typescript
+23505: Unique constraint violation → "Existiert bereits"
+23502: Not-null constraint      → "Pflichtfeld fehlt"
+23514: Check constraint         → "Ungültiger Wert"
+22P02: Invalid date format      → "Datumsformat ungültig"
+```
+
+#### 4. Admin-Seiten (CSV-Import)
+Alle 4 Seiten nutzen identischen Code:
+```typescript
+// Batch import with UPSERT
+for (let i = 0; i < rows.length; i++) {
+  const item = rows[i]
+  const res = await fetch('/api/[entity]', {
+    method: 'PATCH', // UPSERT statt POST
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(item),
+  })
+  // Error tracking + success counting
+}
+```
+
+#### 5. Benutzer-Feedback
+**Progress-Anzeige:**
+```
+⏳ Importiere 21 Projekte...
+⏳ Importiere 12 IT-Kosten...
+⏳ Importiere 40 VDB-S Budgetpositionen...
+⏳ Importiere 3 Jahresbudgets...
+```
+
+**Erfolgsmeldung (alle identisch):**
+```
+✓ CSV importiert: 21 Projekte erfolgreich (aktualisiert/neu erstellt)
+```
+
+**Fehlermeldung (max. 10 Details):**
+```
+⚠️ CSV-Import abgeschlossen: 18 erfolgreich, 3 fehlgeschlagen
+
+Zeile 2 (ID: p1):
+  - Datumsformat ungültig – Erwartetes Format: YYYY-MM-DD
+
+Zeile 8 (ID: p7):
+  - Pflichtfeld fehlt – Pflichtfelder fehlen: title, owner
+
+... und 1 weitere Fehler
+```
+
+#### 6. Timeouts
+- **Einzelne Operationen**: 5 Sekunden
+- **Batch-Operationen**: 15 Sekunden
+- **CSV-Parsing-Fehler**: 10 Sekunden
+
+### Workflow: CSV-Export/Import-Zyklus
+
+1. **Export**: Klick auf "CSV exportieren" in Admin-Portal
+   - Exportiert aktuellen Stand als CSV mit UTF-8 BOM
+   - Dateiname: `[entity]_YYYY-MM-DD.csv`
+
+2. **Bearbeitung**: CSV in Excel öffnen und bearbeiten
+   - Daten ändern (Fortschritt, Budget, Status, etc.)
+   - Neue Zeilen hinzufügen (mit neuer ID)
+   - IDs **nicht** ändern (dienen als UPSERT-Key)
+
+3. **Import**: Klick auf "CSV importieren"
+   - **UPSERT-Logik**: Bestehende Einträge werden aktualisiert, neue werden eingefügt
+   - **Keine Fehler** bei duplizierten IDs!
+   - Detailliertes Feedback mit Row-Level-Tracking
+
+### Technische Details
+
+#### Error-Handling-Kette
+```
+User → CSV-Datei auswählen
+  ↓
+1. CSV-Parsing (src/lib/csv.ts)
+   - BOM-Entfernung
+   - Delimiter-Detection (;,)
+   - Encoding-Detection (UTF-8/Windows-1252)
+   - Format-Validierung (Header, Typen, Ranges)
+   → CSVParseError bei Fehler
+  ↓
+2. Batch-Import (Admin-Seite)
+   - PATCH-Request pro Zeile
+   - Error-Tracking mit { row, item, error }
+   - Success-Counting
+  ↓
+3. API-Route (Backend)
+   - Pre-DB-Validierung (Pflichtfelder, Formate)
+   - PostgreSQL UPSERT
+   - Error-Code-Mapping
+   → { error, details } bei Fehler
+  ↓
+4. User-Feedback (Admin-Seite)
+   - Progress-Anzeige während Import
+   - Detaillierte Fehler-Liste (max. 10)
+   - Erfolgs-Zähler
+```
+
+#### Datei-Struktur
+```
+src/
+├── app/
+│   ├── api/
+│   │   ├── projects/route.ts           # PATCH: UPSERT
+│   │   ├── it-costs/route.ts           # PATCH: UPSERT
+│   │   ├── vdbs-budget/route.ts        # PATCH: UPSERT
+│   │   └── year-budgets/route.ts       # PATCH: UPSERT
+│   └── admin/
+│       ├── projects/page.tsx           # CSV-Import mit PATCH
+│       ├── it-costs/page.tsx           # CSV-Import mit PATCH
+│       ├── vdbs-budget/page.tsx        # CSV-Import mit PATCH
+│       └── overall-budget/page.tsx     # CSV-Import mit PATCH
+├── lib/
+│   └── csv.ts                          # Parser + Serializer + Error-Klasse
+└── types.ts                            # TypeScript-Typen
+```
+
+### Vorteile der einheitlichen Strategie
+
+1. **Konsistente UX**: Alle CSV-Imports funktionieren identisch
+2. **Wartbarkeit**: Änderungen an einer Stelle → gilt für alle
+3. **Testbarkeit**: Einheitliche Test-Szenarien
+4. **Fehlerbehandlung**: Gleiche Fehler → gleiche Meldungen
+5. **Dokumentation**: Eine Anleitung für alle Imports
+
+### Bekannte Einschränkungen
+
+1. **Sequentielle Verarbeitung**: Keine parallelen Requests (Performance-Optimierung möglich)
+2. **Keine Transaktionen**: Erfolgreiche Einträge bleiben bei Fehler erhalten
+3. **Max. 10 Fehler**: Detaillierte Ausgabe nur für erste 10 Fehler
+4. **Keine Rollback-Option**: Änderungen sind sofort permanent
+
+### Zukunft (Optional)
+
+1. **Bulk-UPSERT**: Ein API-Call statt N Calls
+2. **Transaction-Support**: Rollback bei Fehler
+3. **Preview-Mode**: CSV validieren ohne Import
+4. **Import-History**: Log aller Importe
+5. **Parallel-Requests**: Bessere Performance
+
+---
+
+**Status:** ✅ Vollständig implementiert und getestet
+**Version:** 1.9.0 – Unified UPSERT Strategy for All CSV Imports
 **Datum:** 2025-10-11
+**TypeScript Check:** ✅ Erfolgreich (keine Fehler)

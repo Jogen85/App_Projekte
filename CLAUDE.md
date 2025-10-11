@@ -48,14 +48,16 @@ IT Portfolio Dashboard – Next.js 15 application for executive project oversigh
 - `/admin/overall-budget` – Overall Budget Admin (Year Budgets CRUD + CSV Import/Export)
 
 **API Routes** (Server-side):
-- `/api/projects` (GET, POST)
+- `/api/projects` (GET, POST, **PATCH** ✨)
 - `/api/projects/[id]` (PUT, DELETE)
-- `/api/year-budgets` (GET, POST)
+- `/api/year-budgets` (GET, POST, **PATCH** ✨)
 - `/api/year-budgets/[year]` (PUT, DELETE)
-- `/api/it-costs` (GET, POST)
+- `/api/it-costs` (GET, POST, **PATCH** ✨)
 - `/api/it-costs/[id]` (PUT, DELETE)
-- `/api/vdbs-budget` (GET, POST)
+- `/api/vdbs-budget` (GET, POST, **PATCH** ✨)
 - `/api/vdbs-budget/[id]` (PUT, DELETE)
+
+**✨ PATCH-Routen**: UPSERT-Strategie für CSV-Import (v1.9.0)
 
 ### Database Schema (PostgreSQL/Neon)
 
@@ -344,12 +346,19 @@ See `MIGRATION_LOG.md` for detailed migration history.
 
 8. ✅ **Suspense Boundary**: Client Components with `useSearchParams()` must be wrapped in `<Suspense>`
 
+9. ✅ **UPSERT-Strategie (v1.9.0)**: Alle CSV-Imports unterstützen Update bestehender Einträge
+   - PATCH-Routen mit PostgreSQL `ON CONFLICT ... DO UPDATE`
+   - Keine Fehler bei duplizierten IDs
+   - Workflow: Export → Excel-Bearbeitung → Re-Import (überschreibt Änderungen)
+
 ## Known Limitations
 
 1. **Desktop-only**: No mobile optimization (min-width: 1440px)
 2. **Budget Donut**: Fixed dimensions (150px, outer=60, inner=40)
+3. **CSV-Import**: Sequentielle Verarbeitung (keine Parallel-Requests)
+4. **No Transactions**: Erfolgreiche Einträge bleiben bei Fehler erhalten
 
-## CSV Import/Export Features (v1.7.0)
+## CSV Import/Export Features (v1.9.0 - UPSERT Update)
 
 ### Supported Entities
 All four admin portals support CSV Import/Export:
@@ -357,6 +366,26 @@ All four admin portals support CSV Import/Export:
 2. **IT-Kosten** (`/admin/it-costs`)
 3. **VDB-S Budget** (`/admin/vdbs-budget`)
 4. **Jahresbudgets** (`/admin/overall-budget`)
+
+### UPSERT-Strategie (v1.9.0)
+**Alle CSV-Imports nutzen UPSERT** (Insert or Update):
+- **Neue Einträge**: Werden eingefügt (INSERT)
+- **Bestehende Einträge**: Werden aktualisiert (UPDATE)
+- **Key**: `id` (Projekte, IT-Kosten, VDB-S) oder `year` (Jahresbudgets)
+
+**Workflow:**
+1. CSV exportieren (`CSV exportieren`-Button)
+2. In Excel bearbeiten (Fortschritt, Budget, Status ändern)
+3. Re-importieren → **Alle Änderungen werden überschrieben** ✅
+
+**API-Methode**: `PATCH /api/[entity]`
+```sql
+INSERT INTO table (...) VALUES (...)
+ON CONFLICT (unique_key) DO UPDATE SET
+  field1 = EXCLUDED.field1,
+  ...
+  updated_at = NOW()
+```
 
 ### Date Format Support
 CSV Import accepts **both** date formats automatically:
@@ -424,7 +453,24 @@ Zeile 18: (Feld: start)
 
 ## Future Enhancements
 
+- ✅ **UPSERT-Support** (v1.9.0): Implementiert für alle CSV-Imports
 - PDF/Excel Export
 - Multi-User Collaboration
 - Real-time updates (WebSockets)
-- CSV Import preview mode
+- CSV Import preview mode (Dry-Run)
+- Bulk-UPSERT (ein API-Call statt N)
+- Transaction-Support (Rollback bei Fehler)
+
+## Documentation
+
+- **`ERROR_HANDLING_IMPROVEMENTS.md`**: Umfassende Dokumentation der Fehlerbehandlung und UPSERT-Strategie
+- **`MIGRATION_LOG.md`**: Migrations-Historie von Vite zu Next.js
+- **`CLAUDE.md`**: Diese Datei (Projekt-Overview für Claude Code)
+
+## Version History
+
+- **v1.9.0** (2025-10-11): Einheitliche UPSERT-Strategie für alle CSV-Imports
+- **v1.8.1** (2025-10-11): UPSERT-Support für Projekte-CSV-Import
+- **v1.8.0** (2025-10-11): Erweiterte Fehlerbehandlung mit PostgreSQL Error-Code-Mapping
+- **v1.7.0** (2025-10-10): CSV-Import/Export für alle 4 Entitäten
+- **v1.5.0** (2025-10-10): Migration auf Next.js 15 + PostgreSQL (Neon)
