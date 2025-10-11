@@ -259,7 +259,7 @@ function OverallBudgetDashboardContent() {
                 <BudgetDonut
                   spent={calculations.totalActual}
                   remaining={calculations.yearBudget.budget - calculations.totalActual}
-                  height={220}
+                  height={150}
                   itCostsTotal={calculations.itCostSummary.total}
                   vdbsBudgetTotal={calculations.vdbsTotal}
                   yearBudget={calculations.yearBudget.budget}

@@ -29,6 +29,7 @@ const CATEGORY_LABELS: Record<ITCostCategory, string> = {
 const FREQUENCY_LABELS: Record<string, string> = {
   monthly: 'Monatlich',
   quarterly: 'Quartalsweise',
+  biannual: 'Halbjährlich',
   yearly: 'Jährlich',
   one_time: 'Einmalig',
 }
@@ -221,6 +222,7 @@ export default function ITCostsAdmin() {
   const calculateYearlyCost = (cost: ITCost): number => {
     if (cost.frequency === 'monthly') return cost.amount * 12
     if (cost.frequency === 'quarterly') return cost.amount * 4
+    if (cost.frequency === 'biannual') return cost.amount * 2
     return cost.amount
   }
 

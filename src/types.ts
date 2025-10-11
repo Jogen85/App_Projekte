@@ -54,6 +54,7 @@ export type ITCostCategory =
 export type ITCostFrequency =
   | 'monthly'      // Monatliche Zahlung (× 12)
   | 'quarterly'    // Vierteljährliche Zahlung (× 4)
+  | 'biannual'     // Halbjährliche Zahlung (× 2)
   | 'yearly'       // Jährliche Zahlung (× 1)
   | 'one_time';    // Einmalige Zahlung (× 1)
 

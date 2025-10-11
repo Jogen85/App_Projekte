@@ -427,7 +427,7 @@ export function parseITCostsCSV(csv: string): ITCost[] {
   const errors: CSVErrorDetail[] = [];
 
   const validCategories: ITCostCategory[] = ['hardware', 'software_licenses', 'maintenance_service', 'training', 'other'];
-  const validFrequencies: ITCostFrequency[] = ['monthly', 'quarterly', 'yearly', 'one_time'];
+  const validFrequencies: ITCostFrequency[] = ['monthly', 'quarterly', 'biannual', 'yearly', 'one_time'];
 
   rows.forEach((row, idx) => {
     const rowNum = idx + 2; // +1 for header, +1 for 0-based index

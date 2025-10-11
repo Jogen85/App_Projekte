@@ -107,6 +107,8 @@ export function calculateYearlyCostD(
       return cost.amount * 12;
     case 'quarterly':
       return cost.amount * 4;
+    case 'biannual':
+      return cost.amount * 2;
     case 'yearly':
     case 'one_time':
       return cost.amount;
