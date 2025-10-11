@@ -86,6 +86,32 @@ export default function ITCostsAdmin() {
     }
   }
 
+  // Save IT cost in background (optimistic update)
+  const saveITCostInBackground = async (cost: ITCost, originalIndex: number) => {
+    try {
+      const res = await fetch(`/api/it-costs/${cost.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(cost),
+      })
+
+      if (!res.ok) {
+        throw new Error('Fehler beim Speichern')
+      }
+
+      showMessage('✓ Gespeichert')
+    } catch (error) {
+      console.error('Error saving IT cost:', error)
+      setMsg('❌ Fehler beim Speichern - Seite neu laden')
+      setTimeout(() => setMsg(''), 3000)
+
+      // Reload data on error to restore correct state
+      const res = await fetch('/api/it-costs')
+      const data = await res.json()
+      setITCosts(data)
+    }
+  }
+
   // Delete IT cost
   const deleteITCost = async (id: string) => {
     if (!confirm('Position wirklich löschen?')) return
@@ -103,17 +129,23 @@ export default function ITCostsAdmin() {
     }
   }
 
-  // Update field
+  // Update field (with optimistic update)
   const updateField = (i: number, k: keyof ITCost, v: any) => {
-    const cost = { ...itCosts[i] }
+    // 1. Optimistic update: Update state immediately for instant UI feedback
+    const updatedCosts = [...itCosts]
+    const cost = { ...updatedCosts[i] }
 
     if (k === 'amount' || k === 'year') {
-      ;(cost as any)[k] = Number(v) || 0
+      (cost as any)[k] = Number(v) || 0
     } else {
-      ;(cost as any)[k] = v
+      (cost as any)[k] = v
     }
 
-    saveITCost(cost, false)
+    updatedCosts[i] = cost
+    setITCosts(updatedCosts)
+
+    // 2. Save to API in background
+    saveITCostInBackground(cost, i)
   }
 
   // Add new cost
