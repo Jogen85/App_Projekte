@@ -66,6 +66,32 @@ export default function VDBSBudgetAdmin() {
     }
   }
 
+  // Save VDB-S budget item in background (optimistic update)
+  const saveItemInBackground = async (item: VDBSBudgetItem, originalIndex: number) => {
+    try {
+      const res = await fetch(`/api/vdbs-budget/${item.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(item),
+      })
+
+      if (!res.ok) {
+        throw new Error('Fehler beim Speichern')
+      }
+
+      showMessage('✓ Gespeichert')
+    } catch (error) {
+      console.error('Error saving VDB-S budget item:', error)
+      setMsg('❌ Fehler beim Speichern - Seite neu laden')
+      setTimeout(() => setMsg(''), 3000)
+
+      // Reload data on error to restore correct state
+      const res = await fetch('/api/vdbs-budget')
+      const data = await res.json()
+      setVDBSBudget(data)
+    }
+  }
+
   // Delete VDB-S budget item
   const deleteItem = async (id: string) => {
     if (!confirm('Position wirklich löschen?')) return
@@ -83,17 +109,23 @@ export default function VDBSBudgetAdmin() {
     }
   }
 
-  // Update field
+  // Update field (with optimistic update)
   const updateField = (i: number, k: keyof VDBSBudgetItem, v: any) => {
-    const item = { ...vdbsBudget[i] }
+    // 1. Optimistic update: Update state immediately for instant UI feedback
+    const updatedBudget = [...vdbsBudget]
+    const item = { ...updatedBudget[i] }
 
     if (k === 'budget2026' || k === 'year') {
-      ;(item as any)[k] = Number(v) || 0
+      (item as any)[k] = Number(v) || 0
     } else {
-      ;(item as any)[k] = v
+      (item as any)[k] = v
     }
 
-    saveItem(item, false)
+    updatedBudget[i] = item
+    setVDBSBudget(updatedBudget)
+
+    // 2. Save to API in background
+    saveItemInBackground(item, i)
   }
 
   // Add new item

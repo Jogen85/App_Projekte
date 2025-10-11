@@ -82,6 +82,32 @@ export default function ProjectsAdmin() {
     }
   }
 
+  // Save project in background (optimistic update)
+  const saveProjectInBackground = async (project: Project, originalIndex: number) => {
+    try {
+      const res = await fetch(`/api/projects/${project.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(project),
+      })
+
+      if (!res.ok) {
+        throw new Error('Fehler beim Speichern')
+      }
+
+      showMessage('✓ Gespeichert')
+    } catch (error) {
+      console.error('Error saving project:', error)
+      setMsg('❌ Fehler beim Speichern - Seite neu laden')
+      setTimeout(() => setMsg(''), 3000)
+
+      // Reload data on error to restore correct state
+      const res = await fetch('/api/projects')
+      const data = await res.json()
+      setProjects(data)
+    }
+  }
+
   // Delete project
   const deleteProject = async (id: string) => {
     if (!confirm('Projekt wirklich löschen?')) return
@@ -99,19 +125,25 @@ export default function ProjectsAdmin() {
     }
   }
 
-  // Update project field
+  // Update project field (with optimistic update)
   const updateField = (i: number, k: keyof Project, v: any) => {
-    const project = { ...projects[i] }
+    // 1. Optimistic update: Update state immediately for instant UI feedback
+    const updatedProjects = [...projects]
+    const project = { ...updatedProjects[i] }
 
     if (k === 'progress' || k === 'budgetPlanned' || k === 'costToDate') {
-      ;(project as any)[k] = Number(v) || 0
+      (project as any)[k] = Number(v) || 0
     } else if (k === 'requiresAT82Check' || k === 'at82Completed') {
-      ;(project as any)[k] = v === true || v === 'true'
+      (project as any)[k] = v === true || v === 'true'
     } else {
-      ;(project as any)[k] = v
+      (project as any)[k] = v
     }
 
-    saveProject(project, false)
+    updatedProjects[i] = project
+    setProjects(updatedProjects)
+
+    // 2. Save to API in background
+    saveProjectInBackground(project, i)
   }
 
   // Add new project

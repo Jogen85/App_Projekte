@@ -66,6 +66,32 @@ export default function OverallBudgetAdmin() {
     }
   }
 
+  // Save year budget in background (optimistic update)
+  const saveYearBudgetInBackground = async (yb: YearBudget) => {
+    try {
+      const res = await fetch(`/api/year-budgets/${yb.year}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(yb),
+      })
+
+      if (!res.ok) {
+        throw new Error('Fehler beim Speichern')
+      }
+
+      showMessage('✓ Gespeichert')
+    } catch (error) {
+      console.error('Error saving year budget:', error)
+      setMsg('❌ Fehler beim Speichern - Seite neu laden')
+      setTimeout(() => setMsg(''), 3000)
+
+      // Reload data on error to restore correct state
+      const res = await fetch('/api/year-budgets')
+      const data = await res.json()
+      setYearBudgets(data)
+    }
+  }
+
   const deleteYearBudget = async (year: number) => {
     if (!confirm(`Jahresbudget ${year} wirklich löschen?`)) return
 
@@ -88,9 +114,16 @@ export default function OverallBudgetAdmin() {
   }
 
   const updateYearBudgetField = (year: number, budget: number) => {
-    const yb = yearBudgets.find((y) => y.year === year)
+    // 1. Optimistic update: Update state immediately for instant UI feedback
+    const updatedBudgets = yearBudgets.map((yb) =>
+      yb.year === year ? { ...yb, budget } : yb
+    )
+    setYearBudgets(updatedBudgets)
+
+    // 2. Save to API in background
+    const yb = updatedBudgets.find((y) => y.year === year)
     if (yb) {
-      saveYearBudget({ ...yb, budget }, false)
+      saveYearBudgetInBackground(yb)
     }
   }
 
