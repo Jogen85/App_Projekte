@@ -12,6 +12,34 @@ export async function PUT(request: Request, { params }: Params) {
     const { id } = await params
     const body: Project = await request.json()
 
+    // Validate required fields
+    if (!body.title || !body.owner || !body.start || !body.end) {
+      return NextResponse.json(
+        {
+          error: 'Validierungsfehler',
+          details: 'Pflichtfelder fehlen: ' + [
+            !body.title && 'title',
+            !body.owner && 'owner',
+            !body.start && 'start',
+            !body.end && 'end'
+          ].filter(Boolean).join(', ')
+        },
+        { status: 400 }
+      )
+    }
+
+    // Validate date format (YYYY-MM-DD)
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/
+    if (!dateRegex.test(body.start) || !dateRegex.test(body.end)) {
+      return NextResponse.json(
+        {
+          error: 'Datumsformat ungültig',
+          details: `Erwartetes Format: YYYY-MM-DD. Erhalten: start="${body.start}", end="${body.end}"`
+        },
+        { status: 400 }
+      )
+    }
+
     await sql`
       UPDATE projects SET
         project_number_internal = ${body.projectNumberInternal},
@@ -34,10 +62,32 @@ export async function PUT(request: Request, { params }: Params) {
     `
 
     return NextResponse.json({ success: true })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error updating project:', error)
+
+    // PostgreSQL error codes
+    const pgError = error as { code?: string; detail?: string; constraint?: string }
+
+    let errorMessage = 'Fehler beim Aktualisieren des Projekts'
+    let errorDetails = error.message || String(error)
+
+    // Handle common PostgreSQL errors
+    if (pgError.code === '23502') {
+      // Not-null constraint violation
+      errorMessage = 'Pflichtfeld fehlt'
+      errorDetails = pgError.detail || 'Ein erforderliches Feld ist leer'
+    } else if (pgError.code === '23514') {
+      // Check constraint violation
+      errorMessage = 'Ungültiger Wert'
+      errorDetails = pgError.detail || 'Ein Wert entspricht nicht den Anforderungen'
+    } else if (pgError.code === '22P02') {
+      // Invalid text representation (e.g., date format)
+      errorMessage = 'Datumsformat ungültig'
+      errorDetails = 'Das Datum muss im Format YYYY-MM-DD vorliegen'
+    }
+
     return NextResponse.json(
-      { error: 'Failed to update project' },
+      { error: errorMessage, details: errorDetails },
       { status: 500 }
     )
   }

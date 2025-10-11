@@ -57,7 +57,14 @@ export default function ProjectsAdmin() {
         body: JSON.stringify(project),
       })
 
-      if (!res.ok) throw new Error('Fehler beim Speichern')
+      if (!res.ok) {
+        const errorData = await res.json()
+        throw new Error(
+          `${errorData.error || 'Fehler beim Speichern'}${
+            errorData.details ? '\n\nDetails: ' + errorData.details : ''
+          }`
+        )
+      }
 
       const saved = await res.json()
 
@@ -68,10 +75,10 @@ export default function ProjectsAdmin() {
       }
 
       showMessage('✓ Änderungen gespeichert')
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving project:', error)
-      setMsg('❌ Fehler beim Speichern')
-      setTimeout(() => setMsg(''), 3000)
+      setMsg(`❌ ${error.message || 'Fehler beim Speichern'}`)
+      setTimeout(() => setMsg(''), 5000) // Longer timeout for detailed errors
     }
   }
 
@@ -113,29 +120,81 @@ export default function ProjectsAdmin() {
     saveProject(newProject, true)
   }
 
-  // CSV Import
+  // CSV Import with batch operation and detailed error reporting
   const onImportCSV = async (file?: File) => {
     if (!file) return
+
     try {
       const text = await readFileAsText(file)
       const rows = parseProjectsCSV(text)
 
-      // Bulk insert via API
-      for (const row of rows) {
-        await saveProject(row, true)
+      setMsg(`⏳ Importiere ${rows.length} Projekte...`)
+
+      // Batch import with error tracking
+      const errors: Array<{ row: number; project: Project; error: string }> = []
+      let successCount = 0
+
+      for (let i = 0; i < rows.length; i++) {
+        const project = rows[i]
+        try {
+          const res = await fetch('/api/projects', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(project),
+          })
+
+          if (!res.ok) {
+            const errorData = await res.json()
+            errors.push({
+              row: i + 2, // +1 for header, +1 for 1-based indexing
+              project,
+              error: `${errorData.error}${errorData.details ? ' – ' + errorData.details : ''}`
+            })
+          } else {
+            successCount++
+          }
+        } catch (error: any) {
+          errors.push({
+            row: i + 2,
+            project,
+            error: error.message || 'Netzwerkfehler'
+          })
+        }
       }
 
-      showMessage(`✓ CSV importiert: ${rows.length} Zeilen`)
+      // Reload projects after import
+      const res = await fetch('/api/projects')
+      const projectsData = await res.json()
+      setProjects(projectsData)
+
+      // Show results
+      if (errors.length === 0) {
+        showMessage(`✓ CSV importiert: ${successCount} Projekte erfolgreich`)
+      } else {
+        const errorMsg = [
+          `❌ CSV-Import abgeschlossen: ${successCount} erfolgreich, ${errors.length} fehlgeschlagen\n`,
+          ...errors.slice(0, 10).map(e =>
+            `\nZeile ${e.row} (ID: ${e.project.id}):\n  - ${e.error}`
+          )
+        ].join('')
+
+        if (errors.length > 10) {
+          setMsg(errorMsg + `\n\n... und ${errors.length - 10} weitere Fehler`)
+        } else {
+          setMsg(errorMsg)
+        }
+        setTimeout(() => setMsg(''), 15000) // Extra long timeout for batch errors
+      }
     } catch (err) {
       if (err instanceof CSVParseError) {
-        // Detailed error message with line-by-line breakdown
+        // CSV parsing error (before API call)
         const detailedMsg = err.toDetailedMessage()
         setMsg(`❌ ${detailedMsg}`)
-        console.error('CSV Import Fehler:', err.errors)
+        console.error('CSV Parse Fehler:', err.errors)
       } else {
         setMsg(`❌ ${(err as Error)?.message || 'CSV konnte nicht geladen werden'}`)
       }
-      setTimeout(() => setMsg(''), 10000) // Longer timeout for detailed errors
+      setTimeout(() => setMsg(''), 10000)
     }
   }
 
