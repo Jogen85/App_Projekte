@@ -1,7 +1,7 @@
 'use client'
 
 import React, { Suspense, lazy, useMemo, useState, useEffect } from 'react'
-import { Card, TYPOGRAPHY, LAYOUT } from '@/ui'
+import { Card, LAYOUT } from '@/ui'
 import type { ITCost, ITCostCategory } from '@/types'
 import {
   fmtDate,
@@ -92,11 +92,8 @@ function ITCostsDashboardContent() {
     <div className={LAYOUT.pageContainer}>
       <div className={LAYOUT.contentWrapper}>
         {/* Header */}
-        <header className={LAYOUT.header}>
-          <div>
-            <h1 className={TYPOGRAPHY.pageTitle}>IT-Kostenübersicht</h1>
-            <p className={TYPOGRAPHY.pageSubtitle}>Stand: {fmtDate(today)}</p>
-          </div>
+        <header className="flex items-center justify-between mb-4">
+          <div className="text-sm text-slate-600">Stand: {fmtDate(today)}</div>
           <div className="flex items-center gap-4">
             <div>
               <label className="mr-2 text-sm font-medium">Jahr:</label>

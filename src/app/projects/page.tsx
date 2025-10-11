@@ -1,7 +1,7 @@
 'use client'
 
 import React, { Suspense, lazy, useMemo, useState, useEffect } from 'react'
-import { Card, TYPOGRAPHY, LAYOUT } from '@/ui'
+import { Card, LAYOUT } from '@/ui'
 import { parseProjectsCSV, projectsToCSV } from '@/lib/csv'
 import type { Project, NormalizedProject, YearBudget } from '@/types'
 import {
@@ -221,11 +221,8 @@ function ProjectsDashboardContent() {
   return (
     <div className={LAYOUT.pageContainer}>
       <div className={LAYOUT.contentWrapper}>
-        <header className={LAYOUT.header}>
-          <div>
-            <h1 className={TYPOGRAPHY.pageTitle}>IT-Projektübersicht</h1>
-            <p className={TYPOGRAPHY.pageSubtitle}>Stand: {fmtDate(today)}</p>
-          </div>
+        <header className="flex items-center justify-between mb-4">
+          <div className="text-sm text-slate-600">Stand: {fmtDate(today)}</div>
           <FiltersPanel
             statusFilter={statusFilter}
             setStatusFilter={setStatusFilter}

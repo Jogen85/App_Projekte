@@ -2,7 +2,7 @@
 
 import React, { Suspense, useMemo, useState, useEffect } from 'react'
 import type { VDBSBudgetItem, YearBudget } from '@/types'
-import { Card, Badge, TYPOGRAPHY, LAYOUT } from '@/ui'
+import { Card, Badge, LAYOUT } from '@/ui'
 import { getCurrentYear } from '@/lib'
 import {
   ResponsiveContainer,
@@ -168,42 +168,36 @@ function VDBSBudgetDashboardContent() {
     <div className={LAYOUT.pageContainer}>
       <div className={LAYOUT.contentWrapper}>
         {/* Header */}
-        <header className={LAYOUT.header}>
+        <header className="flex items-center justify-end gap-4 mb-4">
           <div>
-            <h1 className={TYPOGRAPHY.pageTitle}>VDB-S Budget</h1>
-            <p className={TYPOGRAPHY.pageSubtitle}>Budgetplanung für VDB-Service, Arbeitskreise und Projekte</p>
+            <label className="mr-2 text-sm font-medium">Kategorie:</label>
+            <select
+              value={categoryFilter}
+              onChange={(e) => setCategoryFilter(e.target.value as 'all' | 'RUN' | 'CHANGE')}
+              className="rounded border border-slate-300 px-3 py-2 text-sm"
+            >
+              <option value="all">Alle</option>
+              <option value="RUN">Laufende Kosten</option>
+              <option value="CHANGE">Projekte</option>
+            </select>
           </div>
-          <div className="flex items-center gap-4">
-            <div>
-              <label className="mr-2 text-sm font-medium">Kategorie:</label>
-              <select
-                value={categoryFilter}
-                onChange={(e) => setCategoryFilter(e.target.value as 'all' | 'RUN' | 'CHANGE')}
-                className="rounded border border-slate-300 px-3 py-2 text-sm"
-              >
-                <option value="all">Alle</option>
-                <option value="RUN">Laufende Kosten</option>
-                <option value="CHANGE">Projekte</option>
-              </select>
-            </div>
-            <div>
-              <label className="mr-2 text-sm font-medium">Jahr:</label>
-              <select
-                value={selectedYear}
-                onChange={(e) => setSelectedYear(Number(e.target.value))}
-                className="rounded border border-slate-300 px-3 py-2 text-sm"
-              >
-                {Array.from({ length: 10 }, (_, i) => currentYear - 2 + i).map((y) => (
-                  <option key={y} value={y}>
-                    {y}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <a href="/admin/vdbs-budget" className="text-sm text-blue-600 hover:underline">
-              VDB-S Budget verwalten
-            </a>
+          <div>
+            <label className="mr-2 text-sm font-medium">Jahr:</label>
+            <select
+              value={selectedYear}
+              onChange={(e) => setSelectedYear(Number(e.target.value))}
+              className="rounded border border-slate-300 px-3 py-2 text-sm"
+            >
+              {Array.from({ length: 10 }, (_, i) => currentYear - 2 + i).map((y) => (
+                <option key={y} value={y}>
+                  {y}
+                </option>
+              ))}
+            </select>
           </div>
+          <a href="/admin/vdbs-budget" className="text-sm text-blue-600 hover:underline">
+            VDB-S Budget verwalten
+          </a>
         </header>
 
         {/* Warnung bei Überplanung */}

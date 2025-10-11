@@ -10,7 +10,7 @@ import {
   getITCostsByCategoryD,
   getToday,
 } from '@/lib'
-import { Card, TYPOGRAPHY, LAYOUT } from '@/ui'
+import { Card, LAYOUT } from '@/ui'
 
 const BudgetDonut = lazy(() => import('@/components/BudgetDonut'))
 
@@ -130,32 +130,24 @@ function OverallBudgetDashboardContent() {
     <div className={LAYOUT.pageContainer}>
       <div className={LAYOUT.contentWrapper}>
         {/* Header */}
-        <header className={LAYOUT.header}>
+        <header className="flex items-center justify-end gap-4 mb-4">
           <div>
-            <h1 className={TYPOGRAPHY.pageTitle}>Gesamtbudgetplanung</h1>
-            <p className={TYPOGRAPHY.pageSubtitle}>
-              Konsolidierte Übersicht über Projektbudgets, IT-Kosten und VDB-S Budget
-            </p>
+            <label className="mr-2 text-sm font-medium">Jahr:</label>
+            <select
+              value={year}
+              onChange={(e) => setYear(Number(e.target.value))}
+              className="rounded border border-slate-300 px-3 py-2 text-sm"
+            >
+              {Array.from({ length: 10 }, (_, i) => currentYear - 5 + i).map((y) => (
+                <option key={y} value={y}>
+                  {y}
+                </option>
+              ))}
+            </select>
           </div>
-          <div className="flex items-center gap-4">
-            <div>
-              <label className="mr-2 text-sm font-medium">Jahr:</label>
-              <select
-                value={year}
-                onChange={(e) => setYear(Number(e.target.value))}
-                className="rounded border border-slate-300 px-3 py-2 text-sm"
-              >
-                {Array.from({ length: 10 }, (_, i) => currentYear - 5 + i).map((y) => (
-                  <option key={y} value={y}>
-                    {y}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <a href="/admin/overall-budget" className="text-sm text-blue-600 hover:underline">
-              Budgets verwalten
-            </a>
-          </div>
+          <a href="/admin/overall-budget" className="text-sm text-blue-600 hover:underline">
+            Budgets verwalten
+          </a>
         </header>
 
         {/* Warnings */}

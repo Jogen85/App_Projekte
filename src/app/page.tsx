@@ -10,7 +10,7 @@ import {
   daysBetween,
   getITCostsByCategoryD,
 } from '@/lib'
-import { Card, TYPOGRAPHY, LAYOUT } from '@/ui'
+import { Card, LAYOUT } from '@/ui'
 import Link from 'next/link'
 
 async function getProjects(): Promise<Project[]> {
@@ -212,16 +212,8 @@ export default async function ITCockpitPage() {
   return (
     <div className={LAYOUT.pageContainer}>
       <div className={LAYOUT.contentWrapper}>
-        <header className={LAYOUT.header}>
-          <div>
-            <h1 className={TYPOGRAPHY.pageTitle}>IT-Cockpit</h1>
-            <p className={TYPOGRAPHY.pageSubtitle}>
-              Verdichtete Kennzahlen, Warnungen und Schnellzugriffe über alle Bereiche.
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-slate-700">Jahr: {year}</span>
-          </div>
+        <header className="flex items-center justify-end mb-4">
+          <span className="text-sm font-medium text-slate-700">Jahr: {year}</span>
         </header>
 
         <div className="grid gap-3 md:grid-cols-4">
