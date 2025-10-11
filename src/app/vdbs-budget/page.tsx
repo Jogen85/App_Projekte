@@ -120,7 +120,7 @@ function VDBSBudgetDashboardContent() {
   const showWarning = yearBudget && kpis.totalBudget > yearBudget.budget
 
   const fmtCurrency = (n: number) =>
-    new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR', minimumFractionDigits: 0 }).format(n)
+    new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR', minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n)
 
   const fmtCompact = (n: number) => {
     if (Math.abs(n) >= 10000) {
@@ -383,6 +383,7 @@ function VDBSBudgetDashboardContent() {
                   <th
                     className="cursor-pointer border-b-2 border-gray-300 px-3 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-700 hover:bg-gray-200"
                     onClick={() => handleSort('budget2026')}
+                    style={{ width: '280px' }}
                   >
                     Budget {selectedYear} {sortField === 'budget2026' && (sortDirection === 'asc' ? '↑' : '↓')}
                   </th>
@@ -409,9 +410,9 @@ function VDBSBudgetDashboardContent() {
                         </Badge>
                       </td>
                       <td className="px-3 py-3 text-right">
-                        <div className="flex items-center justify-end gap-3">
+                        <div className="flex items-center justify-between gap-3">
                           {/* Budget bar */}
-                          <div className="h-2 w-24 rounded-full bg-gray-200">
+                          <div className="h-2 flex-1 rounded-full bg-gray-200">
                             <div
                               className="h-2 rounded-full bg-blue-600"
                               style={{
@@ -419,7 +420,7 @@ function VDBSBudgetDashboardContent() {
                               }}
                             />
                           </div>
-                          <span className="font-mono font-medium text-gray-900">{fmtCurrency(item.budget2026)}</span>
+                          <span className="font-mono font-medium text-gray-900 w-32 text-right">{fmtCurrency(item.budget2026)}</span>
                         </div>
                       </td>
                     </tr>
