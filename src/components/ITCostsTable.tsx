@@ -48,6 +48,7 @@ export default function ITCostsTable({ costs, year }: ITCostsTableProps) {
   const frequencyLabels: Record<ITCostFrequency, string> = {
     monthly: 'Monatlich',
     quarterly: 'Vierteljährlich',
+    biannual: 'Halbjährlich',
     yearly: 'Jährlich',
     one_time: 'Einmalig',
   };

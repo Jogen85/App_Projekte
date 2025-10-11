@@ -10,6 +10,7 @@ interface Props {
 const FREQUENCY_COLORS: Record<ITCostFrequency, string> = {
   monthly: '#3b82f6',     // blue-500
   quarterly: '#10b981',   // green-500
+  biannual: '#8b5cf6',    // violet-500
   yearly: '#f59e0b',      // amber-500
   one_time: '#64748b',    // slate-500
 };
@@ -17,6 +18,7 @@ const FREQUENCY_COLORS: Record<ITCostFrequency, string> = {
 const FREQUENCY_LABELS: Record<ITCostFrequency, string> = {
   monthly: 'Monatlich',
   quarterly: 'Vierteljährlich',
+  biannual: 'Halbjährlich',
   yearly: 'Jährlich',
   one_time: 'Einmalig',
 };
@@ -26,6 +28,7 @@ export default function ITCostsByFrequencyChart({ costs, year }: Props) {
   const aggregated: Record<ITCostFrequency, number> = {
     monthly: 0,
     quarterly: 0,
+    biannual: 0,
     yearly: 0,
     one_time: 0,
   };
@@ -38,6 +41,7 @@ export default function ITCostsByFrequencyChart({ costs, year }: Props) {
   const chartData = [
     { name: FREQUENCY_LABELS.monthly, value: aggregated.monthly, color: FREQUENCY_COLORS.monthly },
     { name: FREQUENCY_LABELS.quarterly, value: aggregated.quarterly, color: FREQUENCY_COLORS.quarterly },
+    { name: FREQUENCY_LABELS.biannual, value: aggregated.biannual, color: FREQUENCY_COLORS.biannual },
     { name: FREQUENCY_LABELS.yearly, value: aggregated.yearly, color: FREQUENCY_COLORS.yearly },
     { name: FREQUENCY_LABELS.one_time, value: aggregated.one_time, color: FREQUENCY_COLORS.one_time },
   ].filter((item) => item.value > 0);
