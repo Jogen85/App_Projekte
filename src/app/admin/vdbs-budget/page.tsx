@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import type { VDBSBudgetItem } from '@/types'
 import { Card, COLORS } from '@/ui'
-import { parseVDBSBudgetCSV, serializeVDBSBudgetCSV } from '@/lib/csv'
+import { parseVDBSBudgetCSV, serializeVDBSBudgetCSV, readFileAsText, CSVParseError } from '@/lib/csv'
 
 const emptyVDBSBudgetItem = (): VDBSBudgetItem => ({
   id: `vdbs-${Math.random().toString(36).slice(2, 8)}`,
@@ -106,7 +106,7 @@ export default function VDBSBudgetAdmin() {
   const onImportCSV = async (file?: File) => {
     if (!file) return
     try {
-      const text = await file.text()
+      const text = await readFileAsText(file)
       const rows = parseVDBSBudgetCSV(text)
 
       // Bulk insert via API
@@ -116,8 +116,15 @@ export default function VDBSBudgetAdmin() {
 
       showMessage(`✓ CSV importiert: ${rows.length} Zeilen`)
     } catch (err) {
-      setMsg(`❌ ${(err as Error)?.message || 'CSV konnte nicht geladen werden'}`)
-      setTimeout(() => setMsg(''), 3000)
+      if (err instanceof CSVParseError) {
+        // Detailed error message with line-by-line breakdown
+        const detailedMsg = err.toDetailedMessage()
+        setMsg(`❌ ${detailedMsg}`)
+        console.error('CSV Import Fehler:', err.errors)
+      } else {
+        setMsg(`❌ ${(err as Error)?.message || 'CSV konnte nicht geladen werden'}`)
+      }
+      setTimeout(() => setMsg(''), 10000) // Longer timeout for detailed errors
     }
   }
 
@@ -197,7 +204,9 @@ export default function VDBSBudgetAdmin() {
               CSV exportieren
             </button>
             {msg && (
-              <span className="text-sm text-green-600 ml-2 bg-green-50 px-3 py-1 rounded-md font-medium">{msg}</span>
+              <div className={`text-sm ml-2 px-3 py-2 rounded-md font-medium max-w-4xl ${msg.startsWith('✓') ? 'text-green-600 bg-green-50' : 'text-red-600 bg-red-50'}`}>
+                <pre className="whitespace-pre-wrap text-xs font-mono">{msg}</pre>
+              </div>
             )}
           </div>
         </Card>

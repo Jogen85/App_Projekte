@@ -1,9 +1,45 @@
-﻿import type { Project, ITCost, ITCostCategory, ITCostFrequency, VDBSBudgetItem } from '../types';
+﻿import type { Project, ITCost, ITCostCategory, ITCostFrequency, VDBSBudgetItem, YearBudget } from '../types';
 
 const REQUIRED_FIELDS = ['id','projectNumberInternal','projectNumberExternal','classification','title','owner','description','status','start','end','progress','budgetPlanned','costToDate','org','requiresAT82Check','at82Completed'] as const;
 const NULL_CHAR = String.fromCharCode(0);
 
 export type CsvDelimiter = ';' | ',';
+
+// ==================== Error Handling ====================
+
+export interface CSVErrorDetail {
+  row: number;
+  field?: string;
+  value?: string;
+  expected?: string;
+  message: string;
+}
+
+export class CSVParseError extends Error {
+  constructor(
+    message: string,
+    public readonly errors: CSVErrorDetail[],
+    public readonly successCount: number = 0
+  ) {
+    super(message);
+    this.name = 'CSVParseError';
+  }
+
+  toDetailedMessage(): string {
+    const lines = [`${this.message} (${this.errors.length} Fehler, ${this.successCount} erfolgreich)`];
+
+    this.errors.forEach(err => {
+      let detail = `\nZeile ${err.row}:`;
+      if (err.field) detail += ` (Feld: ${err.field})`;
+      detail += `\n  - ${err.message}`;
+      if (err.value) detail += `\n  - Wert: "${err.value}"`;
+      if (err.expected) detail += `\n  - Erwartet: ${err.expected}`;
+      lines.push(detail);
+    });
+
+    return lines.join('');
+  }
+}
 
 // Liest File mit Auto-Encoding-Detection (UTF-8 oder Windows-1252/ISO-8859-1)
 export async function readFileAsText(file: File): Promise<string> {
@@ -116,13 +152,18 @@ export function parseProjectsCSV(text: string): Project[] {
   const indexOf = (key: string) => headers.findIndex((h) => h.toLowerCase() === key.toLowerCase());
 
   const projects: Project[] = [];
+  const errors: CSVErrorDetail[] = [];
+
   for (let i = 1; i < records.length; i++) {
     const row = records[i];
+    const rowNum = i + 1; // +1 for header row
+
     const pick = (key: string, fallback = '') => {
       const idx = indexOf(key);
       if (idx === -1 || idx >= row.length) return fallback;
       return row[idx];
     };
+
     const numeric = (value: string) => {
       if (value == null || value === '') return 0;
       let normalized = value.trim().replace(/\s+/g, '');
@@ -144,24 +185,120 @@ export function parseProjectsCSV(text: string): Project[] {
       return undefined;
     };
 
+    // Validations
+    const id = pick('id');
+    const title = pick('title');
+    const owner = pick('owner');
+    const start = pick('start');
+    const end = pick('end');
+    const classification = pick('classification');
+    const status = pick('status');
+    const progress = pick('progress');
+
+    // Required field checks
+    if (!id) {
+      errors.push({ row: rowNum, field: 'id', message: 'Pflichtfeld "id" fehlt oder ist leer' });
+    }
+    if (!title) {
+      errors.push({ row: rowNum, field: 'title', message: 'Pflichtfeld "title" fehlt oder ist leer' });
+    }
+    if (!owner) {
+      errors.push({ row: rowNum, field: 'owner', message: 'Pflichtfeld "owner" fehlt oder ist leer' });
+    }
+    if (!start) {
+      errors.push({ row: rowNum, field: 'start', message: 'Pflichtfeld "start" (Datum) fehlt oder ist leer' });
+    }
+    if (!end) {
+      errors.push({ row: rowNum, field: 'end', message: 'Pflichtfeld "end" (Datum) fehlt oder ist leer' });
+    }
+
+    // Classification validation
+    const validClassifications = ['internal_dev', 'project', 'project_vdbs', 'task'];
+    if (classification && !validClassifications.includes(classification)) {
+      errors.push({
+        row: rowNum,
+        field: 'classification',
+        value: classification,
+        expected: validClassifications.join(', '),
+        message: 'Ungültige Klassifizierung'
+      });
+    }
+
+    // Status validation
+    const validStatuses = ['planned', 'active', 'done'];
+    if (status && !validStatuses.includes(status.toLowerCase())) {
+      errors.push({
+        row: rowNum,
+        field: 'status',
+        value: status,
+        expected: validStatuses.join(', '),
+        message: 'Ungültiger Status'
+      });
+    }
+
+    // Progress range validation
+    const progressNum = numeric(progress);
+    if (progress && (progressNum < 0 || progressNum > 100)) {
+      errors.push({
+        row: rowNum,
+        field: 'progress',
+        value: progress,
+        expected: '0-100',
+        message: 'Fortschritt muss zwischen 0 und 100 liegen'
+      });
+    }
+
+    // Date validation (basic format check)
+    if (start && !/^\d{4}-\d{2}-\d{2}$/.test(start)) {
+      errors.push({
+        row: rowNum,
+        field: 'start',
+        value: start,
+        expected: 'YYYY-MM-DD',
+        message: 'Ungültiges Datumsformat'
+      });
+    }
+    if (end && !/^\d{4}-\d{2}-\d{2}$/.test(end)) {
+      errors.push({
+        row: rowNum,
+        field: 'end',
+        value: end,
+        expected: 'YYYY-MM-DD',
+        message: 'Ungültiges Datumsformat'
+      });
+    }
+
+    // Date logic validation
+    if (start && end && start > end) {
+      errors.push({
+        row: rowNum,
+        message: 'Start-Datum darf nicht nach End-Datum liegen',
+        value: `start: ${start}, end: ${end}`
+      });
+    }
+
     projects.push({
-      id: pick('id') || `row-${i}`,
+      id: id || `row-${i}`,
       projectNumberInternal: pick('projectNumberInternal') || '',
       projectNumberExternal: pick('projectNumberExternal') || undefined,
-      classification: (pick('classification') as any) || 'project',
-      title: pick('title'),
-      owner: pick('owner'),
+      classification: (classification as any) || 'project',
+      title: title,
+      owner: owner,
       description: pick('description'),
-      status: (pick('status') || 'planned').toLowerCase(),
-      start: pick('start'),
-      end: pick('end'),
-      progress: numeric(pick('progress')),
+      status: (status || 'planned').toLowerCase(),
+      start: start,
+      end: end,
+      progress: progressNum,
       budgetPlanned: numeric(pick('budgetPlanned')),
       costToDate: numeric(pick('costToDate')),
       org: pick('org') || 'BB',
       requiresAT82Check: parseBoolean(pick('requiresAT82Check')),
       at82Completed: parseBoolean(pick('at82Completed')),
     });
+  }
+
+  if (errors.length > 0) {
+    throw new CSVParseError('CSV-Import fehlgeschlagen', errors, projects.length);
   }
 
   return projects;
@@ -192,6 +329,13 @@ export const CSV_HEADERS = REQUIRED_FIELDS;
 // IT-Kosten CSV Parser (v1.5.0: startDate/endDate removed)
 const IT_COST_REQUIRED_FIELDS = ['id', 'description', 'category', 'provider', 'amount', 'frequency', 'costCenter', 'notes', 'year'] as const;
 
+function requireITCostHeaders(headers: string[]): asserts headers is string[] {
+  const missing = IT_COST_REQUIRED_FIELDS.filter((field) => !headers.some((h) => h.toLowerCase() === field.toLowerCase()));
+  if (missing.length) {
+    throw new Error(`CSV-Header unvollständig. Erwartet: ${IT_COST_REQUIRED_FIELDS.join(';')}`);
+  }
+}
+
 /**
  * Hilfsfunktion: Parst deutsche Zahlenformate
  */
@@ -213,7 +357,7 @@ function parseGermanNumber(value: string): number {
 
 /**
  * Parst CSV-Daten zu ITCost-Array
- * Erwartet Spalten: id;description;category;provider;amount;frequency;startDate;endDate;costCenter;notes;year
+ * Erwartet Spalten: id;description;category;provider;amount;frequency;costCenter;notes;year
  */
 export function parseITCostsCSV(csv: string): ITCost[] {
   const lines = csv.trim().split('\n');
@@ -230,56 +374,127 @@ export function parseITCostsCSV(csv: string): ITCost[] {
   if (!records.length) return [];
 
   const headers = records[0].map((h) => h.trim().replace(/^"|"$/g, ''));
+  requireITCostHeaders(headers); // Header validation
+
   const rows = records.slice(1);
+  const costs: ITCost[] = [];
+  const errors: CSVErrorDetail[] = [];
 
-  return rows
-    .map((row, idx) => {
-      if (row.length !== headers.length) {
-        console.warn(`IT-Kosten Row ${idx + 2} has ${row.length} columns, expected ${headers.length}`);
-        return null;
-      }
+  const validCategories: ITCostCategory[] = ['hardware', 'software_licenses', 'maintenance_service', 'training', 'other'];
+  const validFrequencies: ITCostFrequency[] = ['monthly', 'quarterly', 'yearly', 'one_time'];
 
-      const pick = (key: string, fallback = '') => {
-        const colIdx = headers.findIndex((h) => h.toLowerCase() === key.toLowerCase());
-        if (colIdx === -1 || colIdx >= row.length) return fallback;
-        return row[colIdx];
-      };
+  rows.forEach((row, idx) => {
+    const rowNum = idx + 2; // +1 for header, +1 for 0-based index
 
-      // Pflichtfelder prüfen (v1.5.0: startDate/endDate nicht mehr erforderlich)
-      if (!pick('id') || !pick('description') || !pick('category') || !pick('provider') || !pick('amount') || !pick('frequency') || !pick('year')) {
-        console.warn(`IT-Kosten Row ${idx + 2} missing required fields`);
-        return null;
-      }
+    const pick = (key: string, fallback = '') => {
+      const colIdx = headers.findIndex((h) => h.toLowerCase() === key.toLowerCase());
+      if (colIdx === -1 || colIdx >= row.length) return fallback;
+      return row[colIdx];
+    };
 
-      // Category validieren
-      const validCategories: ITCostCategory[] = ['hardware', 'software_licenses', 'maintenance_service', 'training', 'other'];
-      const category = pick('category') as ITCostCategory;
-      if (!validCategories.includes(category)) {
-        console.warn(`IT-Kosten Row ${idx + 2} has invalid category: ${category}`);
-        return null;
-      }
+    const id = pick('id');
+    const description = pick('description');
+    const category = pick('category');
+    const provider = pick('provider');
+    const amount = pick('amount');
+    const frequency = pick('frequency');
+    const year = pick('year');
 
-      // Frequency validieren
-      const validFrequencies: ITCostFrequency[] = ['monthly', 'quarterly', 'yearly', 'one_time'];
-      const frequency = pick('frequency') as ITCostFrequency;
-      if (!validFrequencies.includes(frequency)) {
-        console.warn(`IT-Kosten Row ${idx + 2} has invalid frequency: ${frequency}`);
-        return null;
-      }
+    // Column count validation
+    if (row.length !== headers.length) {
+      errors.push({
+        row: rowNum,
+        message: `Zeile hat ${row.length} Spalten, erwartet ${headers.length}`,
+      });
+    }
 
-      return {
-        id: pick('id'),
-        description: pick('description'),
-        category,
-        provider: pick('provider'),
-        amount: parseGermanNumber(pick('amount')),
-        frequency,
-        costCenter: pick('costCenter'),
-        notes: pick('notes'),
-        year: parseInt(pick('year'), 10),
-      } as ITCost;
-    })
-    .filter((p): p is ITCost => p !== null);
+    // Required field checks
+    if (!id) {
+      errors.push({ row: rowNum, field: 'id', message: 'Pflichtfeld "id" fehlt oder ist leer' });
+    }
+    if (!description) {
+      errors.push({ row: rowNum, field: 'description', message: 'Pflichtfeld "description" fehlt oder ist leer' });
+    }
+    if (!category) {
+      errors.push({ row: rowNum, field: 'category', message: 'Pflichtfeld "category" fehlt oder ist leer' });
+    }
+    if (!provider) {
+      errors.push({ row: rowNum, field: 'provider', message: 'Pflichtfeld "provider" fehlt oder ist leer' });
+    }
+    if (!amount) {
+      errors.push({ row: rowNum, field: 'amount', message: 'Pflichtfeld "amount" fehlt oder ist leer' });
+    }
+    if (!frequency) {
+      errors.push({ row: rowNum, field: 'frequency', message: 'Pflichtfeld "frequency" fehlt oder ist leer' });
+    }
+    if (!year) {
+      errors.push({ row: rowNum, field: 'year', message: 'Pflichtfeld "year" fehlt oder ist leer' });
+    }
+
+    // Category validation
+    if (category && !validCategories.includes(category as ITCostCategory)) {
+      errors.push({
+        row: rowNum,
+        field: 'category',
+        value: category,
+        expected: validCategories.join(', '),
+        message: 'Ungültige Kategorie'
+      });
+    }
+
+    // Frequency validation
+    if (frequency && !validFrequencies.includes(frequency as ITCostFrequency)) {
+      errors.push({
+        row: rowNum,
+        field: 'frequency',
+        value: frequency,
+        expected: validFrequencies.join(', '),
+        message: 'Ungültige Frequenz'
+      });
+    }
+
+    // Year validation
+    const yearNum = parseInt(year, 10);
+    if (year && (isNaN(yearNum) || yearNum < 2020 || yearNum > 2030)) {
+      errors.push({
+        row: rowNum,
+        field: 'year',
+        value: year,
+        expected: '2020-2030',
+        message: 'Jahr außerhalb des gültigen Bereichs'
+      });
+    }
+
+    // Amount validation
+    const amountNum = parseGermanNumber(amount);
+    if (amount && amountNum < 0) {
+      errors.push({
+        row: rowNum,
+        field: 'amount',
+        value: amount,
+        expected: '≥ 0',
+        message: 'Betrag muss positiv sein'
+      });
+    }
+
+    costs.push({
+      id: id,
+      description: description,
+      category: (category as ITCostCategory) || 'other',
+      provider: provider,
+      amount: amountNum,
+      frequency: (frequency as ITCostFrequency) || 'one_time',
+      costCenter: pick('costCenter'),
+      notes: pick('notes'),
+      year: yearNum || new Date().getFullYear(),
+    });
+  });
+
+  if (errors.length > 0) {
+    throw new CSVParseError('CSV-Import fehlgeschlagen', errors, costs.length);
+  }
+
+  return costs;
 }
 
 /**
@@ -320,42 +535,89 @@ export function parseVDBSBudgetCSV(text: string): VDBSBudgetItem[] {
   const headers = records[0].map((h) => h.trim());
   const rows = records.slice(1);
 
-  return rows
-    .map((row, idx) => {
-      // Leere Zeilen überspringen
-      if (row.every((cell) => !cell.trim())) {
-        return null;
-      }
+  const items: VDBSBudgetItem[] = [];
+  const errors: CSVErrorDetail[] = [];
 
-      const pick = (key: string, fallback = '') => {
-        const colIdx = headers.findIndex((h) => h.toLowerCase().includes(key.toLowerCase()));
-        if (colIdx === -1 || colIdx >= row.length) return fallback;
-        return row[colIdx];
-      };
+  // Header validation
+  const requiredHeaders = ['projekt nr', 'projekte', 'kategorie', 'budget 2026'];
+  const missingHeaders = requiredHeaders.filter(
+    (req) => !headers.some((h) => h.toLowerCase().includes(req))
+  );
+  if (missingHeaders.length > 0) {
+    throw new Error(`CSV-Header unvollständig. Fehlende Spalten: ${missingHeaders.join(', ')}`);
+  }
 
-      const projectNumber = pick('projekt nr');
-      const projectName = pick('projekte');
-      const categoryStr = pick('kategorie', 'RUN').toUpperCase();
-      const budget2026Str = pick('budget 2026');
+  rows.forEach((row, idx) => {
+    const rowNum = idx + 2; // +1 for header, +1 for 0-based index
 
-      // Pflichtfelder prüfen
-      if (!projectNumber || !projectName || !budget2026Str) {
-        return null;
-      }
+    // Skip empty rows
+    if (row.every((cell) => !cell.trim())) {
+      return;
+    }
 
-      // Kategorie validieren
-      const category = (['RUN', 'CHANGE'].includes(categoryStr) ? categoryStr : 'RUN') as 'RUN' | 'CHANGE';
+    const pick = (key: string, fallback = '') => {
+      const colIdx = headers.findIndex((h) => h.toLowerCase().includes(key.toLowerCase()));
+      if (colIdx === -1 || colIdx >= row.length) return fallback;
+      return row[colIdx];
+    };
 
-      return {
-        id: `vdbs-${idx + 1}`,
-        projectNumber: projectNumber.trim(),
-        projectName: projectName.trim(),
-        category,
-        budget2026: parseGermanNumber(budget2026Str),
-        year: 2026,
-      } as VDBSBudgetItem;
-    })
-    .filter((p): p is VDBSBudgetItem => p !== null);
+    const projectNumber = pick('projekt nr');
+    const projectName = pick('projekte');
+    const categoryStr = pick('kategorie', 'RUN').toUpperCase();
+    const budget2026Str = pick('budget 2026');
+
+    // Required field checks
+    if (!projectNumber) {
+      errors.push({ row: rowNum, field: 'Projekt Nr.', message: 'Pflichtfeld "Projekt Nr." fehlt oder ist leer' });
+    }
+    if (!projectName) {
+      errors.push({ row: rowNum, field: 'Projekte', message: 'Pflichtfeld "Projekte" fehlt oder ist leer' });
+    }
+    if (!budget2026Str) {
+      errors.push({ row: rowNum, field: 'Budget 2026', message: 'Pflichtfeld "Budget 2026" fehlt oder ist leer' });
+    }
+
+    // Category validation
+    const validCategories = ['RUN', 'CHANGE'];
+    if (categoryStr && !validCategories.includes(categoryStr)) {
+      errors.push({
+        row: rowNum,
+        field: 'Kategorie',
+        value: categoryStr,
+        expected: validCategories.join(', '),
+        message: 'Ungültige Kategorie'
+      });
+    }
+
+    // Budget validation
+    const budget2026 = parseGermanNumber(budget2026Str);
+    if (budget2026Str && budget2026 < 0) {
+      errors.push({
+        row: rowNum,
+        field: 'Budget 2026',
+        value: budget2026Str,
+        expected: '≥ 0',
+        message: 'Budget muss positiv sein'
+      });
+    }
+
+    const category = (validCategories.includes(categoryStr) ? categoryStr : 'RUN') as 'RUN' | 'CHANGE';
+
+    items.push({
+      id: `vdbs-${idx + 1}`,
+      projectNumber: projectNumber.trim(),
+      projectName: projectName.trim(),
+      category,
+      budget2026,
+      year: 2026,
+    });
+  });
+
+  if (errors.length > 0) {
+    throw new CSVParseError('CSV-Import fehlgeschlagen', errors, items.length);
+  }
+
+  return items;
 }
 
 /**
@@ -370,6 +632,113 @@ export function serializeVDBSBudgetCSV(items: VDBSBudgetItem[], delimiter: CsvDe
     escapeField(item.projectName, delimiter),
     escapeField(item.category, delimiter),
     escapeField(item.budget2026.toFixed(2), delimiter),
+  ].join(delimiter));
+
+  return [header, ...lines].join('\n');
+}
+
+// ==================== Year Budgets CSV ====================
+
+/**
+ * Parst Year Budget CSV
+ * Format: Jahr;Budget
+ */
+export function parseYearBudgetsCSV(text: string): YearBudget[] {
+  const cleanText = text.replace(new RegExp(NULL_CHAR, 'g'), '');
+  const lines = cleanText.trim().split(/\r?\n/);
+  if (lines.length === 0) return [];
+
+  const delimiter = detectDelimiter(lines[0]);
+  const records = parseRecords(cleanText, delimiter);
+  if (records.length === 0) return [];
+
+  const headers = records[0].map((h) => h.trim());
+  const rows = records.slice(1);
+
+  const yearBudgets: YearBudget[] = [];
+  const errors: CSVErrorDetail[] = [];
+
+  // Header validation
+  const requiredHeaders = ['jahr', 'budget'];
+  const missingHeaders = requiredHeaders.filter(
+    (req) => !headers.some((h) => h.toLowerCase().includes(req))
+  );
+  if (missingHeaders.length > 0) {
+    throw new Error(`CSV-Header unvollständig. Fehlende Spalten: ${missingHeaders.join(', ')}`);
+  }
+
+  rows.forEach((row, idx) => {
+    const rowNum = idx + 2; // +1 for header, +1 for 0-based index
+
+    // Skip empty rows
+    if (row.every((cell) => !cell.trim())) {
+      return;
+    }
+
+    const pick = (key: string, fallback = '') => {
+      const colIdx = headers.findIndex((h) => h.toLowerCase().includes(key.toLowerCase()));
+      if (colIdx === -1 || colIdx >= row.length) return fallback;
+      return row[colIdx];
+    };
+
+    const yearStr = pick('jahr');
+    const budgetStr = pick('budget');
+
+    // Required field checks
+    if (!yearStr) {
+      errors.push({ row: rowNum, field: 'Jahr', message: 'Pflichtfeld "Jahr" fehlt oder ist leer' });
+    }
+    if (!budgetStr) {
+      errors.push({ row: rowNum, field: 'Budget', message: 'Pflichtfeld "Budget" fehlt oder ist leer' });
+    }
+
+    // Year validation
+    const year = parseInt(yearStr, 10);
+    if (yearStr && (isNaN(year) || year < 2020 || year > 2030)) {
+      errors.push({
+        row: rowNum,
+        field: 'Jahr',
+        value: yearStr,
+        expected: '2020-2030',
+        message: 'Jahr außerhalb des gültigen Bereichs'
+      });
+    }
+
+    // Budget validation
+    const budget = parseGermanNumber(budgetStr);
+    if (budgetStr && budget < 0) {
+      errors.push({
+        row: rowNum,
+        field: 'Budget',
+        value: budgetStr,
+        expected: '≥ 0',
+        message: 'Budget muss positiv sein'
+      });
+    }
+
+    yearBudgets.push({
+      year: year || new Date().getFullYear(),
+      budget,
+    });
+  });
+
+  if (errors.length > 0) {
+    throw new CSVParseError('CSV-Import fehlgeschlagen', errors, yearBudgets.length);
+  }
+
+  return yearBudgets;
+}
+
+/**
+ * Serialisiert YearBudget-Array zu CSV
+ */
+export function serializeYearBudgetsCSV(yearBudgets: YearBudget[], delimiter: CsvDelimiter = ';'): string {
+  const headers = ['Jahr', 'Budget'];
+  const header = headers.join(delimiter);
+
+  const lines = yearBudgets.map((yb) => [
+    escapeField(yb.year.toString(), delimiter),
+    escapeField(yb.budget.toFixed(2), delimiter),
   ].join(delimiter));
 
   return [header, ...lines].join('\n');

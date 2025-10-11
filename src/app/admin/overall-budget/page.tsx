@@ -4,6 +4,7 @@ import React, { useState, useEffect, useMemo } from 'react'
 import type { YearBudget, Project } from '@/types'
 import { Card, COLORS } from '@/ui'
 import { getCurrentYear, overlapDays, daysBetween, yearStart, yearEnd } from '@/lib'
+import { parseYearBudgetsCSV, serializeYearBudgetsCSV, readFileAsText, CSVParseError } from '@/lib/csv'
 
 export default function OverallBudgetAdmin() {
   const [yearBudgets, setYearBudgets] = useState<YearBudget[]>([])
@@ -98,6 +99,46 @@ export default function OverallBudgetAdmin() {
     setTimeout(() => setMsg(''), 2000)
   }
 
+  // CSV Import
+  const onImportCSV = async (file?: File) => {
+    if (!file) return
+    try {
+      const text = await readFileAsText(file)
+      const rows = parseYearBudgetsCSV(text)
+
+      // Bulk insert via API
+      for (const row of rows) {
+        const existing = yearBudgets.find((yb) => yb.year === row.year)
+        await saveYearBudget(row, !existing)
+      }
+
+      showMessage(`✓ CSV importiert: ${rows.length} Zeilen`)
+    } catch (err) {
+      if (err instanceof CSVParseError) {
+        // Detailed error message with line-by-line breakdown
+        const detailedMsg = err.toDetailedMessage()
+        setMsg(`❌ ${detailedMsg}`)
+        console.error('CSV Import Fehler:', err.errors)
+      } else {
+        setMsg(`❌ ${(err as Error)?.message || 'CSV konnte nicht geladen werden'}`)
+      }
+      setTimeout(() => setMsg(''), 10000) // Longer timeout for detailed errors
+    }
+  }
+
+  // CSV Export
+  const onExportCSV = () => {
+    const csv = serializeYearBudgetsCSV(yearBudgets)
+    const bom = '\uFEFF' // UTF-8 BOM für Excel
+    const blob = new Blob([bom + csv], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `jahresbudgets_${new Date().toISOString().slice(0, 10)}.csv`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
   // Over-budget warnings
   const overBudgetWarnings = useMemo(() => {
     const warnings: string[] = []
@@ -154,9 +195,30 @@ export default function OverallBudgetAdmin() {
             >
               + Weiteres Jahr
             </button>
+            <input
+              id="csvInput"
+              type="file"
+              accept=".csv"
+              className="hidden"
+              onChange={(e) => onImportCSV(e.target.files?.[0])}
+            />
+            <button
+              onClick={() => document.getElementById('csvInput')!.click()}
+              className="rounded-lg border border-slate-300 px-4 py-2 text-sm hover:bg-slate-50 transition-colors"
+            >
+              CSV importieren
+            </button>
+            <button
+              onClick={onExportCSV}
+              className="rounded-lg border border-slate-300 px-4 py-2 text-sm hover:bg-slate-50 transition-colors"
+            >
+              CSV exportieren
+            </button>
             <span className="text-xs text-slate-500">Änderungen werden automatisch gespeichert</span>
             {msg && (
-              <span className="text-sm text-green-600 ml-2 bg-green-50 px-3 py-1 rounded-md font-medium">{msg}</span>
+              <div className={`text-sm ml-2 px-3 py-2 rounded-md font-medium max-w-4xl ${msg.startsWith('✓') ? 'text-green-600 bg-green-50' : 'text-red-600 bg-red-50'}`}>
+                <pre className="whitespace-pre-wrap text-xs font-mono">{msg}</pre>
+              </div>
             )}
           </div>
         </Card>
