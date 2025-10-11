@@ -102,29 +102,82 @@ export default function VDBSBudgetAdmin() {
     saveItem(newItem, true)
   }
 
-  // CSV Import
+  // CSV Import with UPSERT
   const onImportCSV = async (file?: File) => {
     if (!file) return
+
     try {
       const text = await readFileAsText(file)
       const rows = parseVDBSBudgetCSV(text)
 
-      // Bulk insert via API
-      for (const row of rows) {
-        await saveItem(row, true)
+      setMsg(`⏳ Importiere ${rows.length} VDB-S Budgetpositionen...`)
+
+      // Batch import with UPSERT (update existing, insert new)
+      const errors: Array<{ row: number; item: VDBSBudgetItem; error: string }> = []
+      let successCount = 0
+
+      for (let i = 0; i < rows.length; i++) {
+        const item = rows[i]
+        try {
+          // Use PATCH for UPSERT (insert or update)
+          const res = await fetch('/api/vdbs-budget', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(item),
+          })
+
+          if (!res.ok) {
+            const errorData = await res.json()
+            errors.push({
+              row: i + 2, // +1 for header, +1 for 1-based indexing
+              item,
+              error: `${errorData.error}${errorData.details ? ' – ' + errorData.details : ''}`
+            })
+          } else {
+            successCount++
+          }
+        } catch (error: any) {
+          errors.push({
+            row: i + 2,
+            item,
+            error: error.message || 'Netzwerkfehler'
+          })
+        }
       }
 
-      showMessage(`✓ CSV importiert: ${rows.length} Zeilen`)
+      // Reload budget after import
+      const res = await fetch('/api/vdbs-budget')
+      const data = await res.json()
+      setVDBSBudget(data)
+
+      // Show results
+      if (errors.length === 0) {
+        showMessage(`✓ CSV importiert: ${successCount} VDB-S Budgetpositionen erfolgreich (aktualisiert/neu erstellt)`)
+      } else {
+        const errorMsg = [
+          `⚠️ CSV-Import abgeschlossen: ${successCount} erfolgreich, ${errors.length} fehlgeschlagen\n`,
+          ...errors.slice(0, 10).map(e =>
+            `\nZeile ${e.row} (ID: ${e.item.id}):\n  - ${e.error}`
+          )
+        ].join('')
+
+        if (errors.length > 10) {
+          setMsg(errorMsg + `\n\n... und ${errors.length - 10} weitere Fehler`)
+        } else {
+          setMsg(errorMsg)
+        }
+        setTimeout(() => setMsg(''), 15000) // Extra long timeout for batch errors
+      }
     } catch (err) {
       if (err instanceof CSVParseError) {
-        // Detailed error message with line-by-line breakdown
+        // CSV parsing error (before API call)
         const detailedMsg = err.toDetailedMessage()
         setMsg(`❌ ${detailedMsg}`)
-        console.error('CSV Import Fehler:', err.errors)
+        console.error('CSV Parse Fehler:', err.errors)
       } else {
         setMsg(`❌ ${(err as Error)?.message || 'CSV konnte nicht geladen werden'}`)
       }
-      setTimeout(() => setMsg(''), 10000) // Longer timeout for detailed errors
+      setTimeout(() => setMsg(''), 10000)
     }
   }
 
