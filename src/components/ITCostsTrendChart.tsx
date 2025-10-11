@@ -83,7 +83,7 @@ export default function ITCostsTrendChart({ costs, currentYear }: Props) {
 
   return (
     <div className="w-full h-full">
-      <ResponsiveContainer width="100%" height={240}>
+      <ResponsiveContainer width="100%" height={220}>
         <BarChart data={trendData} margin={{ top: 10, right: 10, left: 10, bottom: 10 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
           <XAxis dataKey="category" tick={{ fontSize: 11 }} angle={-15} textAnchor="end" height={60} />

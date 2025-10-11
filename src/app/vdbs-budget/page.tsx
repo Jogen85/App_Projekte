@@ -256,7 +256,7 @@ function VDBSBudgetDashboardContent() {
         {/* Chart-Zeile (3 Charts) */}
         <div className="grid grid-cols-3 gap-3">
           {/* Chart 1: Budget nach Kategorie */}
-          <Card title="Budget nach Kategorie" className="h-chart relative">
+          <Card title="Budget nach Kategorie" className="h-chart">
             <ResponsiveContainer width="100%" height={240}>
               <PieChart>
                 <Pie
@@ -282,16 +282,6 @@ function VDBSBudgetDashboardContent() {
                 <Tooltip formatter={(value) => fmtCurrency(value as number)} labelFormatter={(label) => label} />
               </PieChart>
             </ResponsiveContainer>
-            <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-4 text-xs">
-              <div className="flex items-center gap-1">
-                <div className="h-3 w-3 rounded-sm" style={{ backgroundColor: CHART_COLORS.RUN }} />
-                <span className="text-gray-700">Laufende Kosten</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <div className="h-3 w-3 rounded-sm" style={{ backgroundColor: CHART_COLORS.CHANGE }} />
-                <span className="text-gray-700">Projekte</span>
-              </div>
-            </div>
           </Card>
 
           {/* Chart 2: Top 5 Positionen */}

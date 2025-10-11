@@ -174,7 +174,7 @@ function ITCostsDashboardContent() {
           </Card>
 
           <Card title="Dienstleister-Übersicht" className="h-chart">
-            <div className="overflow-y-auto max-h-64">
+            <div className="overflow-y-auto max-h-52">
               {kpis.byProvider.length === 0 ? (
                 <div className="flex h-full items-center justify-center text-sm text-gray-500">
                   Keine Daten vorhanden
